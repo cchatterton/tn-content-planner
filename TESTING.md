@@ -2,6 +2,8 @@
 
 ## 0.3.17
 
+Release/tag match `68dd958`; remote/local ZIP SHA-256: `d2050dd17a604bcd6ed80c08f36186ba2891ff2ee82aaf5a73fcbda10bb479e8`. Published ZIP installation through the WordPress installer passed and reports 0.3.17.
+
 - 54 scan/pattern and 63 integration checks pass, including unique totals, done-without-example, valid examples, trashed and deleted examples.
 - Browser checks verify live status/example counters and unchanged totals under Show Mine, plus existing review and pattern regressions.
 - Key/record dots share orange; upper/lower key slots and right alignment pass desktop/mobile checks and Axe.
