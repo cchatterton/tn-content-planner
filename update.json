@@ -1,4 +1,4 @@
 {
-  "version": "0.3.4",
-  "body": "## 0.3.4 - 2026-09-09\n\n- Show the installed plugin version as a subtle watermark in the header's top-right corner.\n- Read the watermark from the plugin version constant so it reflects the installed package.\n"
+  "version": "0.4.0",
+  "body": "## 0.4.0 - 2026-09-09\n\n- Apply approved linked title, slug and parent changes immediately and clear their pending indicators.\n- Save linked template and relationship settings immediately; these update planning metadata and XP Pattern keys, not theme templates.\n- Apply earlier saved approvals on refresh where the linked post has not changed externally.\n- Replace the non-hierarchical notice with runtime CPT settings for diagnosing tab eligibility.\n"
 }

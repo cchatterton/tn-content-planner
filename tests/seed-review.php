@@ -22,5 +22,6 @@ foreach (array(array('review-one','Garden Design Services',$prefix.'-plan'),arra
 $old=array('revision'=>0,'rows'=>array());
 $rows=tncp_validate_rows($rows,'page',$old);
 if(is_wp_error($rows)){throw new RuntimeException($rows->get_error_message());}
+$rows[0]['confirmed']['title'] = false; // Unapproved mapped title stays available for reconciliation.
 update_option('tncp_plan_page',array('revision'=>1,'rows'=>$rows),false);
 echo wp_json_encode(array('prefix'=>$prefix,'posts'=>$posts));

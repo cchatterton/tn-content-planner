@@ -1,8 +1,8 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.4 · Branding mode: Author Branded
+Author: Techn · Version: 0.4.0 · Branding mode: Author Branded
 
-A WordPress content planning wizard: plan a WBS by post type, then review and create selected posts or apply confirmed changes to linked posts.
+A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
 ## Install
 
@@ -13,7 +13,8 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - The header displays the installed plugin version in its top-right corner.
 - The task header reads Content Planner, with the eyebrow Plan. Organise. Publish. and three feature tags: Visual hierarchy, CSV import, Publish or draft. Plugin metadata retains TN Content Planner / Techn authorship.
 
-- Unapplied linked-post title, slug, parent, template and relationship-flag changes are marked red with a Pending change label. Saving preserves these indicators; applying the changes clears them.
+- Approving a linked title, slug or parent change applies that field immediately in WordPress and saves it in the plan. Template and relationship settings on linked rows save immediately without a modal. Successful changes clear their pending indicators; errors remain visible without pretending the change succeeded. Unapproved differences remain marked pending.
+- Each content tab shows WordPress’s runtime post-type key, Public, Publicly Queryable, Exclude From Search, Hierarchical and Built-in settings in place of the non-hierarchical notice. Values refresh with the catalog; unusual non-boolean values are displayed literally for diagnosis.
 
 - Custom post-type eligibility reads `publicly_queryable` from the site's registered type object. Public and Exclude From Search do not affect this decision. Native Posts/Pages use WordPress visibility handling. Edit permission is still required and media attachments are excluded. This same rule drives tabs, scans, REST access, examples and XP Patterns; there is no site-specific name list.
 
@@ -25,7 +26,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - Review selected rows one at a time: Item X of Y. Apply advances only after success; Skip leaves the item selected for later. Parents are reviewed first.
 - Match ranking: exact slug, exact title, then the number of distinct shared title words within the same post type. Repeated words count once. Up to five suggestions are shown, plus the currently linked post where needed. Untouched scan rows remain eligible; accepting one absorbs that automatic row to keep one link per post. Edited or manually linked rows cannot be absorbed.
 - Accept source applies the plan title, slug, parent, template and flags to the chosen post while preserving its content/status. Accept destination adopts the chosen post’s values into the plan without changing the post. Create new makes a separate post with a unique slug. Planned children follow the new row reference but move in WordPress only when reviewed.
-- Plan save is separate from post creation and mutation. Modal choices stage title, slug and parent changes for review and apply.
+- Plan save persists new rows and other unsaved edits. Linked-post change modals apply immediately; they require no additional Save or Review action. Each approval changes only its chosen field and preserves unrelated edits. Earlier saved approvals and planning settings apply on tab refresh when the linked snapshot is current; external conflicts and uncreated parents remain available for review.
 - “Create new plan item” keeps the original mapped item and gives the copy a unique slug, adding a suffix if necessary.
 - Parent references can target planned rows or existing posts. Root depth is 0. The display moves and indents descendants immediately.
 - XP pattern is `posttype-level-template-flagcount`, e.g. `page-1-single-3`. It identifies a pattern combination, not an individual row. Identical combinations intentionally share a key; rows have independent UUIDs.

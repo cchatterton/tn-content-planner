@@ -6,7 +6,7 @@ function tncp_register_routes() {
         array('methods' => 'GET', 'callback' => 'tncp_patterns_data', 'permission_callback' => 'tncp_patterns_permission'),
         array('methods' => 'POST', 'callback' => 'tncp_patterns_save', 'permission_callback' => 'tncp_patterns_permission'),
     ));
-    foreach (array('plan' => 'GET', 'save' => 'POST', 'apply' => 'POST', 'refresh' => 'POST', 'resolve' => 'POST', 'bin' => 'POST') as $action => $method) {
+    foreach (array('plan' => 'GET', 'save' => 'POST', 'apply' => 'POST', 'refresh' => 'POST', 'resolve' => 'POST', 'bin' => 'POST', 'change' => 'POST') as $action => $method) {
         register_rest_route('tncp/v1', '/' . $action . '/(?P<type>[a-z0-9_-]+)', array('methods' => $method, 'callback' => 'tncp_' . $action . '_request', 'permission_callback' => 'tncp_permissions'));
     }
 }
@@ -16,7 +16,7 @@ function tncp_permissions($request) {
 function tncp_plan_request($request) {
     $catalog = tncp_catalog($request['type']);
     if (is_wp_error($catalog)) { return $catalog; }
-    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog);
+    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog, 'settings' => tncp_type_settings($request['type']));
 }
 /** Serialise mutations across browsers. Expired locks recover after an interrupted PHP request. */
 function tncp_mutate($request, $action) {
@@ -55,6 +55,10 @@ function tncp_save_plan($request, $plan) {
 }
 function tncp_refresh_request($request) { return tncp_mutate($request, 'tncp_refresh_plan'); }
 function tncp_refresh_plan($request, $plan) {
+    if (!empty($request['apply_approved'])) {
+        $plan = tncp_apply_saved_approvals($plan, $request['type']);
+        if (is_wp_error($plan)) { return $plan; }
+    }
     foreach ($plan['rows'] as &$row) {
         if (!$row['post_id']) { continue; }
         $post = get_post($row['post_id']);

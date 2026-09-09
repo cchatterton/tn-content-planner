@@ -11,6 +11,8 @@ let lastPage;
  await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();
  async function checkCounts(){await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');const current=await page.evaluate(async()=>await(await fetch(TNCP.api+'plan/page',{headers:{'X-WP-Nonce':TNCP.nonce}})).json());const mapped=current.plan.rows.filter(r=>current.catalog.some(p=>p.id===r.post_id)).length;await page.getByRole('tab',{name:`Pages, ${mapped} of ${current.plan.rows.length} mapped`,exact:true}).waitFor();}
  await checkCounts();
+ assert.match(await page.locator('.tncp-type-settings').innerText(),/Publicly Queryable/);
+ assert.equal(await page.getByText('This post type is non-hierarchical.',{exact:false}).count(),0);
  assert.equal(await page.locator('tbody td:nth-child(4) a').count(),0);
  assert.equal(await page.getByRole('button',{name:'1. Plan your WBS',exact:true}).count(),0);
  assert.equal(await page.getByRole('button',{name:'2. Review & create',exact:true}).count(),0);
@@ -128,6 +130,29 @@ let lastPage;
  assert.equal(await patternRow.getByRole('combobox',{name:/^Example post/}).inputValue(),exampleId);
  await page.screenshot({path:'tests/artifacts/patterns-desktop.png',fullPage:true});
  if(process.env.TNCP_AXE_PATH){for(const viewport of [{width:1600,height:1100},{width:390,height:844}]){await page.setViewportSize(viewport);const audit=await page.evaluate(async()=>await axe.run('.tncp-wrap',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));assert.deepEqual(audit.violations.map(item=>item.id),[]);}}
+ // Approved linked edits persist without Save or Review, and survive reload.
+ await page.setViewportSize({width:1600,height:1100});
+ await page.getByRole('tab',{name:/^Pages,/}).click();await checkCounts();
+ const immediate=page.locator('[data-row="review-one"]');
+ async function applyField(field,value,button){
+  const response=page.waitForResponse(r=>r.url().includes('/change/page') && r.request().method()==='POST');
+  if(field==='Parent' || field==='Template') await immediate.getByRole('combobox',{name:field,exact:true}).selectOption(value);
+  else { await immediate.getByRole('textbox',{name:field,exact:true}).fill(value);await immediate.getByRole('textbox',{name:field,exact:true}).press('Tab'); }
+  if(button) await page.getByRole('button',{name:button,exact:true}).click();
+  assert.equal((await response).status(),200);await checkCounts();assert.equal(await immediate.getByText('Pending change',{exact:true}).count(),0);
+ }
+ await immediate.getByRole('button',{name:/^Edit title:/}).click();
+ await applyField('Title, HTML allowed','Immediate browser title','Change linked post');
+ await applyField('Content slug',fixture.prefix+'-immediate','Change linked post');
+ await applyField('Parent','post:'+fixture.posts[0],'Move linked post');
+ await applyField('Template','archive');
+ const flagResponse=page.waitForResponse(r=>r.url().includes('/change/page') && r.request().method()==='POST');
+ await immediate.getByRole('checkbox',{name:'Local',exact:true}).check();assert.equal((await flagResponse).status(),200);await checkCounts();
+ const applied=await page.evaluate(async()=>await(await fetch(TNCP.api+'plan/page',{headers:{'X-WP-Nonce':TNCP.nonce}})).json());
+ const savedRow=applied.plan.rows.find(r=>r.id==='review-one'), savedPost=applied.catalog.find(p=>p.id===savedRow.post_id);
+ assert.equal(savedRow.title,'Immediate browser title');assert.equal(savedPost.title,savedRow.title);assert.equal(savedPost.slug,fixture.prefix+'-immediate');assert.equal(savedPost.parent,fixture.posts[0]);assert.equal(savedPost.planning.template,'archive');assert.equal(savedPost.planning.flags.local,true);
+ assert.equal(await immediate.getByText('Pending change',{exact:true}).count(),0);
+ await page.getByRole('tab',{name:/^Pages,/}).click();await checkCounts();assert.equal(await immediate.getByRole('combobox',{name:'Template',exact:true}).inputValue(),'archive');
  assert.deepEqual(errors,[]);console.log('PASS: ordered matches, all three reconciliation choices, one-item advancement, failure retry, skip, live tab counts, CSV and accessibility.');
  await browser.close();
 })().catch(async error=>{console.error(error);if(lastPage){console.error(await lastPage.locator('#tncp-notice').innerText().catch(()=>''));await lastPage.screenshot({path:'tests/artifacts/reconcile-failure.png',fullPage:true}).catch(()=>{});}process.exit(1)});

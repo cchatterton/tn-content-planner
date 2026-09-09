@@ -1,5 +1,14 @@
 # Validation
 
+## 0.4.0
+
+- 42 immediate-change checks cover field-only updates, all five flags, template metadata, XP keys, retained content/status, stale snapshots, invalid parents, unapproved changes and earlier saved approvals.
+- Existing 63 integration, 31 reconciliation and 46 scan/visibility checks pass.
+- Browser checks confirm modal approvals and direct metadata edits persist without Save/Review and clear pending markers. Existing reconciliation, CSV, patterns and counts coverage passes.
+- Runtime CPT settings replace the non-hierarchical notice. Desktop/mobile/narrow layouts and modal pass Axe WCAG A/AA checks.
+- PHP lint and JavaScript syntax checks pass.
+
+
 ## 0.3.4
 
 Release/tag match `685bcc8`. Remote/local ZIP SHA-256: `3a9e94fd7bc0d567873fa32352049906ba5351c401e2737cf6535414f6503ced`. Native update to 0.3.4 succeeded on the disposable WordPress site and retained the saved plan. The following check reported the installed version current.

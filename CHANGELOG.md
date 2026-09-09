@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 - 2026-09-09
+
+- Apply approved linked title, slug and parent changes immediately and clear their pending indicators.
+- Save linked template and relationship settings immediately; these update planning metadata and XP Pattern keys, not theme templates.
+- Apply earlier saved approvals on refresh where the linked post has not changed externally.
+- Replace the non-hierarchical notice with runtime CPT settings for diagnosing tab eligibility.
 
 ## 0.3.4 - 2026-09-09
 

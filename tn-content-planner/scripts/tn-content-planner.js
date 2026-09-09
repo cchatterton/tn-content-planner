@@ -6,7 +6,7 @@
     const columns = ['title', 'slug'];
     const app = document.getElementById('tncp-app');
     const dialog = document.getElementById('tncp-dialog');
-    let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [];
+    let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [], typeSettings = {};
     let patternsPlan = { revision: 0, rows: [], catalog: {} };
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
     let reviewQueue = [], reviewIndex = 0, reviewTarget = 0, reviewDecision = '', reviewNewSlug = '', reviewApplied = 0, reviewSkipped = 0;
@@ -143,19 +143,41 @@
     async function load() {
         await work(async () => {
             const saved = await api('plan');
-            await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true });
-            const data = await api('plan'); plan = data.plan; catalog = data.catalog; dirty = false; selected.clear(); step = 1; render();
+            await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
+            const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; dirty = false; selected.clear(); step = 1; render();
         });
     }
+    function parentPostValue(value) { return !value ? 0 : value.startsWith('post:') ? Number(value.slice(5)) : plan.rows.find(item => `row:${item.id}` === value)?.post_id || -1; }
+    async function applyLinkedChange(row, field, value) {
+        const wasDirty = dirty, old = row[field], metadata = field === 'template' || flags.includes(field);
+        if (field === 'parent') {
+            row[field] = value;
+            try { plan.rows.forEach(item => depth(item)); } catch (error) { row[field] = old; announce(error.message, true); render(); return; }
+            row[field] = old;
+        }
+        await work(async () => {
+            const post = catalog.find(item => item.id === row.post_id);
+            const result = await api('change', { revision: plan.revision, row_id: row.id, post_id: row.post_id, baseline: row.baseline, planning: post?.planning, field, value: field === 'parent' ? parentPostValue(value) : value, confirmed: true });
+            if (flags.includes(field)) row.flags[field] = result.planning.flags[field];
+            else row[field] = metadata ? result.planning.template : field === 'parent' ? (result.snapshot.parent ? `post:${result.snapshot.parent}` : '') : result.snapshot[field];
+            row.baseline = result.snapshot;
+            row.confirmed = { ...row.confirmed, [field]: false }; row.scanned = false;
+            plan.revision = result.plan.revision;
+            if (post) Object.assign(post, result.snapshot, { planning: result.planning });
+            dirty = wasDirty || !result.plan.rows.some(item => item.id === row.id);
+            render(); announce(metadata ? __('Planning setting saved.') : __('Approved change applied to WordPress.'));
+        });
+        render();
+    }
     async function change(row, field, value) {
-        if (busy || row[field] === value) return;
+        if (busy || (flags.includes(field) ? row.flags[field] : row[field]) === value) return;
         const old = row[field];
         if (field === 'slug') value = slug(value);
         if (row.post_id && ['title', 'slug', 'parent'].includes(field)) {
             const message = field === 'parent' ? __('Do you want to move this post under the new parent?') : field === 'title' ? __('Do you want to change the linked post’s title or create a new item in the plan with the new name?') : __('Do you want to change the linked post’s slug or create a new item in the plan with this new slug?');
             const choices = [['update', field === 'parent' ? __('Move linked post') : __('Change linked post')]];
             if (field !== 'parent') choices.push(['new', __('Create new plan item')]);
-            const decision = await ask(__('Linked post change'), `${message} ${__('Post changes are applied during review.')}`, choices);
+            const decision = await ask(__('Linked post change'), `${message} ${__('Approving applies this change immediately.')}`, choices);
             if (decision === 'cancel') { render(); return; }
             if (decision === 'new') {
                 const copy = { ...structuredClone(row), id: uid(), post_id: 0, baseline: null, confirmed: {} };
@@ -165,9 +187,9 @@
                 while (plan.rows.some(item => item.slug === copy.slug) || catalog.some(post => post.slug === copy.slug)) copy.slug = `${base}-${suffix++}`;
                 plan.rows.push(copy); editing = copy.id; markDirty(); render(); return;
             }
-            if (Array.isArray(row.confirmed)) row.confirmed = {};
-            row.confirmed[field] = true;
         }
+        if (row.post_id) { await applyLinkedChange(row, field, value); return; }
+        if (flags.includes(field)) { row.flags[field] = value; markDirty(); render(); return; }
         row[field] = value;
         try { plan.rows.forEach(item => depth(item)); } catch (error) { row[field] = old; announce(error.message, true); render(); return; }
         if (field === 'slug' && !row.post_id) {
@@ -260,7 +282,7 @@
         tr.append(el('td', {}, [check]), title,
             el('td', {}, [el('input', { type: 'text', value: row.slug, required: '', maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
             el('td', {}, [parent]), el('td', {}, [template]));
-        flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => { row.flags[flag] = event.target.checked; markDirty(); render(); } })])));
+        flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => change(row, flag, event.target.checked) })])));
         tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
             const post = catalog.find(item => item.id === row.post_id);
@@ -311,8 +333,8 @@
                 await work(async () => { try {
                     if (type === 'xp-patterns') { patternsPlan = await api('patterns'); dirty = false; step = 1; render(); return; }
                     const saved = await api('plan');
-                    await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true });
-                    const data = await api('plan'); plan = data.plan; catalog = data.catalog; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
+                    await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
+                    const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
                 } catch (error) { type = prior; throw error; } });
                 document.getElementById(`tncp-tab-${type}`)?.focus();
             }
@@ -320,9 +342,16 @@
         const panel = el('section', { id: 'tncp-panel', class: 'tncp-panel', role: 'tabpanel', 'aria-labelledby': `tncp-tab-${type}` });
         app.replaceChildren(tabs, panel);
         if (type === 'xp-patterns') { renderPatterns(panel); return; }
+        const settings = el('dl', { class: 'tncp-type-settings', 'aria-label': __('Registered post type settings') });
+        const settingNames = { name: __('Post type'), public: __('Public'), publicly_queryable: __('Publicly Queryable'), exclude_from_search: __('Exclude From Search'), hierarchical: __('Hierarchical'), _builtin: __('Built-in') };
+        Object.entries(settingNames).forEach(([key, label]) => {
+            const value = typeSettings[key];
+            const display = typeof value === 'boolean' ? (value ? __('Enabled') : __('Disabled')) : value === undefined ? __('Unavailable') : JSON.stringify(value);
+            settings.append(el('div', {}, [el('dt', { text: label }), el('dd', { text: display })]));
+        });
+        panel.append(settings);
         if (step === 2) { renderReview(panel); return; }
         panel.append(el('h2', { text: __('Build your content structure') }));
-        if (!TNCP.types.find(item => item.name === type)?.hierarchical) panel.append(el('p', { class: 'description', text: __('This post type is non-hierarchical. Parent relationships are stored, but its native permalinks and editor may not display them.') }));
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });
         panel.append(el('div', { class: 'tncp-actions' }, [
             button(__('Add row'), () => { const row = newRow(); plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
@@ -480,7 +509,7 @@
         panel.append(el('div', { class: 'tncp-actions' }, [
             button(__('Back to plan'), () => { step = 1; render(); }),
             button(__('Skip for now'), () => { reviewSkipped++; reviewIndex++; resetReviewItem(); render(); }),
-            button(__('Reload this item'), async () => { await work(async () => { const data = await api('plan'); plan = data.plan; catalog = data.catalog; resetReviewItem(); render(); }); }),
+            button(__('Reload this item'), async () => { await work(async () => { const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; resetReviewItem(); render(); }); }),
             button(reviewIndex + 1 === reviewQueue.length ? __('Apply & finish') : __('Apply & next'), async () => {
                 await work(async () => {
                     const result = await api('resolve', { revision: plan.revision, row_id: row.id, decision: reviewDecision, target_id: reviewTarget,

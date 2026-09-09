@@ -14,6 +14,14 @@ function tncp_types() {
     return $types;
 }
 
+/** Runtime registration values, rather than a plugin-specific configuration copy. */
+function tncp_type_settings($name) {
+    $type = get_post_type_object($name);
+    if (!$type) { return array(); }
+    return array('name' => $type->name, 'public' => $type->public, 'publicly_queryable' => $type->publicly_queryable,
+        'exclude_from_search' => $type->exclude_from_search, 'hierarchical' => $type->hierarchical, '_builtin' => $type->_builtin);
+}
+
 function tncp_title($title) {
     return wp_kses($title, array(
         'i' => array('class' => true, 'aria-hidden' => true),
@@ -26,17 +34,21 @@ function tncp_snapshot($post) {
     return array('title' => $post->post_title, 'slug' => $post->post_name, 'parent' => (int) $post->post_parent);
 }
 
+function tncp_post_planning($post_id) {
+    $stored_flags = get_post_meta($post_id, '_tncp_flags', true);
+    $flags = array();
+    foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($stored_flags[$flag]); }
+    $template = get_post_meta($post_id, '_tncp_template', true);
+    return array('template' => in_array($template, array('single', 'archive', 'custom'), true) ? $template : 'single', 'flags' => $flags);
+}
+
 function tncp_catalog($type) {
     $posts = get_posts(array('post_type' => $type, 'post_status' => array('publish', 'draft', 'pending', 'private', 'future'), 'numberposts' => 2001, 'orderby' => 'ID', 'order' => 'ASC', 'suppress_filters' => false));
     if (count($posts) > 2000) { return tncp_error(__('This post type exceeds the 2,000-post catalog limit. Narrow the post type before planning.', 'tn-content-planner')); }
     $catalog = array();
     foreach ($posts as $post) {
         if (current_user_can('edit_post', $post->ID)) {
-            $stored_flags = get_post_meta($post->ID, '_tncp_flags', true);
-            $flags = array();
-            foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($stored_flags[$flag]); }
-            $template = get_post_meta($post->ID, '_tncp_template', true);
-            $planning = array('template' => in_array($template, array('single', 'archive', 'custom'), true) ? $template : 'single', 'flags' => $flags);
+            $planning = tncp_post_planning($post->ID);
             $catalog[] = array_merge(array('id' => $post->ID, 'has_content' => '' !== trim($post->post_content), 'has_featured_image' => has_post_thumbnail($post->ID), 'planning' => $planning, 'can_trash' => defined('EMPTY_TRASH_DAYS') && EMPTY_TRASH_DAYS > 0 && current_user_can('delete_post', $post->ID)), tncp_snapshot($post));
         }
     }

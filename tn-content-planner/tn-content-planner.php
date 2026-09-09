@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TN Content Planner
  * Description: Plan content by post type, arrange a WBS, and create or update selected WordPress content.
- * Version: 0.3.4
+ * Version: 0.4.0
  * Requires at least: 6.0
  * Requires PHP: 8.1
  * Author: Techn
@@ -13,7 +13,7 @@
  * Update URI: https://github.com/cchatterton/tn-content-planner
  */
 if (!defined('ABSPATH')) { exit; }
-define('TNCP_VERSION', '0.3.4');
+define('TNCP_VERSION', '0.4.0');
 define('TNCP_PLUGIN_FILE', __FILE__);
 define('TNCP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TNCP_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -23,3 +23,5 @@ foreach (array('helpers', 'admin', 'assets', 'rest', 'updater') as $tncp_file) {
 unset($tncp_file);
 
 require_once TNCP_PLUGIN_DIR . 'functions/patterns.php';
+
+require_once TNCP_PLUGIN_DIR . 'functions/changes.php';

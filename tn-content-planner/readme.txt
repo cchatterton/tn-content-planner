@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.4
+Stable tag: 0.4.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -24,7 +24,7 @@ TN Content Planner by Techn provides a two-step content planning workflow in Wor
 
 Existing slugs map to editable posts in the same post type. Ambiguous matches are rejected; use a unique slug. Circular hierarchies, duplicate planned slugs and stale edits are rejected.
 
-New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a linked row offers keeping the post or moving it to the WordPress bin. Binning requires a saved plan and delete permission. Saves store the plan only; changes to WordPress posts are applied one item at a time during review.
+New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a linked row offers keeping the post or moving it to the WordPress bin. Binning requires a saved plan and delete permission. Approved linked title, slug and parent changes apply immediately. Linked template and relationship settings save immediately as planning metadata, without changing theme templates. Creation and reconciliation still advance one item at a time during review.
 
 Font Awesome Free 6.7.2 is bundled locally for title previews. Permitted title tags are i, span, strong, em, b and br. Unsafe HTML attributes are removed. Your frontend theme must load its own icon styles if it renders icon markup in post titles.
 
@@ -70,6 +70,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.4.0 =
+* Apply linked title, slug and parent changes as soon as their modal is approved.
+* Save linked template and relationship metadata immediately; no second review step.
+* Replace the non-hierarchical notice with runtime CPT settings for diagnosis.
+
 
 = 0.3.4 =
 * Show the installed version as a subtle watermark at the top right of the header.
