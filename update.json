@@ -1,4 +1,4 @@
 {
-  "version": "0.4.0",
-  "body": "## 0.4.0 - 2026-09-09\n\n- Apply approved linked title, slug and parent changes immediately and clear their pending indicators.\n- Save linked template and relationship settings immediately; these update planning metadata and XP Pattern keys, not theme templates.\n- Apply earlier saved approvals on refresh where the linked post has not changed externally.\n- Replace the non-hierarchical notice with runtime CPT settings for diagnosing tab eligibility.\n"
+  "version": "0.5.0",
+  "body": "## 0.5.0 - 2026-09-09\n\n- Add an Assigned to user picklist for each XP Pattern, persisted with its description, status and example.\n- Populate assignees from this site's WordPress users, with an Unassigned option.\n- Make XP Pattern dropdown widths consistent within each column.\n"
 }

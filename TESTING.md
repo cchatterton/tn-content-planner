@@ -1,6 +1,15 @@
 # Validation
 
+## 0.5.0
+
+- 49 scan/pattern checks pass, including assigned-user persistence, site user listing and rejection of unknown assignments.
+- Browser coverage confirms assignments survive reload and Example post dropdown widths match. Desktop/mobile Axe and existing immediate-edit/reconciliation regressions pass.
+- PHP and JavaScript syntax checks pass.
+
+
 ## 0.4.0
+
+Release/tag match `5726118`; remote/local ZIP SHA-256 `79b54934fe1f8c99cc9ad16587d7aed048a632c501a65419ffa9c9d3c7874332`. Native WordPress upgrade to 0.4.0 passed and retained the saved plan.
 
 - 42 immediate-change checks cover field-only updates, all five flags, template metadata, XP keys, retained content/status, stale snapshots, invalid parents, unapproved changes and earlier saved approvals.
 - Existing 63 integration, 31 reconciliation and 46 scan/visibility checks pass.

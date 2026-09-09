@@ -96,7 +96,7 @@
 .tncp-loading[hidden] { display: none; }
 .tncp-loading .spinner { float: none; margin: 0; }
 
-.tncp-wrap .tncp-patterns-table { min-width: 55rem; }
+.tncp-wrap .tncp-patterns-table { min-width: 70rem; }
 .tncp-wrap .tncp-patterns-table input { width: 100%; min-width: 14rem; }
 .tncp-wrap .tncp-example-link { display: block; margin-top: .25rem; }
 
@@ -111,3 +111,5 @@
 .tncp-wrap .tncp-type-settings > div { display: flex; flex-wrap: wrap; gap: .35rem; }
 .tncp-wrap .tncp-type-settings dt { font-weight: 600; }
 .tncp-wrap .tncp-type-settings dd { margin: 0; }
+
+.tncp-wrap .tncp-patterns-table select { width: 100%; max-width: none; }

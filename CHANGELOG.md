@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 - 2026-09-09
+
+- Add an Assigned to user picklist for each XP Pattern, persisted with its description, status and example.
+- Populate assignees from this site's WordPress users, with an Unassigned option.
+- Make XP Pattern dropdown widths consistent within each column.
+
 ## 0.4.0 - 2026-09-09
 
 - Apply approved linked title, slug and parent changes immediately and clear their pending indicators.

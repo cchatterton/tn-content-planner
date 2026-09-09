@@ -17,13 +17,13 @@ function tncp_patterns_data() {
             $key = $type->name . '-' . $level . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
             if (!isset($patterns[$key])) {
                 $entry = $saved['entries'][$key] ?? array();
-                $patterns[$key] = array('key' => $key, 'type' => $type->name, 'count' => 0, 'description' => $entry['description'] ?? '', 'status' => $entry['status'] ?? 'todo', 'post_id' => $entry['post_id'] ?? 0);
+                $patterns[$key] = array('key' => $key, 'type' => $type->name, 'count' => 0, 'description' => $entry['description'] ?? '', 'status' => $entry['status'] ?? 'todo', 'post_id' => $entry['post_id'] ?? 0, 'user_id' => (int) ($entry['user_id'] ?? 0));
             }
             ++$patterns[$key]['count'];
         }
     }
     ksort($patterns, SORT_NATURAL);
-    return array('revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog);
+    return array('revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog, 'users' => array_map(static fn($user) => array('id' => (int) $user->ID, 'name' => $user->display_name), get_users(array('blog_id' => get_current_blog_id(), 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID', 'display_name')))));
 }
 
 function tncp_patterns_save($request) {
@@ -53,7 +53,12 @@ function tncp_patterns_save($request) {
             $post_id = (int) $row['post_id'];
             $eligible = array_column($data['catalog'][$patterns[$key]['type']], 'id');
             if ($post_id && !in_array($post_id, $eligible, true)) { return tncp_error(__('The example post is unavailable or belongs to another post type.', 'tn-content-planner')); }
-            $saved['entries'][$key] = array('description' => sanitize_text_field($row['description']), 'status' => $row['status'], 'post_id' => $post_id);
+            $user_id = $row['user_id'] ?? ($saved['entries'][$key]['user_id'] ?? 0);
+            if (!is_scalar($user_id) || !ctype_digit((string) $user_id)) { return tncp_error(__('Choose a valid assigned user.', 'tn-content-planner')); }
+            $user_id = (int) $user_id;
+            $previous_user = (int) ($saved['entries'][$key]['user_id'] ?? 0);
+            if ($user_id && $user_id !== $previous_user && !in_array($user_id, array_column($data['users'], 'id'), true)) { return tncp_error(__('Choose a user from this site.', 'tn-content-planner')); }
+            $saved['entries'][$key] = array('description' => sanitize_text_field($row['description']), 'status' => $row['status'], 'post_id' => $post_id, 'user_id' => $user_id);
         }
         ++$saved['revision'];
         if (!update_option('tncp_patterns', $saved, false)) { return tncp_error(__('The patterns could not be saved. Please retry.', 'tn-content-planner'), 500); }

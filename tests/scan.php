@@ -74,6 +74,7 @@ try {
  scan_assert(4===array_sum(array_column($own,'count')),'Patterns count each saved content item once');
  $entry=array_values(array_filter($own,fn($r)=>$r['key']==='tncp_scan_test-1-custom-1'))[0];
  scan_assert(1===$entry['count'] && 'todo'===$entry['status'],'Pattern key and default status');
+ $entry['user_id']=1;
  $entry['description']='Layout <b>example</b>';$entry['status']='in-progress';$entry['post_id']=$ids[1];
  $request=new WP_REST_Request('POST','/tncp/v1/patterns');$request->set_param('revision',$patterns['revision']);$request->set_param('rows',array($entry));
  $saved_patterns=rest_do_request($request);
@@ -81,6 +82,12 @@ try {
  $entries=array_column($saved_patterns->get_data()['rows'],null,'key');$stored=$entries[$entry['key']];
  scan_assert('Layout example'===$stored['description'] && 'in-progress'===$stored['status'] && $ids[1]===$stored['post_id'],'Description, status and example persist');
  scan_assert(409===rest_do_request($request)->get_status(),'Pattern stale revision rejected');
+ scan_assert(1===$stored['user_id'],'Assigned user persists');
+ scan_assert(in_array(1,array_column($saved_patterns->get_data()['users'],'id'),true),'Site user picklist supplied');
+ $request->set_param('revision',$saved_patterns->get_data()['revision']);
+ $entry['user_id']=999999999;$request->set_param('rows',array($entry));
+ scan_assert(400===rest_do_request($request)->get_status(),'Unknown assigned user rejected');
+ $entry['user_id']=1;
  $request->set_param('revision',$saved_patterns->get_data()['revision']);$entry['status']='invalid';$request->set_param('rows',array($entry));
  scan_assert(400===rest_do_request($request)->get_status(),'Invalid pattern status rejected');
  $entry['status']='done';$entry['post_id']=$ids[3];$request->set_param('rows',array($entry));
