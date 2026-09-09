@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.1.2
+Stable tag: 0.2.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -19,7 +19,7 @@ TN Content Planner by Techn provides a two-step content planning workflow in Wor
 
 Existing slugs map to editable posts in the same post type. Ambiguous matches are rejected; use a unique slug. Circular hierarchies, duplicate planned slugs and stale edits are rejected.
 
-New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a plan row does not delete its post. Saves store the plan only; changes to WordPress posts are applied in Step 2.
+New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a linked row offers keeping the post or moving it to the WordPress bin. Binning requires a saved plan and delete permission. Saves store the plan only; changes to WordPress posts are applied one item at a time during review.
 
 Font Awesome Free 6.7.2 is bundled locally for title previews. Permitted title tags are i, span, strong, em, b and br. Unsafe HTML attributes are removed. Your frontend theme must load its own icon styles if it renders icon markup in post titles.
 
@@ -47,13 +47,13 @@ title,slug
 Only title and slug are accepted, in that order. Imported rows start with no parent, Single template and all relationship flags unchecked. Set other fields in the planner after importing. Unique existing slugs still map to posts when saved. Standard quoted CSV supports commas, newlines and double quotes in titles. Imports append and must be saved.
 
 = What are the limits? =
-500 plan rows and 2,000 catalog posts per post type; 1 MB per CSV; 50 selected rows per apply batch; 100 hierarchy levels. Include uncreated ancestors in the selected batch. For non-hierarchical post types, post_parent is stored but native permalinks and editors may not reflect it.
+500 plan rows and 2,000 catalog posts per post type; 1 MB per CSV; 100 hierarchy levels. Review uncreated ancestors before their children. For non-hierarchical post types, post_parent is stored but native permalinks and editors may not reflect it.
 
 = What if another editor changes a post? =
-Saving or applying is stopped when linked title, slug or parent differs from the saved snapshot. Refresh linked posts reloads those fields and discards pending linked changes. Save or copy any unsaved work before refreshing. Removed or trashed linked posts must be restored before refreshing.
+Saving or applying is stopped when linked title, slug or parent differs from the saved snapshot. Clicking a post-type tab refreshes unchanged linked rows with a loading spinner while preserving saved pending changes. Unsaved edits require explicit discard. Removed or trashed linked posts must be restored before refreshing.
 
-= Is applying a batch atomic? =
-No. Completed rows are persisted individually. A failure stops the batch and leaves completed rows linked. Retry the remaining rows. New posts have a stable row marker to aid recovery after interrupted requests.
+= How does review work? =
+Selected items are shown one at a time as Item X of Y. Match suggestions use exact slug, exact title, then distinct shared title words. Accept source applies plan values, Accept destination adopts the existing post values, and Create new makes a separate post. Apply advances on success; failure stays on the current item. Skip leaves an item selected for later. New posts have a stable row marker to aid recovery after interrupted requests.
 
 = What happens on deactivation? =
 Plans, mappings and generated posts are retained. No content is deleted automatically.
@@ -65,6 +65,16 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.2.0 =
+* Review selected rows one at a time, with Item X of Y, Apply & next, retry and skip.
+* Suggest same-type matches by exact slug, exact title, then distinct shared title words.
+* Accept plan values, adopt existing post values, or create a separate post.
+* Add mapped/planned tab counters and a select-all header checkbox with partial selection state.
+* Offer linked-post binning separately from removing only the plan row.
+* Refresh linked posts on tab clicks with an Ajax spinner, preserving pending edits.
+* Restore the header pill styling and bottom-right alignment; remove step buttons and redundant guidance.
+* Offset the selected tab down by 1px.
 
 = 0.1.2 =
 * Default new posts to Published with a Draft option and publishing capability enforcement.

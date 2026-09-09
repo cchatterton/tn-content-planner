@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) { exit; }
 add_action('rest_api_init', 'tncp_register_routes');
 function tncp_register_routes() {
-    foreach (array('plan' => 'GET', 'save' => 'POST', 'apply' => 'POST', 'refresh' => 'POST') as $action => $method) {
+    foreach (array('plan' => 'GET', 'save' => 'POST', 'apply' => 'POST', 'refresh' => 'POST', 'resolve' => 'POST', 'bin' => 'POST') as $action => $method) {
         register_rest_route('tncp/v1', '/' . $action . '/(?P<type>[a-z0-9_-]+)', array('methods' => $method, 'callback' => 'tncp_' . $action . '_request', 'permission_callback' => 'tncp_permissions'));
     }
 }
@@ -57,6 +57,12 @@ function tncp_refresh_plan($request, $plan) {
         if (!$post || $post->post_type !== $request['type'] || !current_user_can('edit_post', $post->ID) || in_array($post->post_status, array('trash', 'auto-draft'), true)) {
             return tncp_error(__('A linked post was removed or is unavailable. Restore it before refreshing this plan.', 'tn-content-planner'));
         }
+        // Automatic tab refresh must not overwrite saved changes awaiting review.
+        if (!empty($request['preserve_pending']) && !empty($row['baseline'])) {
+            $baseline = $row['baseline'];
+            $parent = tncp_parent_id($row, $plan['rows']);
+            if ($row['title'] !== $baseline['title'] || $row['slug'] !== $baseline['slug'] || $parent !== (int) $baseline['parent']) { continue; }
+        }
         $row['baseline'] = tncp_snapshot($post);
         $row['title'] = $post->post_title;
         $row['slug'] = $post->post_name;
@@ -80,7 +86,7 @@ function tncp_apply_plan($request, $plan) {
     if (!is_array($selected) || !$selected || count($selected) > 50 || array_filter($selected, static fn($id) => !is_string($id))) {
         return tncp_error(__('Select between 1 and 50 saved rows per batch.', 'tn-content-planner'));
     }
-    $rows = tncp_validate_rows($plan['rows'], $request['type'], $plan);
+    $rows = tncp_validate_rows($plan['rows'], $request['type'], $plan, $selected);
     if (is_wp_error($rows)) { return $rows; }
     $by_id = array_column($rows, null, 'id');
     foreach ($selected as $id) {
@@ -163,4 +169,95 @@ function tncp_apply_plan($request, $plan) {
         }
     }
     return array('plan' => $plan, 'completed' => $completed, 'errors' => $errors);
+}
+
+function tncp_resolve_request($request) { return tncp_mutate($request, 'tncp_resolve_item'); }
+
+/** Apply one explicit reconciliation decision while holding the normal plan lock. */
+function tncp_resolve_item($request, $plan) {
+    $index = array_search($request['row_id'], array_column($plan['rows'], 'id'), true);
+    $decision = $request['decision'];
+    if (false === $index || !in_array($decision, array('source', 'destination', 'new'), true)) {
+        return tncp_error(__('Choose a saved item and a reconciliation decision.', 'tn-content-planner'));
+    }
+    $type = $request['type'];
+    $row = $plan['rows'][$index];
+    $original_id = $row['id'];
+    $catalog = tncp_catalog($type);
+    if (is_wp_error($catalog)) { return $catalog; }
+    $target = null;
+    if ('new' !== $decision) {
+        if (!is_scalar($request['target_id']) || !ctype_digit((string) $request['target_id'])) { return tncp_error(__('Choose a matching WordPress post.', 'tn-content-planner')); }
+        foreach ($catalog as $post) { if ($post['id'] === (int) $request['target_id']) { $target = $post; break; } }
+        if (!$target) { return tncp_error(__('The matching post is unavailable or cannot be edited.', 'tn-content-planner'), 403); }
+        // Compare the values actually displayed to the reviewer, including planning metadata.
+        $expected = $request['target_snapshot'];
+        $actual = array_intersect_key($target, array_flip(array('title', 'slug', 'parent', 'planning')));
+        if (!is_array($expected) || $expected != $actual) { return tncp_error(__('The destination changed while you reviewed it. Reload this item before applying.', 'tn-content-planner'), 409); }
+        $row['post_id'] = $target['id'];
+        $row['baseline'] = array_intersect_key($target, array_flip(array('title', 'slug', 'parent')));
+        $row['confirmed'] = array('title' => true, 'slug' => true, 'parent' => true);
+        if ('destination' === $decision) {
+            $row['title'] = $target['title'];
+            $row['slug'] = $target['slug'];
+            $row['parent'] = $target['parent'] ? 'post:' . $target['parent'] : '';
+            $row['template'] = $target['planning']['template'];
+            $row['flags'] = $target['planning']['flags'];
+        }
+    } else {
+        // A distinct row identity prevents recovery markers from reusing the old linked post.
+        $row['id'] = 'r_' . hash('sha256', $original_id . ':' . $plan['revision']);
+        $row['post_id'] = 0;
+        $row['baseline'] = null;
+        $row['confirmed'] = array();
+        if (null !== $request['new_slug'] && !is_string($request['new_slug'])) { return tncp_error(__('Enter a valid slug.', 'tn-content-planner')); }
+        $slug = sanitize_title($request['new_slug'] ?? $row['slug']);
+        if (!$slug) { return tncp_error(__('Enter a slug for the new post.', 'tn-content-planner')); }
+        foreach ($catalog as $post) {
+            if ($post['slug'] === $slug) { return tncp_error(__('That slug already exists. Choose a distinct slug to create a new post.', 'tn-content-planner')); }
+        }
+        $row['slug'] = $slug;
+        foreach ($plan['rows'] as &$child) {
+            if ('row:' . $original_id === $child['parent']) { $child['parent'] = 'row:' . $row['id']; }
+        }
+        unset($child);
+    }
+    $plan['rows'][$index] = $row;
+    // Reconciliation explicitly authorises this row's new mapping; normal Save cannot detach it.
+    $rows = tncp_validate_rows($plan['rows'], $type, $plan, array($row['id']));
+    if (is_wp_error($rows)) { return $rows; }
+    $plan['rows'] = $rows;
+    if ('destination' === $decision) {
+        // Accept destination writes only the plan, never the existing post or its metadata.
+        $plan['rows'][$index]['title'] = $target['title'];
+        $plan['rows'][$index]['confirmed'] = array('title' => false, 'slug' => false, 'parent' => false);
+        $stored = tncp_store($type, $plan);
+        if (is_wp_error($stored)) { return $stored; }
+        return array('plan' => $stored, 'completed' => array($original_id), 'errors' => array());
+    }
+    $request->set_param('selected', array($row['id']));
+    $result = tncp_apply_plan($request, $plan);
+    if (is_wp_error($result)) { return $result; }
+    if ($result['completed']) { $result['completed'] = array($original_id); }
+    return $result;
+}
+
+function tncp_bin_request($request) { return tncp_mutate($request, 'tncp_bin_linked_post'); }
+function tncp_bin_linked_post($request, $plan) {
+    if (true !== $request['confirmed']) { return tncp_error(__('Confirm moving the linked post to the bin.', 'tn-content-planner')); }
+    $index = array_search($request['row_id'], array_column($plan['rows'], 'id'), true);
+    if (false === $index || !$plan['rows'][$index]['post_id']) { return tncp_error(__('Save a linked row before moving its post to the bin.', 'tn-content-planner')); }
+    $row = $plan['rows'][$index];
+    $post = get_post($row['post_id']);
+    if (!$post || $post->post_type !== $request['type'] || !current_user_can('delete_post', $post->ID)) { return tncp_error(__('You cannot move this linked post to the bin.', 'tn-content-planner'), 403); }
+    if (!defined('EMPTY_TRASH_DAYS') || EMPTY_TRASH_DAYS <= 0) { return tncp_error(__('The WordPress bin is disabled. Remove the plan row only; permanent deletion is not supported here.', 'tn-content-planner')); }
+    if (tncp_snapshot($post) !== $row['baseline']) { return tncp_error(__('The linked post changed. Click the post-type tab to reload linked posts before moving it to the bin.', 'tn-content-planner'), 409); }
+    foreach ($plan['rows'] as $child) {
+        if ($child['parent'] === 'row:' . $row['id'] || $child['parent'] === 'post:' . $post->ID) { return tncp_error(__('Move the child plan rows before removing their parent.', 'tn-content-planner')); }
+    }
+    if (!wp_trash_post($post->ID) || 'trash' !== get_post_status($post->ID)) { return tncp_error(__('WordPress could not move this post to the bin. The plan row has been kept.', 'tn-content-planner')); }
+    array_splice($plan['rows'], $index, 1);
+    $stored = tncp_store($request['type'], $plan);
+    if (is_wp_error($stored)) { return tncp_error(__('The post was moved to the bin, but the plan could not be saved. Reload the plan and remove the row, or restore the post from the WordPress bin.', 'tn-content-planner'), 500); }
+    return $stored;
 }

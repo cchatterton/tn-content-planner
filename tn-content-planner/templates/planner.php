@@ -3,15 +3,18 @@
     <h1 class="screen-reader-text"><?php esc_html_e('Content Planner', 'tn-content-planner'); ?></h1>
     <div id="tncp-notice" class="notice" role="status" aria-live="polite" hidden><p></p></div>
     <div class="tncp-hero">
+        <div class="tncp-hero-copy">
         <span class="tncp-eyebrow"><?php esc_html_e('Plan. Organise. Publish.', 'tn-content-planner'); ?></span>
         <h2><?php esc_html_e('Content Planner', 'tn-content-planner'); ?></h2>
         <p><?php esc_html_e('Give every piece of content a place. Plan the structure, then create it in WordPress.', 'tn-content-planner'); ?></p>
+        </div>
         <ul class="tncp-capabilities" aria-label="<?php esc_attr_e('Plugin features', 'tn-content-planner'); ?>">
             <li><?php esc_html_e('Visual hierarchy', 'tn-content-planner'); ?></li>
             <li><?php esc_html_e('CSV import', 'tn-content-planner'); ?></li>
             <li><?php esc_html_e('Publish or draft', 'tn-content-planner'); ?></li>
         </ul>
     </div>
+    <div id="tncp-loading" class="tncp-loading" role="status" hidden><span class="spinner is-active" aria-hidden="true"></span><?php esc_html_e('Loading linked posts…', 'tn-content-planner'); ?></div>
     <div id="tncp-app" aria-busy="true">
         <p><?php esc_html_e('Loading your content plan…', 'tn-content-planner'); ?></p>
     </div>

@@ -1,5 +1,13 @@
 # Validation
 
+## 0.2.0
+
+- 63 existing WordPress integration checks and 31 reconciliation, refresh and bin checks pass.
+- Browser coverage passes for ordered matching, all reconciliation choices, advancement, failed retry, skip, header checkbox states, live counts, tab refresh/spinner and linked-post binning.
+- Desktop/mobile review and planner layouts pass Axe WCAG A/AA checks. Planner, review and bin screenshots were visually inspected.
+- PHP/JavaScript syntax, package layout and version alignment were checked.
+
+
 ## 0.1.2
 
 The published `v0.1.2` release ZIP was verified against the local package (SHA-256 `607ea4652e45e007f8417ecb9ab411656bd362e9197b2c50f3e86ed329b60139`). WordPress discovered and installed the update from 0.1.1 through the native plugin screen, preserved the saved plan and then reported the version current.

@@ -8,6 +8,7 @@
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [];
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
+    let reviewQueue = [], reviewIndex = 0, reviewTarget = 0, reviewDecision = '', reviewNewSlug = '', reviewApplied = 0, reviewSkipped = 0;
     let creationStatus = TNCP.types[0]?.can_publish ? 'publish' : 'draft';
 
     function el(tag, attributes = {}, children = []) {
@@ -42,12 +43,14 @@
     }
     async function work(task) {
         if (busy) return;
+        document.getElementById('tncp-loading').hidden = false;
         busy = true; app.inert = true; app.setAttribute('aria-busy', 'true');
         const controls = [...app.querySelectorAll('button, input, select')];
         const previous = controls.map(control => control.disabled);
         controls.forEach(control => { control.disabled = true; });
         try { await task(); } catch (error) { announce(error.message, true); }
         finally {
+            document.getElementById('tncp-loading').hidden = true;
             busy = false; app.inert = false; app.setAttribute('aria-busy', 'false');
             controls.forEach((control, index) => { if (control.isConnected) control.disabled = previous[index]; });
         }
@@ -57,7 +60,7 @@
             document.getElementById('tncp-dialog-title').textContent = title;
             document.getElementById('tncp-dialog-description').textContent = description;
             const actions = document.getElementById('tncp-dialog-actions');
-            actions.replaceChildren(...choices.map(([value, label]) => el('button', { value, class: 'button', text: label })), el('button', { value: 'cancel', class: 'button', text: __('Cancel'), autofocus: '' }));
+            actions.replaceChildren(...choices.map(([value, label, disabled = false]) => el('button', { value, class: 'button', text: label, disabled })), el('button', { value: 'cancel', class: 'button', text: __('Cancel'), autofocus: '' }));
             dialog.returnValue = 'cancel';
             dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
             dialog.showModal();
@@ -136,7 +139,7 @@
             const message = field === 'parent' ? __('Do you want to move this post under the new parent?') : field === 'title' ? __('Do you want to change the linked post’s title or create a new item in the plan with the new name?') : __('Do you want to change the linked post’s slug or create a new item in the plan with this new slug?');
             const choices = [['update', field === 'parent' ? __('Move linked post') : __('Change linked post')]];
             if (field !== 'parent') choices.push(['new', __('Create new plan item')]);
-            const decision = await ask(__('Linked post change'), `${message} ${__('Post changes are applied in Step 2.')}`, choices);
+            const decision = await ask(__('Linked post change'), `${message} ${__('Post changes are applied during review.')}`, choices);
             if (decision === 'cancel') { render(); return; }
             if (decision === 'new') {
                 const copy = { ...structuredClone(row), id: uid(), post_id: 0, baseline: null, confirmed: {} };
@@ -244,8 +247,24 @@
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => { row.flags[flag] = event.target.checked; markDirty(); render(); } })])));
         tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', { text: row.post_id ? String(row.post_id) : '—' }), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
-            const answer = await ask(__('Remove plan row?'), __('This removes the row from the plan. Linked WordPress posts are kept.'), [['remove', __('Remove row')]]);
+            const post = catalog.find(item => item.id === row.post_id);
+            const choices = [['remove', row.post_id ? __('Remove row only') : __('Remove row')]];
+            let message = __('This removes the row from the plan.');
+            if (row.post_id) {
+                message += ` ${__('Linked post')}: ${plain(post?.title || row.title)} (#${row.post_id}). ${__('Keep this post, or move only this post to the WordPress bin. Other posts are not deleted.')}`;
+                if (dirty) message += ' ' + __('Save the plan first to enable moving the linked post to the bin.');
+                else if (!post?.can_trash) message += ' ' + __('Moving this post to the bin is unavailable for this user or site.');
+                choices.push(['trash', __('Remove row & move post to bin'), dirty || !post?.can_trash]);
+            }
+            const answer = await ask(__('Remove plan row?'), message, choices);
             if (answer === 'remove') { plan.rows = plan.rows.filter(item => item.id !== row.id); selected.delete(row.id); markDirty(); render(); }
+            if (answer === 'trash') {
+                await work(async () => {
+                    plan = await api('bin', { revision: plan.revision, row_id: row.id, confirmed: true }); selected.delete(row.id);
+                    const data = await api('plan'); catalog = data.catalog; dirty = false; render();
+                    announce(__('Plan row removed and linked post moved to the WordPress bin.'));
+                });
+            }
         } }, [el('span', { class: 'dashicons dashicons-trash', 'aria-hidden': 'true' })])]));
         markPendingFields(tr, row);
         return tr;
@@ -255,14 +274,11 @@
         const focusRow = active?.closest('[data-row]')?.dataset.row;
         const focusLabel = active?.getAttribute('aria-label');
         const selection = active?.tagName === 'INPUT' && active.type === 'text' ? [active.selectionStart, active.selectionEnd] : null;
-        const steps = el('nav', { class: 'tncp-steps', 'aria-label': __('Planning steps') }, [
-            button(__('1. Plan your WBS'), () => { step = 1; render(); }),
-            button(__('2. Review & create'), () => { step = 2; render(); }, false, dirty || !selected.size)
-        ]);
-        steps.children[step - 1].setAttribute('aria-current', 'step');
+        const currentType = TNCP.types.find(item => item.name === type);
+        if (currentType) currentType.counts = { mapped: plan.rows.filter(row => row.post_id && catalog.some(post => post.id === row.post_id)).length, planned: plan.rows.length };
         const tabs = el('div', { class: 'tncp-tabs', role: 'tablist', 'aria-label': __('Post types') });
         TNCP.types.forEach(item => tabs.append(el('button', {
-            type: 'button', role: 'tab', id: `tncp-tab-${item.name}`, 'aria-selected': String(type === item.name), 'aria-controls': 'tncp-panel', tabindex: type === item.name ? '0' : '-1', text: item.label,
+            type: 'button', role: 'tab', id: `tncp-tab-${item.name}`, 'aria-selected': String(type === item.name), 'aria-controls': 'tncp-panel', tabindex: type === item.name ? '0' : '-1', text: `${item.label} ${item.counts?.mapped || 0}/${item.counts?.planned || 0}`, 'aria-label': `${item.label}, ${item.counts?.mapped || 0} ${__('of')} ${item.counts?.planned || 0} ${__('mapped')}`, title: __('Mapped items / total plan items'),
             onkeydown: event => {
                 if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
                 event.preventDefault(); const index = TNCP.types.findIndex(entry => entry.name === item.name);
@@ -270,42 +286,44 @@
                 tabs.children[next].focus(); tabs.children[next].click();
             },
             onclick: async () => {
-                if (busy || type === item.name) return;
+                if (busy) return;
                 if (dirty && await ask(__('Unsaved plan'), __('Save this post type first, or discard its unsaved edits to change tabs.'), [['discard', __('Discard edits')]]) !== 'discard') return;
                 const prior = type; type = item.name;
                 await work(async () => { try {
-                    const data = await api('plan'); plan = data.plan; catalog = data.catalog; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
+                    const saved = await api('plan');
+                    const refreshed = await api('refresh', { revision: saved.plan.revision, preserve_pending: true });
+                    const data = await api('plan'); plan = refreshed; catalog = data.catalog; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
                     document.getElementById(`tncp-tab-${type}`)?.focus();
                 } catch (error) { type = prior; throw error; } });
             }
         })));
         const panel = el('section', { id: 'tncp-panel', class: 'tncp-panel', role: 'tabpanel', 'aria-labelledby': `tncp-tab-${type}` });
-        app.replaceChildren(steps, tabs, panel);
+        app.replaceChildren(tabs, panel);
         if (step === 2) { renderReview(panel); return; }
-        panel.append(el('h2', { text: __('Build your content structure') }), el('p', { class: 'description', text: __('Add rows, choose parents, then save your plan. Click a title to edit its HTML. Choose Published or Draft for new posts in Step 2. Published is the default.') }));
+        panel.append(el('h2', { text: __('Build your content structure') }));
         if (!TNCP.types.find(item => item.name === type)?.hierarchical) panel.append(el('p', { class: 'description', text: __('This post type is non-hierarchical. Parent relationships are stored, but its native permalinks and editor may not display them.') }));
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });
         panel.append(el('div', { class: 'tncp-actions' }, [
             button(__('Add row'), () => { const row = newRow(); plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
             button(__('Import CSV'), () => file.click()), file, button(__('Download CSV template'), downloadTemplate),
-            button(__('Refresh linked posts'), async () => {
-                if (await ask(__('Refresh linked posts?'), __('This reloads titles, slugs and parents from WordPress and discards pending edits to linked rows and all unsaved edits in this tab.'), [['refresh', __('Refresh linked posts')]]) !== 'refresh') return;
-                await work(async () => { plan = await api('refresh', { revision: plan.revision }); const data = await api('plan'); catalog = data.catalog; dirty = false; render(); announce(__('Linked posts refreshed.')); });
-            })
+
         ]));
         if (!plan.rows.length) panel.append(el('div', { class: 'tncp-empty' }, [el('h3', { text: __('Start with the content you need') }), el('p', { text: __('Add your first row or import a CSV to build your work breakdown structure.') })]));
         else {
             const table = el('table', { class: 'widefat striped tncp-table' });
             const head = el('tr');
-            [__('Select'), __('Title *'), __('Content slug *'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
+            const selectAll = el('input', { type: 'checkbox', id: 'tncp-select-all', 'aria-label': __('Select all rows'), checked: plan.rows.every(row => selected.has(row.id)), onchange: event => {
+                selected = event.target.checked ? new Set(plan.rows.map(row => row.id)) : new Set(); render();
+                document.getElementById('tncp-select-all')?.focus();
+            } });
+            selectAll.indeterminate = plan.rows.some(row => selected.has(row.id)) && !selectAll.checked;
+            head.append(el('th', { scope: 'col' }, [selectAll]));
+            [__('Title *'), __('Content slug *'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
             table.append(el('thead', {}, [head]), el('tbody', {}, orderedRows().map(rowView)));
-            panel.append(el('p', { class: 'description', text: __('Scroll the table horizontally to see all planning fields. Red fields marked Pending change have not yet been applied to WordPress.') }));
             panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table]));
         }
         panel.append(el('div', { class: 'tncp-actions tncp-footer' }, [button(__('Save plan'), save, true),
-            button(__('Select all'), () => { selected = new Set(plan.rows.map(row => row.id)); render(); }),
-            button(__('Clear selection'), () => { selected.clear(); render(); }),
-            button(__('Review & create selected'), () => { step = 2; render(); }, false, dirty || !selected.size),
+            button(__('Review & create selected'), startReview, false, dirty || !selected.size),
             el('span', { text: `${plan.rows.length} ${__('rows')} · ${selected.size} ${__('selected')} · ${dirty ? __('Unsaved changes') : __('Saved plan')}`, role: 'status' })
         ]));
         if (focusRow && focusLabel) {
@@ -316,36 +334,116 @@
             }
         }
     }
+    function startReview() {
+        reviewQueue = orderedRows().filter(row => selected.has(row.id)).map(row => row.id);
+        reviewIndex = 0; reviewApplied = 0; reviewSkipped = 0;
+        resetReviewItem(); step = 2; render();
+    }
+    function resetReviewItem() {
+        const row = plan.rows.find(item => item.id === reviewQueue[reviewIndex]);
+        reviewTarget = row?.post_id || 0; reviewDecision = '';
+        reviewNewSlug = row?.slug || '';
+        const base = reviewNewSlug; let suffix = 2;
+        while (catalog.some(post => post.slug === reviewNewSlug) || plan.rows.some(item => item.id !== row?.id && item.slug === reviewNewSlug)) reviewNewSlug = `${base}-${suffix++}`;
+    }
+    function matchText(value) {
+        let decoded = value;
+        try { decoded = decodeURIComponent(value); } catch { /* Keep malformed percent escapes as text. */ }
+        return plain(decoded).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    }
+    function suggestedMatches(row) {
+        const title = plain(row.title).trim().toLowerCase().replace(/\s+/g, ' ');
+        const titleWords = new Set(matchText(row.title).split(' ').filter(Boolean));
+        const matches = catalog.filter(post => !plan.rows.some(item => item.id !== row.id && item.post_id === post.id)).map(post => {
+            const exactSlug = row.slug.trim().toLowerCase() === post.slug.trim().toLowerCase();
+            const exactTitle = title === plain(post.title).trim().toLowerCase().replace(/\s+/g, ' ');
+            const sharedWords = [...new Set(matchText(post.title).split(' ').filter(Boolean))].filter(word => titleWords.has(word));
+            const linked = row.post_id === post.id;
+            return { post, linked, tier: exactSlug ? 0 : exactTitle ? 1 : 2, count: sharedWords.length,
+                reason: exactSlug ? __('Exact slug') : exactTitle ? __('Exact title') : sharedWords.length ? `${sharedWords.length} ${sharedWords.length === 1 ? __('word matched') : __('words matched')}: ${sharedWords.join(', ')}` : __('Currently linked') };
+        }).filter(match => match.tier < 2 || match.count > 0 || match.linked)
+            .sort((left, right) => left.tier - right.tier || right.count - left.count || left.post.id - right.post.id);
+        const visible = matches.slice(0, 5);
+        const linked = matches.find(match => match.linked);
+        if (linked && !visible.includes(linked)) visible.push(linked);
+        return visible;
+    }
+    function reviewParent(value) {
+        if (!value) return __('None');
+        return value.startsWith('row:') ? plain(plan.rows.find(row => `row:${row.id}` === value)?.title || value) : plain(catalog.find(post => `post:${post.id}` === value)?.title || value);
+    }
+    function reviewSnapshot(post) { return { title: post.title, slug: post.slug, parent: post.parent, planning: post.planning }; }
     function renderReview(panel) {
-        panel.append(el('h2', { text: __('Review selected content') }), el('p', { text: __('Only the selected saved rows are applied. Include any uncreated parents. Existing posts keep their publication status and content. Maximum 50 rows per batch.') }));
-        const hasNewPosts = plan.rows.some(row => selected.has(row.id) && !row.post_id);
-        if (hasNewPosts) {
+        if (reviewIndex >= reviewQueue.length) {
+            panel.append(el('h2', { text: __('Review complete') }), el('p', { text: `${reviewApplied} ${__('applied')} · ${reviewSkipped} ${__('skipped')}. ${__('Skipped items remain selected in the plan.')}` }), button(__('Back to plan'), () => { step = 1; render(); }));
+            return;
+        }
+        const row = plan.rows.find(item => item.id === reviewQueue[reviewIndex]);
+        if (!row) { panel.append(el('p', { text: __('This item is no longer in the saved plan. Return to the plan to select it again.') }), button(__('Back to plan'), () => { step = 1; render(); })); return; }
+        const candidates = suggestedMatches(row);
+        const target = catalog.find(post => post.id === reviewTarget);
+        panel.append(el('p', { class: 'tncp-review-progress', role: 'status', text: `${__('Item')} ${reviewIndex + 1} ${__('of')} ${reviewQueue.length}` }),
+            el('h2', { text: plain(row.title) }), el('p', { text: __('Does this content already exist? Choose a match and decide which values to keep, or create a separate post. Only this item will be applied.') }));
+        const matches = el('fieldset', { class: 'tncp-matches' }, [el('legend', { text: __('Do any of these match?') })]);
+        if (!candidates.length) matches.append(el('p', { text: __('No close matches found in this post type.') }));
+        candidates.forEach(match => {
+            const input = el('input', { type: 'radio', name: 'tncp-match', value: String(match.post.id), checked: reviewTarget === match.post.id,
+                onchange: () => { reviewTarget = match.post.id; reviewDecision = ''; render(); } });
+            matches.append(el('label', { class: 'tncp-match' }, [input, el('span', {}, [el('strong', { text: plain(match.post.title) }),
+                el('span', { class: 'tncp-match-detail', text: `/${match.post.slug} · #${match.post.id} · ${match.reason}${match.linked ? ' · ' + __('Currently linked') : ''}` })])]));
+        });
+        matches.append(el('p', { class: 'description', text: __('Matches are ranked by exact slug, exact title, then shared title words. No match is accepted automatically.') }));
+        panel.append(matches);
+        const table = el('table', { class: 'widefat tncp-compare' });
+        table.append(el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: __('Field') }), el('th', { scope: 'col', text: __('Source — your plan') }), el('th', { scope: 'col', text: __('Destination — WordPress') })])]));
+        const body = el('tbody');
+        const fields = [
+            [__('Title'), row.title, target?.title], [__('Slug'), row.slug, target?.slug],
+            [__('Parent'), reviewParent(row.parent), target ? reviewParent(target.parent ? `post:${target.parent}` : '') : null],
+            [__('Template'), row.template, target?.planning.template],
+            [__('Relationships'), flags.filter(flag => row.flags[flag]).join(', ') || __('None'), target ? flags.filter(flag => target.planning.flags[flag]).join(', ') || __('None') : null]
+        ];
+        fields.forEach(([label, source, destination]) => body.append(el('tr', { class: target && source !== destination ? 'tncp-difference' : '' }, [el('th', { scope: 'row', text: label }), el('td', { text: source }), el('td', { text: destination ?? __('Choose a match above') })])));
+        table.append(body); panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Source and destination comparison') }, [table]));
+        const choices = el('fieldset', { class: 'tncp-decisions' }, [el('legend', { text: __('What should happen to this item?') })]);
+        [['source', __('Accept source'), __('Use the plan’s title, slug, parent, template and relationship flags on the chosen post. Its content and publication status stay unchanged.')],
+            ['destination', __('Accept destination'), __('Link this plan item to the chosen post and adopt its values. The WordPress post is not changed.')],
+            ['new', __('Create new'), __('Create a separate post from this plan item. Existing posts are kept; planned children will follow the new post when you review them.')]].forEach(([value, label, description]) => {
+                choices.append(el('label', { class: 'tncp-decision' }, [el('input', { type: 'radio', name: 'tncp-decision', value, checked: reviewDecision === value, disabled: value !== 'new' && !target, onchange: () => { reviewDecision = value; render(); } }), el('span', {}, [el('strong', { text: label }), el('span', { class: 'tncp-match-detail', text: description })])]));
+            });
+        panel.append(choices);
+        if (reviewDecision === 'new') {
             const canPublish = TNCP.types.find(item => item.name === type)?.can_publish;
             const status = el('select', { id: 'tncp-creation-status', onchange: event => { creationStatus = event.target.value; render(); document.getElementById('tncp-creation-status')?.focus(); } }, [
-                el('option', { value: 'publish', text: __('Published'), disabled: !canPublish }),
-                el('option', { value: 'draft', text: __('Draft') })
-            ]);
+                el('option', { value: 'publish', text: __('Published'), disabled: !canPublish }), el('option', { value: 'draft', text: __('Draft') })]);
             status.value = creationStatus;
-            panel.append(el('div', { class: 'tncp-actions' }, [el('label', { for: 'tncp-creation-status', text: __('New post status') }), status]));
-            panel.append(el('p', { class: 'description', text: creationStatus === 'publish' ? __('New posts will be published and visible on your site when you apply this selection.') : __('New posts will be saved as drafts.') }));
-            if (!canPublish) panel.append(el('p', { text: __('You can create drafts for this post type, but you do not have permission to publish it.') }));
+            panel.append(el('div', { class: 'tncp-actions' }, [el('label', { for: 'tncp-new-slug', text: __('New post slug') }), el('input', { id: 'tncp-new-slug', type: 'text', value: reviewNewSlug, oninput: event => { reviewNewSlug = event.target.value; } }),
+                el('label', { for: 'tncp-creation-status', text: __('New post status') }), status]));
+            panel.append(el('p', { class: 'description', text: creationStatus === 'publish' ? __('The new post will be published when you apply this item.') : __('The new post will be saved as a draft.') }));
         }
-        const list = el('ul', { class: 'tncp-review' });
-        orderedRows().filter(row => selected.has(row.id)).forEach(row => {
-            const changes = row.baseline ? ['title', 'slug', 'parent'].filter(field => (field === 'parent' ? parentId(row) : row[field]) !== row.baseline[field]) : [];
-            const parent = row.parent.startsWith('row:') ? plan.rows.find(item => `row:${item.id}` === row.parent)?.title : catalog.find(post => `post:${post.id}` === row.parent)?.title;
-            const item = el('li', {}, [el('strong', { text: plain(row.title) }), el('p', { text: `${row.post_id ? __('Update linked post') + ' #' + row.post_id : (creationStatus === 'publish' ? __('Publish new post') : __('Create draft'))} · /${row.slug} · ${__('Parent')}: ${parent ? plain(parent) : __('None')}` })]);
-            for (const field of changes) item.append(el('p', { text: `${__(field[0].toUpperCase() + field.slice(1))}: ${String(row.baseline[field])} → ${field === 'parent' ? (plain(parent || '') || __('None')) : row[field]}` }));
-            list.append(item);
-        });
-        panel.append(list, el('div', { class: 'tncp-actions' }, [button(__('Back to plan'), () => { step = 1; render(); }), button(__('Create / update selected'), async () => {
-            await work(async () => {
-                const result = await api('apply', { revision: plan.revision, selected: [...selected], creation_status: creationStatus }); plan = result.plan;
-                result.completed.forEach(id => selected.delete(id)); dirty = false; step = 1;
-                render(); announce(`${result.completed.length} ${__('rows applied.')} ${result.errors.join(' ')}`, result.errors.length > 0);
-                const data = await api('plan'); catalog = data.catalog; render();
-            });
-        }, true, selected.size > 50 || !selected.size || dirty)]));
+        const blockedParent = parentId(row) < 0 && reviewDecision !== 'destination';
+        if (blockedParent) panel.append(el('p', { class: 'tncp-review-warning', text: __('This item has an uncreated parent. Review that parent first, or skip this item for now.') }));
+        panel.append(el('div', { class: 'tncp-actions' }, [
+            button(__('Back to plan'), () => { step = 1; render(); }),
+            button(__('Skip for now'), () => { reviewSkipped++; reviewIndex++; resetReviewItem(); render(); }),
+            button(__('Reload this item'), async () => { await work(async () => { const data = await api('plan'); plan = data.plan; catalog = data.catalog; resetReviewItem(); render(); }); }),
+            button(reviewIndex + 1 === reviewQueue.length ? __('Apply & finish') : __('Apply & next'), async () => {
+                await work(async () => {
+                    const result = await api('resolve', { revision: plan.revision, row_id: row.id, decision: reviewDecision, target_id: reviewTarget,
+                        target_snapshot: target ? reviewSnapshot(target) : null, new_slug: slug(reviewNewSlug), creation_status: creationStatus });
+                    if (!result.completed.length) throw new Error(result.errors.join(' ') || __('This item could not be applied. Review it and try again.'));
+                    plan = result.plan; selected.delete(row.id); dirty = false;
+                    reviewApplied++; reviewIndex++;
+                    // Advance only after a successful resolution. If catalog refresh fails, retry loading without reapplying.
+                    let refreshError = '';
+                    try { const data = await api('plan'); catalog = data.catalog; } catch (error) { refreshError = error.message; }
+                    resetReviewItem(); render();
+                    if (refreshError) announce(refreshError, true);
+                    else if (result.errors.length) announce(result.errors.join(' '), true);
+                    else announce(__('Item applied.'));
+                });
+            }, true, !reviewDecision || blockedParent)
+        ]));
     }
     function parseCSV(text) {
         const records = []; let record = [], field = '', quoted = false, closed = false;

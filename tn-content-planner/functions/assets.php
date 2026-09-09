@@ -8,6 +8,6 @@ function tncp_assets($hook) {
     wp_enqueue_script('tncp-admin', TNCP_PLUGIN_URL . 'scripts/tn-content-planner.js', array('wp-i18n'), TNCP_VERSION, true);
     wp_set_script_translations('tncp-admin', 'tn-content-planner');
     $types = array();
-    foreach (tncp_types() as $type) { $types[] = array('name' => $type->name, 'label' => $type->label, 'hierarchical' => $type->hierarchical, 'can_publish' => current_user_can($type->cap->publish_posts)); }
+    foreach (tncp_types() as $type) { $types[] = array('name' => $type->name, 'counts' => tncp_plan_counts($type->name), 'label' => $type->label, 'hierarchical' => $type->hierarchical, 'can_publish' => current_user_can($type->cap->publish_posts)); }
     wp_localize_script('tncp-admin', 'TNCP', array('api' => rest_url('tncp/v1/'), 'nonce' => wp_create_nonce('wp_rest'), 'types' => $types));
 }

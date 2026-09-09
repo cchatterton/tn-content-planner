@@ -1,5 +1,17 @@
 # Changelog
 
+
+## 0.2.0 - 2026-09-09
+
+- Review selected rows one at a time, with Item X of Y, Apply & next, retry and skip.
+- Suggest same-type matches by exact slug, exact title, then distinct shared title words.
+- Accept plan values, adopt existing post values, or create a separate post.
+- Add mapped/planned tab counters and a select-all header checkbox with partial selection state.
+- Offer linked-post binning separately from removing only the plan row.
+- Refresh linked posts on tab clicks with an Ajax spinner, preserving pending edits.
+- Restore the header pill styling and bottom-right alignment; remove step buttons and redundant guidance.
+- Offset the selected tab down by 1px.
+
 ## 0.1.2 - 2026-09-09
 
 - Defaulted new posts to Published, with a Draft selector and publish capability enforcement.

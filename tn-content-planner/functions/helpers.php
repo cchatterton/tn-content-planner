@@ -36,7 +36,7 @@ function tncp_catalog($type) {
             foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($stored_flags[$flag]); }
             $template = get_post_meta($post->ID, '_tncp_template', true);
             $planning = array('template' => in_array($template, array('single', 'archive', 'custom'), true) ? $template : 'single', 'flags' => $flags);
-            $catalog[] = array_merge(array('id' => $post->ID, 'planning' => $planning), tncp_snapshot($post));
+            $catalog[] = array_merge(array('id' => $post->ID, 'planning' => $planning, 'can_trash' => defined('EMPTY_TRASH_DAYS') && EMPTY_TRASH_DAYS > 0 && current_user_can('delete_post', $post->ID)), tncp_snapshot($post));
         }
     }
     return $catalog;
@@ -97,7 +97,7 @@ function tncp_parent_id($row, $rows) {
     return -1;
 }
 
-function tncp_validate_rows($input, $type, $old) {
+function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
     if (!is_array($input) || count($input) > 500) { return tncp_error(__('Use no more than 500 rows per post type.', 'tn-content-planner')); }
     $catalog = tncp_catalog($type);
     if (is_wp_error($catalog)) { return $catalog; }
@@ -144,7 +144,7 @@ function tncp_validate_rows($input, $type, $old) {
         $key = $row['slug'];
         if (isset($slugs[$key])) { return tncp_error(__('Each planned slug must be unique within its post type.', 'tn-content-planner')); }
         $slugs[$key] = true;
-        if ($row['baseline']) {
+        if ($row['baseline'] && (null === $confirmation_ids || in_array($row['id'], $confirmation_ids, true))) {
             $desired = array('title' => $row['title'], 'slug' => $row['slug'], 'parent' => tncp_parent_id($row, $rows));
             foreach ($desired as $field => $value) {
                 if ($value !== $row['baseline'][$field] && !$row['confirmed'][$field]) { return tncp_error(sprintf(__('Confirm the linked post %s change before saving.', 'tn-content-planner'), $field)); }
@@ -153,4 +153,15 @@ function tncp_validate_rows($input, $type, $old) {
     }
     unset($row);
     return $rows;
+}
+
+function tncp_plan_counts($type) {
+    $plan = tncp_plan($type);
+    $ids = array_values(array_filter(array_unique(array_column($plan['rows'], 'post_id'))));
+    $mapped = 0;
+    if ($ids) {
+        $posts = get_posts(array('post_type' => $type, 'post__in' => $ids, 'post_status' => array('publish', 'draft', 'pending', 'private', 'future'), 'numberposts' => count($ids), 'suppress_filters' => false));
+        foreach ($posts as $post) { if (current_user_can('edit_post', $post->ID)) { ++$mapped; } }
+    }
+    return array('mapped' => $mapped, 'planned' => count($plan['rows']));
 }

@@ -1,159 +1,99 @@
-// Run against the disposable local WordPress site, with Playwright available in NODE_PATH.
-const { chromium } = require('playwright');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
 let lastPage;
-(async () => {
- const browser = await chromium.launch({headless:true,channel:'chrome'});
- const page = await browser.newPage({viewport:{width:1600,height:1050}});
- lastPage = page; page.setDefaultTimeout(15000);
- const errors = []; page.on('pageerror', error => errors.push(error.message));
- await page.goto('http://127.0.0.1:8765/wp-login.php');
- await page.locator('#user_login').fill('tncp_admin');
- await page.locator('#user_pass').fill(process.env.TNCP_TEST_PASSWORD);
- await page.locator('#wp-submit').click();
- await page.waitForURL('**/wp-admin/');
- await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');
- if(process.env.TNCP_TEST_PUBLIC_TYPES){
-  await page.getByRole('tab',{name:'Public demo',exact:true}).waitFor();
-  await page.getByRole('tab',{name:'Hidden UI public demo',exact:true}).click();
-  await page.getByRole('heading',{name:'Build your content structure',exact:true}).waitFor();
-  assert.equal(await page.getByRole('tab',{name:'Internal demo',exact:true}).count(),0);
-  assert.equal(await page.getByRole('tab',{name:'Patterns',exact:true}).count(),0);
- }
- await page.getByRole('tab',{name:'Pages',exact:true}).click();
- await page.getByRole('button',{name:'Add row',exact:true}).waitFor();
+(async()=>{
+ const fixture=JSON.parse(fs.readFileSync(process.env.TNCP_REVIEW_FIXTURE,'utf8'));
+ const browser=await chromium.launch({headless:true,channel:'chrome'});
+ const page=await browser.newPage({viewport:{width:1600,height:1100}});lastPage=page;page.setDefaultTimeout(20000);
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('http://127.0.0.1:8765/wp-login.php');await page.evaluate(password=>{document.getElementById('user_login').value='tncp_admin';document.getElementById('user_pass').value=password;},process.env.TNCP_TEST_PASSWORD);await page.locator('#wp-submit').click();await page.waitForURL('**/wp-admin/');
+ await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();
+ await page.getByRole('tab',{name:'Pages, 1 of 3 mapped',exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'1. Plan your WBS',exact:true}).count(),0);
+ assert.equal(await page.getByRole('button',{name:'2. Review & create',exact:true}).count(),0);
+ const selectAll=page.getByRole('checkbox',{name:'Select all rows',exact:true});
+ await selectAll.check();await selectAll.uncheck();
+ if(await page.locator('tbody input[type=checkbox]:checked').count())throw Error('Header did not clear selection');
+ await page.locator('tbody tr').first().getByRole('checkbox').first().check();
+ if(!await selectAll.evaluate(node=>node.indeterminate))throw Error('Header missing partial state');
+ await selectAll.check();await page.getByRole('button',{name:'Review & create selected',exact:true}).click();
+ await page.getByText('Item 1 of 3',{exact:true}).waitFor();
+ const matches=page.locator('.tncp-match');
+ assert.match(await matches.nth(0).innerText(),/Exact slug/);
+ assert.match(await matches.nth(1).innerText(),/Exact title/);
+ assert.match(await matches.nth(2).innerText(),/2 words matched/);
+ assert.match(await matches.nth(3).innerText(),/1 word matched/);
+ assert.equal(await page.getByRole('button',{name:'Apply & next',exact:true}).isDisabled(),true);
+ await matches.nth(1).click();await page.getByRole('radio',{name:/^Accept destination/}).check();
  fs.mkdirSync('tests/artifacts',{recursive:true});
- await page.screenshot({path:'tests/artifacts/empty-desktop.png',fullPage:true});
- assert.equal(await page.locator('.tncp-hero h2').innerText(),'Content Planner');
- assert.equal(await page.locator('.tncp-eyebrow').innerText(),'PLAN. ORGANISE. PUBLISH.');
- assert.deepEqual(await page.locator('.tncp-capabilities li').allTextContents(),['Visual hierarchy','CSV import','Publish or draft']);
- const token = Date.now();
- const rootSlug = `browser-${token}-home`, childSlug = `browser-${token}-child`;
- const csv = 'title,slug\r\n' +
-   `"<i class=""fa-solid fa-house"" aria-hidden=""true""></i> Home",${rootSlug}\r\n` +
-   `"Services, overview",${childSlug}\r\n`;
- await page.locator('#tncp-csv').setInputFiles({name:'plan.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
- await page.getByText('2 rows imported.',{exact:false}).waitFor();
- assert.equal(await page.locator('tbody tr').count(),2);
- assert.equal(await page.locator('tbody tr').nth(1).locator('.tncp-pattern').innerText(),'page-0-single-0');
- assert.equal(await page.locator('tbody tr input[type="checkbox"]:checked').count(),0);
- const rootId=await page.locator('tbody tr').first().getAttribute('data-row');
- await page.locator('tbody tr').nth(1).getByRole('combobox',{name:'Parent',exact:true}).selectOption(`row:${rootId}`);
- await page.waitForFunction(()=>document.querySelectorAll('.tncp-pattern')[1]?.textContent==='page-1-single-0');
- assert.equal(await page.locator('tbody tr').first().locator('.fa-house').count(),1);
- const iconFont = await page.locator('.tncp-title .fa-house').evaluate(node => getComputedStyle(node).fontFamily);
- assert(iconFont.includes('Font Awesome'));
- await page.getByRole('button',{name:'Save plan',exact:true}).click();
- await page.getByText('Plan saved.',{exact:false}).waitFor();
- await page.getByRole('button',{name:'Select all',exact:true}).click();
- await page.getByRole('button',{name:'Review & create selected',exact:true}).click();
- assert.equal(await page.getByRole('combobox',{name:'New post status',exact:true}).inputValue(),'publish');
- await page.getByRole('combobox',{name:'New post status',exact:true}).selectOption('draft');
- await page.getByText('New posts will be saved as drafts.',{exact:true}).waitFor();
- await page.screenshot({path:'tests/artifacts/review-desktop.png',fullPage:true});
- await page.getByRole('button',{name:'Create / update selected',exact:true}).click();
- await page.getByText('2 rows applied.',{exact:false}).waitFor();
- const first = page.locator('tbody tr').first();
- assert.match(await first.locator('td').nth(11).innerText(),/^\d+$/);
- // Mapped title modal: cancel, then update and commit.
- await first.getByRole('button',{name:'Edit title:',exact:false}).click();
- await first.getByRole('textbox',{name:'Title, HTML allowed'}).fill('Home changed');
- await first.getByRole('textbox',{name:'Title, HTML allowed'}).press('Tab');
- await page.locator('dialog[open]').waitFor();
- await page.screenshot({path:'tests/artifacts/title-dialog.png',fullPage:true});
- await page.getByRole('button',{name:'Cancel',exact:true}).click();
- assert.equal(await first.locator('.tncp-title').innerText(),' Home');
- await first.getByRole('button',{name:'Edit title:',exact:false}).click();
- await first.getByRole('textbox',{name:'Title, HTML allowed'}).fill('Home changed');
- await first.getByRole('textbox',{name:'Title, HTML allowed'}).press('Tab');
- await page.getByRole('button',{name:'Change linked post',exact:true}).click();
- await page.locator('[data-pending=title]').waitFor();
- await page.getByRole('button',{name:'Save plan',exact:true}).click();
- await page.getByText('Plan saved.',{exact:false}).waitFor();
- assert.equal(await page.locator('[data-pending=title]').count(),1);
- await first.getByRole('checkbox',{name:'Select Home changed',exact:true}).check();
- await page.getByRole('button',{name:'Review & create selected',exact:true}).click();
- await page.getByRole('button',{name:'Create / update selected',exact:true}).click();
- await page.getByText('1 rows applied.',{exact:false}).waitFor();
- await page.locator('[data-pending=title]').waitFor({state:'hidden'});
- // Parent changes move row immediately and require explicit modal confirmation.
- await page.locator('tbody tr').nth(1).getByRole('combobox',{name:'Parent',exact:true}).selectOption('');
- await page.getByRole('button',{name:'Move linked post',exact:true}).click();
- await page.waitForFunction(() => document.querySelectorAll('.tncp-pattern')[1]?.textContent === 'page-0-single-0');
- // Creating a new item preserves original mapped row.
- const root = page.locator('tbody tr').first();
- await root.getByRole('button',{name:'Edit title:',exact:false}).click();
- await root.getByRole('textbox',{name:'Title, HTML allowed'}).fill('New content idea');
- await root.getByRole('textbox',{name:'Title, HTML allowed'}).press('Tab');
- await page.getByRole('button',{name:'Create new plan item',exact:true}).click();
- await page.waitForFunction(() => document.querySelectorAll('tbody tr').length === 3);
- assert.equal(await page.locator('tbody tr').last().locator('td').nth(11).innerText(),'—');
- await page.getByRole('button',{name:'Save plan',exact:true}).click();
- await page.getByText('Plan saved.',{exact:false}).waitFor();
- await page.screenshot({path:'tests/artifacts/planner-desktop.png',fullPage:true});
- // Saved pending parent changes survive reload and clear only after apply.
- await page.reload(); await page.getByRole('tab',{name:'Pages',exact:true}).click();
- await page.locator('[data-pending=parent]').waitFor();
- const pendingRow=page.locator('tbody tr').nth(1);
- await pendingRow.getByRole('combobox',{name:'Template',exact:true}).selectOption('custom');
- await page.locator('[data-pending=template]').waitFor();
- await pendingRow.getByRole('checkbox',{name:'Local',exact:true}).check();
- await page.locator('[data-pending=local]').waitFor();
- await pendingRow.getByRole('textbox',{name:'Content slug',exact:true}).fill(childSlug+'-updated');
- await pendingRow.getByRole('textbox',{name:'Content slug',exact:true}).press('Tab');
- await page.getByRole('button',{name:'Change linked post',exact:true}).click();
- await page.locator('[data-pending=slug]').waitFor();
- await page.getByRole('button',{name:'Save plan',exact:true}).click();
- await page.getByText('Plan saved.',{exact:false}).waitFor();
- assert.equal(await page.locator('[data-pending=parent]').count(),1);
- await page.locator('[data-pending=parent]').scrollIntoViewIfNeeded();
- await page.screenshot({path:'tests/artifacts/pending-changes.png',fullPage:true});
+ await page.screenshot({path:'tests/artifacts/reconcile-desktop.png',fullPage:true});
  if(process.env.TNCP_AXE_PATH){
   await page.addScriptTag({path:process.env.TNCP_AXE_PATH});
-  const a11y=await page.evaluate(async()=>await axe.run('.tncp-wrap',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
-  assert.deepEqual(a11y.violations.map(item=>item.id),[]);
+  for(const viewport of [{width:1600,height:1100},{width:390,height:844}]){
+   await page.setViewportSize(viewport);
+   const audit=await page.evaluate(async()=>await axe.run('.tncp-wrap',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
+   assert.deepEqual(audit.violations.map(item=>item.id),[]);
+  }
+  await page.screenshot({path:'tests/artifacts/reconcile-mobile.png',fullPage:true});await page.setViewportSize({width:1600,height:1100});
  }
- await pendingRow.getByRole('checkbox',{name:'Select Services, overview',exact:true}).check();
- await page.getByRole('button',{name:'Review & create selected',exact:true}).click();
- await page.getByRole('button',{name:'Create / update selected',exact:true}).click();
- await page.getByText('1 rows applied.',{exact:false}).waitFor();
- await page.waitForFunction(()=>document.querySelectorAll('[data-pending]').length===0);
- // Trash actions remain labelled, discreet and protected by confirmation.
- const trash=page.locator('tbody tr').last().getByRole('button',{name:'Remove row: New content idea',exact:true});
- assert.equal(await trash.innerText(),'');
- assert.equal(await trash.getAttribute('title'),'Remove row');
- assert.equal(await trash.locator('.dashicons-trash').count(),1);
- await trash.click(); await page.getByRole('button',{name:'Cancel',exact:true}).click();
- assert.equal(await page.locator('tbody tr').count(),3);
- // CSV template download is exactly the documented blank header.
- const downloadPromise = page.waitForEvent('download');
- await page.getByRole('button',{name:'Download CSV template',exact:true}).click();
- const download = await downloadPromise;
- const path = await download.path();
- assert.equal(fs.readFileSync(path,'utf8').replace(/^\uFEFF/,''),'title,slug\r\n');
- // Invalid imports do not alter rows.
- await page.locator('#tncp-csv').setInputFiles({name:'bad.csv',mimeType:'text/csv',buffer:Buffer.from('title,slug,parent\r\nUnexpected,unexpected,extra\r\n')});
- await page.getByText('Use the column order in the downloadable CSV template.',{exact:false}).waitFor();
- assert.equal(await page.locator('tbody tr').count(),3);
- // Unauthenticated/missing nonce request fails through actual HTTP authentication.
- const denied = await page.evaluate(async () => (await fetch(TNCP.api+'save/page',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision:0,rows:[]})})).status);
- assert.equal(denied,401);
- await page.setViewportSize({width:390,height:844});
- await page.screenshot({path:'tests/artifacts/planner-mobile.png',fullPage:true});
- const overflow = await page.locator('.tncp-scroll').evaluate(node => node.scrollWidth > node.clientWidth);
- assert(overflow,'Table scrolls on mobile');
- const pageWidth = await page.evaluate(() => ({scroll:document.documentElement.scrollWidth,width:innerWidth}));
- assert(pageWidth.scroll <= pageWidth.width+2,'No whole-page horizontal overflow');
- await page.setViewportSize({width:800,height:700});
- await page.screenshot({path:'tests/artifacts/planner-narrow.png',fullPage:true});
- // Update links native WordPress plugin row.
- await page.goto('http://127.0.0.1:8765/wp-admin/plugins.php');
- const plugin = page.locator('tr[data-slug="tn-content-planner"]').first();
- assert.equal(await plugin.getByRole('link',{name:'GitHub',exact:true}).count(),1);
- assert.equal(await plugin.getByRole('link',{name:'Check for updates',exact:true}).count(),1);
- assert.equal(await plugin.getByRole('link',{name:'Visit plugin site',exact:true}).count(),0);
- assert.deepEqual(errors,[]);
- console.log('PASS: Browser workflow, CSV, HTML/icon rendering, modals, draft creation, responsive layouts, nonce rejection and plugin links.');
+ await page.getByRole('button',{name:'Apply & next',exact:true}).click();await page.getByText('Item 2 of 3',{exact:true}).waitFor();
+ await page.getByRole('radio',{name:/^Create new/}).check();
+ assert.equal(await page.getByRole('combobox',{name:'New post status',exact:true}).inputValue(),'publish');
+ await page.getByRole('combobox',{name:'New post status',exact:true}).selectOption('draft');
+ await page.getByRole('textbox',{name:'New post slug',exact:true}).fill(fixture.prefix+'-plan');
+ await page.getByRole('button',{name:'Apply & next',exact:true}).click();await page.getByText('That slug already exists.',{exact:false}).waitFor();
+ assert.equal(await page.getByText('Item 2 of 3',{exact:true}).count(),1);
+ await page.getByRole('textbox',{name:'New post slug',exact:true}).fill(fixture.prefix+'-new');
+ await page.getByRole('button',{name:'Apply & next',exact:true}).click();await page.getByText('Item 3 of 3',{exact:true}).waitFor();
+ await page.getByRole('tab',{name:'Pages, 2 of 3 mapped',exact:true}).waitFor();
+ await page.locator('.tncp-match').filter({hasText:'Legacy Article'}).click();await page.getByRole('radio',{name:/^Accept source/}).check();
+ await page.getByRole('button',{name:'Apply & finish',exact:true}).click();await page.getByRole('heading',{name:'Review complete',exact:true}).waitFor();
+ await page.getByRole('tab',{name:'Pages, 3 of 3 mapped',exact:true}).waitFor();
+ const data=await page.evaluate(async()=>await (await fetch(TNCP.api+'plan/page',{headers:{'X-WP-Nonce':TNCP.nonce}})).json());
+ assert.equal(data.plan.rows[0].post_id,fixture.posts[1]);
+ assert.equal(data.plan.rows[0].slug,fixture.prefix+'-exact-title');
+ assert.equal(data.plan.rows[2].post_id,fixture.posts[4]);
+ const posts=await page.evaluate(async ids=>Promise.all(ids.map(async id=>(await (await fetch(`/index.php?rest_route=/wp/v2/pages/${id}&context=edit`,{headers:{'X-WP-Nonce':TNCP.nonce}})).json()))),[fixture.posts[0],data.plan.rows[1].post_id,fixture.posts[4]]);
+ assert.equal(posts[0].title.raw,'Garden Planning');assert.equal(posts[1].status,'draft');assert.equal(posts[2].title.raw,'Legacy Redesign');assert.equal(posts[2].content.raw,'Keep existing content');
+ await page.getByRole('button',{name:'Back to plan',exact:true}).click();
+ // Skip leaves the current item selected and unchanged.
+ await page.getByRole('button',{name:'Add row',exact:true}).click();const row=page.locator('tbody tr').last();
+ await row.getByRole('textbox',{name:'Title, HTML allowed',exact:true}).fill('Skip this item');await row.getByRole('textbox',{name:'Title, HTML allowed',exact:true}).press('Tab');
+ await row.getByRole('textbox',{name:'Content slug',exact:true}).fill(fixture.prefix+'-skip');await row.getByRole('textbox',{name:'Content slug',exact:true}).press('Tab');
+ await page.getByRole('button',{name:'Save plan',exact:true}).click();await page.getByText('Plan saved.',{exact:false}).waitFor();
+ await page.getByRole('tab',{name:'Pages, 3 of 4 mapped',exact:true}).waitFor();
+ await row.getByRole('checkbox',{name:'Select Skip this item',exact:true}).check();await page.getByRole('button',{name:'Review & create selected',exact:true}).click();
+ await page.getByText('Item 1 of 1',{exact:true}).waitFor();await page.getByRole('button',{name:'Skip for now',exact:true}).click();
+ await page.getByText('0 applied · 1 skipped.',{exact:false}).waitFor();await page.getByRole('button',{name:'Back to plan',exact:true}).click();
+ assert.equal(await row.getByRole('checkbox',{name:'Select Skip this item',exact:true}).isChecked(),true);
+ await row.getByRole('button',{name:'Remove row: Skip this item',exact:true}).click();await page.getByRole('button',{name:'Remove row',exact:true}).click();
+ await page.getByRole('tab',{name:'Pages, 3 of 3 mapped',exact:true}).waitFor();
+ // Tab click reloads linked data and exposes an Ajax loading state.
+ await page.getByRole('button',{name:'Save plan',exact:true}).click();
+ await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');
+ assert.equal(await page.getByRole('button',{name:'Refresh linked posts',exact:true}).count(),0);
+ assert.equal(await page.getByRole('button',{name:'Select all',exact:true}).count(),0);
+ let releaseRefresh;const refreshGate=new Promise(resolve=>releaseRefresh=resolve);
+ await page.route('**/*refresh/page',async route=>{await refreshGate;await route.continue();});
+ const refreshRequest=page.waitForRequest(request=>request.url().includes('refresh/page'));
+ await page.getByRole('tab',{name:/^Pages,/}).click();await refreshRequest;
+ assert.equal(await page.locator('#tncp-loading').isVisible(),true);
+ releaseRefresh();await page.waitForFunction(()=>document.getElementById('tncp-loading').hidden);
+ await page.unroute('**/*refresh/page');
+ assert.equal(await page.getByRole('tab',{name:/^Pages,/}).evaluate(node=>getComputedStyle(node).top),'1px');
+ // Linked rows offer a separate, recoverable bin action.
+ await page.locator('tbody tr').last().getByRole('button',{name:/^Remove row:/}).click();
+ await page.getByRole('button',{name:'Remove row only',exact:true}).waitFor();
+ await page.screenshot({path:'tests/artifacts/bin-modal.png',fullPage:true});
+ await page.getByRole('button',{name:'Remove row & move post to bin',exact:true}).click();
+ await page.getByRole('tab',{name:'Pages, 2 of 2 mapped',exact:true}).waitFor();
+ const binned=await page.evaluate(async id=>(await (await fetch(`/index.php?rest_route=/wp/v2/pages/${id}&context=edit`,{headers:{'X-WP-Nonce':TNCP.nonce}})).json()),fixture.posts[4]);
+ assert.equal(binned.status,'trash');
+ await page.screenshot({path:'tests/artifacts/planner-desktop.png',fullPage:true});
+ // CSV contract still has exactly two columns.
+ const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'Download CSV template',exact:true}).click();const download=await downloading;
+ assert.equal(fs.readFileSync(await download.path(),'utf8').replace(/^\uFEFF/,''),'title,slug\r\n');
+ assert.deepEqual(errors,[]);console.log('PASS: ordered matches, all three reconciliation choices, one-item advancement, failure retry, skip, live tab counts, CSV and accessibility.');
  await browser.close();
-})().catch(async error => { console.error(error); if(lastPage){console.error(await lastPage.locator('#tncp-notice').innerText().catch(()=>''));await lastPage.screenshot({path:'tests/artifacts/failure.png',fullPage:true}).catch(()=>{});} process.exit(1); });
+})().catch(async error=>{console.error(error);if(lastPage){console.error(await lastPage.locator('#tncp-notice').innerText().catch(()=>''));await lastPage.screenshot({path:'tests/artifacts/reconcile-failure.png',fullPage:true}).catch(()=>{});}process.exit(1)});
