@@ -2,6 +2,8 @@
 
 ## 0.3.20
 
+Release/tag match `00e974e`; remote/local ZIP SHA-256: `fd7aa31f053185753ddec603812e95f38f16f5ab150faff1040ac6aa10474218`. Published ZIP installation through the WordPress installer passed and reports 0.3.20.
+
 - 65 integration, 54 scan/pattern and 42 immediate-change checks pass, including Unicode edge trimming and preserved title HTML/internal spaces.
 - Automatic tab-save browser test confirms padded titles are saved trimmed; manual saving and failed-save recovery still pass.
 - PHP lint, JavaScript syntax and whitespace checks pass.
