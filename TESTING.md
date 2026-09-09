@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.12
+
+- Browser verification confirms native Pages show an Include in Search tick and retain the grey native Publicly Queryable marker.
+- Native/custom rendering and desktop/mobile/narrow Axe checks pass. JavaScript syntax, PHP lint and whitespace checks pass.
+
+
 ## 0.3.11
 
 Release/tag match `85253dd`. Remote/local ZIP SHA-256: `cfcfef9d0f40a3c65dd6ad018296b938182e1f918781c415d8a6c94d681ba45f`. The published package installed successfully through the WordPress installer on the disposable site and reports 0.3.11.

@@ -1,4 +1,4 @@
 {
-  "version": "0.3.11",
-  "body": "## 0.3.11 - 2026-09-09\n\n- Show a neutral grey dot for Publicly Queryable on native post types, with an explanation that WordPress handles their public visibility.\n- Keep Native in its existing colour and display Custom in accessible orange.\n- Preserve post-type eligibility, including native Pages.\n"
+  "version": "0.3.12",
+  "body": "## 0.3.12 - 2026-09-09\n\n- Replace Exclude From Search with Include in Search in the settings bar.\n- Show a navy tick when the type is included and an orange cross when excluded, for native and custom types alike.\n- Keep the neutral native marker only for Publicly Queryable.\n"
 }

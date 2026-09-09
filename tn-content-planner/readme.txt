@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.11
+Stable tag: 0.3.12
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.12 =
+* Show Include in Search with a tick for included types and a cross for excluded types.
+* Keep the grey native marker only for Publicly Queryable.
+
 
 = 0.3.11 =
 * Use a grey Publicly Queryable marker for native types and orange text for Custom.

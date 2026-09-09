@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.12 - 2026-09-09
+
+- Replace Exclude From Search with Include in Search in the settings bar.
+- Show a navy tick when the type is included and an orange cross when excluded, for native and custom types alike.
+- Keep the neutral native marker only for Publicly Queryable.
+
 ## 0.3.11 - 2026-09-09
 
 - Show a neutral grey dot for Publicly Queryable on native post types, with an explanation that WordPress handles their public visibility.
