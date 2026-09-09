@@ -2,6 +2,8 @@
 
 ## 0.3.22
 
+Release/tag match `db093c6`; remote/local ZIP SHA-256: `fc3d3aaa8bd1c4f4c6da3c9781078d6412ec46b5c787c364c6f67242e3629e64`. Published ZIP installation through the WordPress installer passed and reports 0.3.22.
+
 - Browser lock regression verifies save-before-lock, failed-save preservation, disabled controls, all planner mutation routes rejected while locked, per-type scope, reload persistence, keyboard unlock and Axe WCAG A/AA.
 - Locked-page screenshot inspected; existing 65 integration checks, PHP lint, JavaScript syntax and whitespace checks pass.
 
