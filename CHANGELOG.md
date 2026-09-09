@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.18 - 2026-09-09
+
+- Allow hierarchical posts to share a slug under different parents; use parent-aware mapping, scanning, collision checks and creation.
+- Allow blank slugs in saved plans and CSV imports; disable selection and mapping until a slug is entered.
+- Show mapped / total content counts per XP Pattern and restrict examples to mapped items with that pattern.
+- Make descriptions the widest XP Pattern column and link content-table pattern keys to their example editor.
+- Save automatically before switching tabs, retain manual Save, and preserve the current tab and edits if saving fails.
+
 ## 0.3.17 - 2026-09-09
 
 - Show done-with-example / total pattern counts on the XP Patterns tab, including before opening it.

@@ -110,6 +110,16 @@ function tncp_parent_id($row, $rows) {
     return -1;
 }
 
+/** Hierarchical slugs are unique per parent; unresolved parents retain their row identity. */
+function tncp_slug_scope($type, $row, $rows) {
+    if (!is_post_type_hierarchical($type)) { return ''; }
+    $parent = tncp_parent_id($row, $rows);
+    return $parent < 0 ? $row['parent'] : 'post:' . $parent;
+}
+function tncp_slug_matches($type, $row, $post, $rows) {
+    return '' !== $row['slug'] && $row['slug'] === $post['slug'] && (!is_post_type_hierarchical($type) || tncp_slug_scope($type, $row, $rows) === 'post:' . $post['parent']);
+}
+
 function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
     if (!is_array($input) || count($input) > 2000) { return tncp_error(__('Use no more than 500 rows per post type.', 'tn-content-planner')); }
     $catalog = tncp_catalog($type);
@@ -130,35 +140,52 @@ function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
         $native_slug = !empty($previous['post_id']) && $raw['slug'] === $previous['baseline']['slug'];
         $title = $native_title ? $raw['title'] : tncp_title($raw['title']);
         $slug = sanitize_title($raw['slug']);
-        if ((!$native_title && (strlen($title) > 4000 || '' === trim(wp_strip_all_tags($title)))) || (!$native_slug && (!$slug || strlen($slug) > 200))) { return tncp_error(__('Every row needs a text title (up to 4,000 bytes) and a slug of at most 200 characters.', 'tn-content-planner')); }
+        if ((!$native_title && (strlen($title) > 4000 || '' === trim(wp_strip_all_tags($title)))) || (!$native_slug && strlen($slug) > 200)) { return tncp_error(__('Every row needs a text title (up to 4,000 bytes). Optional slugs must be at most 200 characters.', 'tn-content-planner')); }
         if (!in_array($raw['template'], array('single', 'archive', 'custom'), true)) { return tncp_error(__('Choose Single, Archive or Custom.', 'tn-content-planner')); }
         if ($raw['parent'] && !preg_match('/^(row:[a-zA-Z0-9_-]{1,80}|post:[1-9][0-9]*)$/', $raw['parent'])) { return tncp_error(__('Invalid parent reference.', 'tn-content-planner')); }
         if (isset($raw['post_id']) && (!is_scalar($raw['post_id']) || !preg_match('/^[0-9]+$/', (string) $raw['post_id']))) { return tncp_error(__('Post ID must be a non-negative integer.', 'tn-content-planner')); }
         $post_id = absint($raw['post_id'] ?? 0);
         $previous = $old_rows[$id] ?? null;
         if ($previous && $previous['post_id'] && $previous['post_id'] !== $post_id) { return tncp_error(__('A linked row cannot be detached. Create a new plan item instead.', 'tn-content-planner')); }
-        $matches = array_values(array_filter($catalog, static fn($post) => $post['slug'] === $slug));
-        if (!$post_id && count($matches) > 1) { return tncp_error(sprintf(__('Slug "%s" matches multiple posts. Use a unique slug.', 'tn-content-planner'), $slug)); }
-        if (!$post_id && count($matches) === 1) { $post_id = $matches[0]['id']; }
-        if ($post_id && isset($posts[$post_id]) && $posts[$post_id]['slug'] !== $slug && array_filter($matches, static fn($match) => $match['id'] !== $post_id)) { return tncp_error(__('This slug already belongs to another post in this post type.', 'tn-content-planner')); }
-        if ($post_id && !isset($posts[$post_id])) { return tncp_error(__('A linked post is unavailable or cannot be edited.', 'tn-content-planner')); }
-        if ($post_id && isset($mapped[$post_id])) { return tncp_error(__('A post can only be linked to one row in a post-type plan.', 'tn-content-planner')); }
-        if ($post_id) { $mapped[$post_id] = true; }
-        $baseline = $post_id ? array_intersect_key($posts[$post_id], array_flip(array('title', 'slug', 'parent'))) : null;
-        if ($previous && $previous['post_id'] && $previous['baseline'] !== $baseline) { return tncp_error(__('A linked post changed outside this plan. Reload the saved plan to refresh it before editing.', 'tn-content-planner'), 409); }
+        $baseline = null;
         $flags = array();
         foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($raw['flags'][$flag]); }
         $confirmed = array();
         foreach (array('title', 'slug', 'parent') as $field) { $confirmed[$field] = !empty($raw['confirmed'][$field]); }
         $rows[] = array('id' => $id, 'title' => $title, 'slug' => $slug, 'parent' => $raw['parent'], 'template' => $raw['template'], 'flags' => $flags, 'post_id' => $post_id, 'baseline' => $baseline, 'confirmed' => $confirmed, 'scanned' => !empty($previous['scanned']));
     }
+    // Resolve planned parents first, so input order does not affect slug mapping.
+    $resolving = array(); $resolved = array();
+    $resolve = function($index) use (&$resolve, &$rows, &$resolving, &$resolved, $catalog, $type) {
+        if (isset($resolved[$index]) || isset($resolving[$index])) { return; }
+        $resolving[$index] = true;
+        $parent_index = array_search(substr($rows[$index]['parent'], 4), array_column($rows, 'id'), true);
+        if (str_starts_with($rows[$index]['parent'], 'row:') && false !== $parent_index) { $resolve($parent_index); }
+        if (!$rows[$index]['post_id']) {
+            $matches = array_values(array_filter($catalog, static fn($post) => tncp_slug_matches($type, $rows[$index], $post, $rows)));
+            if (1 === count($matches)) { $rows[$index]['post_id'] = $matches[0]['id']; }
+        }
+        $resolved[$index] = true;
+    };
+    foreach (array_keys($rows) as $index) { $resolve($index); }
+    foreach ($rows as &$row) {
+        $post_id = $row['post_id']; $previous = $old_rows[$row['id']] ?? null;
+        if ($post_id && !isset($posts[$post_id])) { return tncp_error(__('A linked post is unavailable or cannot be edited.', 'tn-content-planner')); }
+        if ($post_id && isset($mapped[$post_id])) { return tncp_error(__('A post can only be linked to one row in a post-type plan.', 'tn-content-planner')); }
+        if ($post_id) { $mapped[$post_id] = true; }
+        $row['baseline'] = $post_id ? array_intersect_key($posts[$post_id], array_flip(array('title', 'slug', 'parent'))) : null;
+        if ($previous && $previous['post_id'] && $previous['baseline'] !== $row['baseline']) { return tncp_error(__('A linked post changed outside this plan. Reload the saved plan to refresh it before editing.', 'tn-content-planner'), 409); }
+        $matches = array_filter($catalog, static fn($post) => $post['id'] !== $post_id && tncp_slug_matches($type, $row, $post, $rows));
+        if ($matches && (!$post_id || $row['slug'] !== $row['baseline']['slug'] || tncp_parent_id($row, $rows) !== $row['baseline']['parent'])) { return tncp_error(__('That slug already exists under this parent.', 'tn-content-planner')); }
+    }
+    unset($row);
     $slugs = array();
     foreach ($rows as &$row) {
         $level = tncp_ancestry($row, $rows, $type);
         if (is_wp_error($level)) { return $level; }
         $row['pattern'] = $type . '-' . $level . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
-        $key = $row['slug'];
-        if (isset($slugs[$key]) && !($row['post_id'] && $row['baseline']['slug'] === $key && $slugs[$key]['post_id'] && $slugs[$key]['baseline']['slug'] === $key)) { return tncp_error(__('Each planned slug must be unique within its post type.', 'tn-content-planner')); }
+        $key = tncp_slug_scope($type, $row, $rows) . '|' . $row['slug'];
+        if ($row['slug'] && isset($slugs[$key]) && !($row['post_id'] && $row['baseline']['slug'] === $row['slug'] && $slugs[$key]['post_id'] && $slugs[$key]['baseline']['slug'] === $row['slug'] && tncp_parent_id($row, $rows) === $row['baseline']['parent'] && tncp_parent_id($slugs[$key], $rows) === $slugs[$key]['baseline']['parent'])) { return tncp_error(__('Each planned slug must be unique under its parent (or across a non-hierarchical post type).', 'tn-content-planner')); }
         $slugs[$key] = $row;
         if ($row['baseline'] && (null === $confirmation_ids || in_array($row['id'], $confirmation_ids, true))) {
             $desired = array('title' => $row['title'], 'slug' => $row['slug'], 'parent' => tncp_parent_id($row, $rows));
@@ -193,11 +220,12 @@ function tncp_scan_rows($plan, $type) {
     $catalog = tncp_catalog($type);
     if (is_wp_error($catalog)) { return $catalog; }
     $mapped = array_fill_keys(array_filter(array_column($plan['rows'], 'post_id')), true);
+    usort($catalog, static fn($a, $b) => count(get_post_ancestors($a['id'])) <=> count(get_post_ancestors($b['id'])));
     foreach ($catalog as $post) {
         if (isset($mapped[$post['id']])) { continue; }
         // A unique slug already in the plan is the same item, not a second row.
-        $matches = array_keys(array_filter($plan['rows'], static fn($row) => !$row['post_id'] && $row['slug'] && $row['slug'] === $post['slug']));
-        $post_matches = array_filter($catalog, static fn($candidate) => $candidate['slug'] === $post['slug']);
+        $matches = array_keys(array_filter($plan['rows'], static fn($row) => !$row['post_id'] && $row['slug'] && tncp_slug_matches($type, $row, $post, $plan['rows'])));
+        $post_matches = array_filter($catalog, static fn($candidate) => $candidate['slug'] === $post['slug'] && (!is_post_type_hierarchical($type) || $candidate['parent'] === $post['parent']));
         $baseline = array_intersect_key($post, array_flip(array('title', 'slug', 'parent')));
         if (1 === count($matches) && 1 === count($post_matches)) {
             $index = $matches[0];

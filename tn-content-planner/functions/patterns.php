@@ -4,25 +4,29 @@ if (!defined('ABSPATH')) { exit; }
 function tncp_patterns_permission() { return current_user_can('manage_options'); }
 
 /** Count unique saved patterns across all eligible types, independent of the Mine filter. */
-function tncp_pattern_counts() {
+function tncp_pattern_summary() {
     $saved = get_option('tncp_patterns', array('entries' => array()));
-    $keys = array(); $done = 0;
+    $keys = array(); $examples = array(); $done = array();
     foreach (tncp_types() as $type) {
         $plan = tncp_plan($type->name);
         foreach ($plan['rows'] as $row) {
             $level = tncp_ancestry($row, $plan['rows'], $type->name);
-            if (is_wp_error($level)) { return null; }
+            if (is_wp_error($level)) { return array('counts' => null, 'examples' => array()); }
             $key = $type->name . '-' . $level . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
-            if (isset($keys[$key])) { continue; }
             $keys[$key] = true;
             $entry = $saved['entries'][$key] ?? array();
-            if ('done' !== ($entry['status'] ?? '') || empty($entry['post_id'])) { continue; }
+            if (empty($entry['post_id']) || (int) $entry['post_id'] !== (int) $row['post_id']) { continue; }
             $post = get_post($entry['post_id']);
-            if ($post && $post->post_type === $type->name && in_array($post->post_status, array('publish', 'draft', 'pending', 'private', 'future'), true) && current_user_can('edit_post', $post->ID)) { ++$done; }
+            if ($post && $post->post_type === $type->name && in_array($post->post_status, array('publish', 'draft', 'pending', 'private', 'future'), true) && current_user_can('edit_post', $post->ID)) {
+                $examples[$key] = $post->ID;
+                if ('done' === ($entry['status'] ?? '')) { $done[$key] = true; }
+            }
         }
     }
-    return array('done' => $done, 'total' => count($keys));
+    return array('counts' => array('done' => count($done), 'total' => count($keys)), 'examples' => $examples);
 }
+function tncp_pattern_counts() { return tncp_pattern_summary()['counts']; }
+function tncp_pattern_examples() { return tncp_pattern_summary()['examples']; }
 
 function tncp_patterns_data() {
     $saved = get_option('tncp_patterns', array('revision' => 0, 'entries' => array()));
@@ -31,6 +35,7 @@ function tncp_patterns_data() {
         $posts = tncp_catalog($type->name);
         if (is_wp_error($posts)) { return $posts; }
         $catalog[$type->name] = $posts;
+        $available = array_fill_keys(array_column($posts, 'id'), true);
         $plan = tncp_plan($type->name);
         foreach ($plan['rows'] as $row) {
             $level = tncp_ancestry($row, $plan['rows'], $type->name);
@@ -38,13 +43,17 @@ function tncp_patterns_data() {
             $key = $type->name . '-' . $level . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
             if (!isset($patterns[$key])) {
                 $entry = $saved['entries'][$key] ?? array();
-                $patterns[$key] = array('key' => $key, 'type' => $type->name, 'count' => 0, 'description' => $entry['description'] ?? '', 'status' => $entry['status'] ?? 'todo', 'post_id' => $entry['post_id'] ?? 0, 'user_id' => (int) ($entry['user_id'] ?? 0));
+                $patterns[$key] = array('key' => $key, 'type' => $type->name, 'count' => 0, 'mapped_count' => 0, 'example_ids' => array(), 'description' => $entry['description'] ?? '', 'status' => $entry['status'] ?? 'todo', 'post_id' => $entry['post_id'] ?? 0, 'user_id' => (int) ($entry['user_id'] ?? 0));
             }
             ++$patterns[$key]['count'];
+            if ($row['post_id'] && isset($available[$row['post_id']])) {
+                ++$patterns[$key]['mapped_count'];
+                $patterns[$key]['example_ids'][] = (int) $row['post_id'];
+            }
         }
     }
     ksort($patterns, SORT_NATURAL);
-    return array('pattern_counts' => tncp_pattern_counts(), 'revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog, 'current_user_id' => get_current_user_id(), 'users' => array_map(static fn($user) => array('id' => (int) $user->ID, 'name' => $user->display_name), get_users(array('blog_id' => get_current_blog_id(), 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID', 'display_name')))));
+    return array('pattern_examples' => tncp_pattern_examples(), 'pattern_counts' => tncp_pattern_counts(), 'revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog, 'current_user_id' => get_current_user_id(), 'users' => array_map(static fn($user) => array('id' => (int) $user->ID, 'name' => $user->display_name), get_users(array('blog_id' => get_current_blog_id(), 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID', 'display_name')))));
 }
 
 function tncp_patterns_save($request) {
@@ -72,8 +81,8 @@ function tncp_patterns_save($request) {
             if (!isset($row['description']) || !is_string($row['description']) || mb_strlen($row['description']) > 240 || !in_array($row['status'] ?? null, array('todo', 'in-progress', 'done'), true)) { return tncp_error(__('Use a description up to 240 characters and a valid status.', 'tn-content-planner')); }
             if (!isset($row['post_id']) || !is_scalar($row['post_id']) || !ctype_digit((string) $row['post_id'])) { return tncp_error(__('Choose a valid example post.', 'tn-content-planner')); }
             $post_id = (int) $row['post_id'];
-            $eligible = array_column($data['catalog'][$patterns[$key]['type']], 'id');
-            if ($post_id && !in_array($post_id, $eligible, true)) { return tncp_error(__('The example post is unavailable or belongs to another post type.', 'tn-content-planner')); }
+            $eligible = $patterns[$key]['example_ids'];
+            if ($post_id && !in_array($post_id, $eligible, true)) { return tncp_error(__('Choose an available mapped post with this XP Pattern.', 'tn-content-planner')); }
             $user_id = $row['user_id'] ?? ($saved['entries'][$key]['user_id'] ?? 0);
             if (!is_scalar($user_id) || !ctype_digit((string) $user_id)) { return tncp_error(__('Choose a valid assigned user.', 'tn-content-planner')); }
             $user_id = (int) $user_id;

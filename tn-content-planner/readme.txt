@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.17
+Stable tag: 0.3.18
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -14,7 +14,7 @@ Plan a content WBS by post type, import CSV, arrange parents and create selected
 
 Scans add existing editable posts to complete linked plans on initial load and tab clicks, preserving pending changes. Custom types are eligible when their registered Publicly Queryable setting is enabled, regardless of Public or Exclude From Search. Native Posts/Pages retain WordPress visibility handling. Edit permission is required and media attachments are excluded. The filter uses no site-specific name list. Drafts remain included for eligible types; trashed posts and auto-drafts are excluded. Removing only a row means the next scan will add its existing post again.
 
-XP Patterns groups saved content items by pattern key with counts, a short description, todo/in-progress/done status an assigned site user and an example post. Pattern details are saved separately. Mapped Post IDs, review matches and pattern examples open the editor in a new tab. Parent selectors have no extra editor link. Two stacked dots beside mapped Post IDs show stored content (top) and featured image (bottom), visible only when present, with missing indicators completely hidden.
+XP Patterns groups saved content items by pattern key with mapped / total item counts, a short description, todo/in-progress/done status an assigned site user and an example post. The description is the widest column. Examples are restricted to mapped items with the same pattern; content-table pattern keys open the example editor in a new tab. Pattern details are saved separately. Mapped Post IDs, review matches and pattern examples open the editor in a new tab. Parent selectors have no extra editor link. Two stacked dots beside mapped Post IDs show stored content (top) and featured image (bottom), visible only when present, with missing indicators completely hidden.
 
 
 TN Content Planner by Techn provides a two-step content planning workflow in WordPress admin.
@@ -22,7 +22,7 @@ TN Content Planner by Techn provides a two-step content planning workflow in Wor
 1. Plan your WBS: add rows in post-type tabs, edit safe title HTML, choose parents, templates and relationship flags, then save.
 2. Review and create: select saved rows and apply new post creations or explicitly confirmed changes to linked posts.
 
-Existing slugs map to editable posts in the same post type. Ambiguous matches are rejected; use a unique slug. Circular hierarchies, duplicate planned slugs and stale edits are rejected.
+Existing slugs map within the post type and parent for hierarchical types. Different parents may share a slug; sibling duplicates are rejected. Non-hierarchical types retain global slug uniqueness. Slugs are optional in plans and CSV imports, but rows without slugs cannot be selected or mapped. Circular hierarchies and stale edits are rejected.
 
 New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a linked row offers keeping the post or moving it to the WordPress bin. Binning requires a saved plan and delete permission. Approved linked title, slug and parent changes apply immediately. Linked template and relationship settings save immediately as planning metadata, without changing theme templates. Creation and reconciliation still advance one item at a time during review.
 
@@ -55,7 +55,7 @@ Only title and slug are accepted, in that order. Imported rows start with no par
 2,000 plan rows and 2,000 catalog posts per post type; 1 MB per CSV; 100 hierarchy levels. Review uncreated ancestors before their children. For non-hierarchical post types, post_parent is stored but native permalinks and editors may not reflect it.
 
 = What if another editor changes a post? =
-Saving or applying is stopped when linked title, slug or parent differs from the saved snapshot. Clicking a post-type tab refreshes unchanged linked rows with a loading spinner while preserving saved pending changes. Unsaved edits require explicit discard. Removed or trashed linked posts must be restored before refreshing.
+Saving or applying is stopped when linked title, slug or parent differs from the saved snapshot. Clicking a post-type tab refreshes unchanged linked rows with a loading spinner while preserving saved pending changes. Clicking any tab automatically saves unsaved content or pattern edits before switching. Manual Save remains available; save failures preserve the current tab and edits. Removed or trashed linked posts must be restored before refreshing.
 
 = How does review work? =
 Selected items are shown one at a time as Item X of Y. Match suggestions use exact slug, exact title, then distinct shared title words. Accept source applies plan values, Accept destination adopts the existing post values, and Create new makes a separate post. Apply advances on success; failure stays on the current item. Skip leaves an item selected for later. New posts have a stable row marker to aid recovery after interrupted requests.
@@ -70,6 +70,14 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.18 =
+- Allow hierarchical posts to share a slug under different parents; use parent-aware mapping, scanning, collision checks and creation.
+- Allow blank slugs in saved plans and CSV imports; disable selection and mapping until a slug is entered.
+- Show mapped / total content counts per XP Pattern and restrict examples to mapped items with that pattern.
+- Make descriptions the widest XP Pattern column and link content-table pattern keys to their example editor.
+- Save automatically before switching tabs, retain manual Save, and preserve the current tab and edits if saving fails.
+
 
 = 0.3.17 =
 * Add done-with-example / total counts to the XP Patterns tab.

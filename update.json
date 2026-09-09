@@ -1,4 +1,4 @@
 {
-  "version": "0.3.17",
-  "body": "## 0.3.17 - 2026-09-09\n\n- Show done-with-example / total pattern counts on the XP Patterns tab, including before opening it.\n- Update counts as patterns and plans change; Show Mine does not change the overall totals.\n- Add a bottom-right key for upper content and lower featured-image dots.\n- Use orange dots consistently in mapped records and the key.\n"
+  "version": "0.3.18",
+  "body": "## 0.3.18 - 2026-09-09\n\n- Allow hierarchical posts to share a slug under different parents; use parent-aware mapping, scanning, collision checks and creation.\n- Allow blank slugs in saved plans and CSV imports; disable selection and mapping until a slug is entered.\n- Show mapped / total content counts per XP Pattern and restrict examples to mapped items with that pattern.\n- Make descriptions the widest XP Pattern column and link content-table pattern keys to their example editor.\n- Save automatically before switching tabs, retain manual Save, and preserve the current tab and edits if saving fails.\n"
 }

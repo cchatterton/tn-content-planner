@@ -16,7 +16,7 @@ function tncp_permissions($request) {
 function tncp_plan_request($request) {
     $catalog = tncp_catalog($request['type']);
     if (is_wp_error($catalog)) { return $catalog; }
-    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog, 'settings' => tncp_type_settings($request['type']), 'pattern_counts' => tncp_pattern_counts());
+    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog, 'settings' => tncp_type_settings($request['type']), 'pattern_examples' => tncp_pattern_examples(), 'pattern_counts' => tncp_pattern_counts());
 }
 /** Serialise mutations across browsers. Expired locks recover after an interrupted PHP request. */
 function tncp_mutate($request, $action) {
@@ -37,7 +37,7 @@ function tncp_mutate($request, $action) {
             return tncp_error(__('This plan was saved in another window. Reload it before making changes.', 'tn-content-planner'), 409);
         }
         $result = call_user_func($action, $request, $plan);
-        if (is_array($result)) { $result['pattern_counts'] = tncp_pattern_counts(); }
+        if (is_array($result)) { $result['pattern_counts'] = tncp_pattern_counts(); $result['pattern_examples'] = tncp_pattern_examples(); }
         return $result;
     } finally {
         delete_option($lock);
@@ -106,6 +106,7 @@ function tncp_apply_plan($request, $plan) {
     foreach ($selected as $id) {
         if (!isset($by_id[$id])) { return tncp_error(__('A selected row is no longer in this plan.', 'tn-content-planner')); }
         $row = $by_id[$id];
+        if (!$row['slug']) { return tncp_error(__('Enter a slug before mapping this item.', 'tn-content-planner')); }
         $parent = $row['parent'];
         while (str_starts_with($parent, 'row:')) {
             $ancestor = $by_id[substr($parent, 4)];
@@ -196,6 +197,7 @@ function tncp_resolve_item($request, $plan) {
     }
     $type = $request['type'];
     $row = $plan['rows'][$index];
+    if (!$row['slug']) { return tncp_error(__('Enter a slug before mapping this item.', 'tn-content-planner')); }
     $original_id = $row['id'];
     $catalog = tncp_catalog($type);
     if (is_wp_error($catalog)) { return $catalog; }
@@ -240,7 +242,7 @@ function tncp_resolve_item($request, $plan) {
         $slug = sanitize_title($request['new_slug'] ?? $row['slug']);
         if (!$slug) { return tncp_error(__('Enter a slug for the new post.', 'tn-content-planner')); }
         foreach ($catalog as $post) {
-            if ($post['slug'] === $slug) { return tncp_error(__('That slug already exists. Choose a distinct slug to create a new post.', 'tn-content-planner')); }
+            if (tncp_slug_matches($type, array_merge($row, array('slug' => $slug)), $post, $plan['rows'])) { return tncp_error(__('That slug already exists. Choose a distinct slug to create a new post.', 'tn-content-planner')); }
         }
         $row['slug'] = $slug;
         foreach ($plan['rows'] as &$child) {

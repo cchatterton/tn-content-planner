@@ -100,7 +100,7 @@
 .tncp-loading[hidden] { display: none; }
 .tncp-loading .spinner { float: none; margin: 0; }
 
-.tncp-wrap .tncp-patterns-table { min-width: 70rem; }
+.tncp-wrap .tncp-patterns-table { min-width: 80rem; table-layout: fixed; }
 .tncp-wrap .tncp-patterns-table input { width: 100%; min-width: 14rem; }
 .tncp-wrap .tncp-example-control { display: grid; grid-template-columns: minmax(0, 1fr) 6rem; align-items: center; gap: .5rem; }
 .tncp-wrap .tncp-example-control select { min-width: 0; }
@@ -145,3 +145,11 @@
 
 .tncp-wrap .tncp-indicator-key { margin-inline-start: auto; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; }
 .tncp-wrap .tncp-indicator-key-item { display: inline-flex; align-items: center; gap: .4rem; }
+
+/* Give the description the most room; keep the example selector and ID aligned. */
+.tncp-wrap .tncp-patterns-table th:nth-child(1) { width: 12%; }
+.tncp-wrap .tncp-patterns-table th:nth-child(2) { width: 7%; }
+.tncp-wrap .tncp-patterns-table th:nth-child(3) { width: 34%; }
+.tncp-wrap .tncp-patterns-table th:nth-child(4) { width: 10%; }
+.tncp-wrap .tncp-patterns-table th:nth-child(5) { width: 13%; }
+.tncp-wrap .tncp-patterns-table th:nth-child(6) { width: 24%; }

@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.17 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.18 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -10,6 +10,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 
 ## Scope and decisions
 
+- Each XP Pattern row shows mapped / total content items. Example choices are limited to available mapped items with that pattern. Descriptions receive the widest column. Pattern keys in content tables link to the matching example editor in a new tab.
 - The XP Patterns tab shows done-with-available-example / total unique patterns across eligible types. Counts update during edits and after saves; unavailable examples do not count as complete. XP Patterns has Show Mine / Show All controls beside its heading. The toggle only hides loaded rows in JavaScript, keeps unsaved edits intact and defaults to Show All. Show Mine uses the logged-in user’s assignment.
 - Table headings remain visible below the WordPress admin bar while scrolling, including horizontal alignment. Add row is below the content table.
 - The header displays the installed plugin version in its top-right corner.
@@ -34,7 +35,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - XP pattern is `posttype-level-template-flagcount`, e.g. `page-1-single-3`. It identifies a pattern combination, not an individual row. Identical combinations intentionally share a key; rows have independent UUIDs.
 - Single / Archive / Custom and the five flags are planning metadata, not theme-template generation or automatic related-content queries.
 - New posts default to Published, with a Draft option in the review step; updates retain existing content and publication status. Publishing requires the post type’s publish capability; users without it can create drafts.
-- Slug mapping uses the current post type. Ambiguous existing slugs are rejected; choose a unique slug. Duplicate planned slugs are rejected, including an attempted rename onto another post's slug. Existing linked posts may retain identical native slugs (for example under different parents).
+- Slug mapping uses the current post type and, for hierarchical types, the parent. Different parents can share a slug; sibling duplicates are rejected. Non-hierarchical types retain WordPress’s global slug uniqueness. Slugs are optional for saved plans and CSV imports, but rows without slugs cannot be selected or mapped.
 - Font Awesome Free is bundled for admin preview. Safe HTML allowlist: `i`, `span`, `strong`, `em`, `b`, `br`; `class` and `aria-hidden` on `i`/`span`. Frontend icon loading belongs to the active theme.
 - Limits: 2,000 rows / 2,000 catalog posts per type; 1 MB CSV; 100 hierarchy levels. Post types with no native hierarchy still store `post_parent`, without changing their permalink rules.
 
@@ -52,7 +53,7 @@ Only `title` and `slug` are accepted, in that order. Imported rows start with no
 
 Each site's `tncp_plan_{post_type}` option stores a revision and rows, including stable row IDs, post links, snapshots and confirmed pending changes. Options do not autoload. Generated posts use `_tncp_row_id` as a durable recovery marker, plus `_tncp_template`, `_tncp_flags` and `_tncp_pattern` metadata. `tncp_patterns` stores revisioned descriptions, statuses and example IDs by pattern key; counts are calculated from saved plans. Metadata for unused keys is retained so it returns if the pattern is needed again. `tncp_lock_patterns` serialises pattern saves. `tncp_lock_{post_type}` serialises writes; an interrupted request's lock expires after ten minutes.
 
-A stale plan revision or linked title/slug/parent stops mutation. Clicking a post-type tab reloads linked values for unchanged rows and preserves saved pending edits. When switching tabs with unsaved edits, choose Discard, Cancel or Save plan now. Saving persists the active content plan or XP Patterns before switching; failure keeps the current tab and edits. A trashed/deleted mapped post must be restored or its row removed. For a pending row with an external conflict, review the current destination before choosing which values to accept.
+A stale plan revision or linked title/slug/parent stops mutation. Clicking a post-type tab reloads linked values for unchanged rows and preserves saved pending edits. Clicking any tab automatically saves the active content plan or XP Patterns before switching; failure keeps the current tab and edits. Manual Save remains available. A trashed/deleted mapped post must be restored or its row removed. For a pending row with an external conflict, review the current destination before choosing which values to accept.
 
 **Send selected to bin** is available below the content table after saving and selecting linked rows. Confirmation lists the posts; selected children are processed before parents. Unselected child rows block parent removal. Uncreated rows stay in the plan. Each successful bin action persists; a failure stops processing and keeps remaining rows selected for retry.
 

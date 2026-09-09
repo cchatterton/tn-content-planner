@@ -8,6 +8,7 @@
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [], typeSettings = {};
     let patternCounts = TNCP.pattern_counts || { done: 0, total: 0 };
+    let patternExamples = TNCP.pattern_examples || {};
     let patternsMine = false;
     let patternsPlan = { revision: 0, rows: [], catalog: {} };
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
@@ -64,6 +65,7 @@
         let result;
         try { result = await response.json(); } catch { throw new Error(__('The server returned an unreadable response. Your edits are still here; try again.')); }
         if (!response.ok) throw new Error(result.message || __('The request failed. Try again.'));
+        if ('pattern_examples' in result) patternExamples = result.pattern_examples;
         if ('pattern_counts' in result) patternCounts = result.pattern_counts;
         return result;
     }
@@ -123,6 +125,17 @@
         if (!row.parent) return 0;
         if (row.parent.startsWith('post:')) return Number(row.parent.slice(5));
         return plan.rows.find(item => `row:${item.id}` === row.parent)?.post_id || -1;
+    }
+    function slugScope(row) {
+        if (!TNCP.types.find(item => item.name === type)?.hierarchical) return '';
+        const parent = parentId(row);
+        return parent < 0 ? row.parent : `post:${parent}`;
+    }
+    function slugMatches(row, post, value = row.slug) {
+        return Boolean(value) && post.slug === value && (!TNCP.types.find(item => item.name === type)?.hierarchical || slugScope(row) === `post:${post.parent}`);
+    }
+    function slugTaken(row, value = row.slug) {
+        return Boolean(value) && (plan.rows.some(item => item.id !== row.id && item.slug === value && slugScope(item) === slugScope(row)) || catalog.some(post => slugMatches(row, post, value)));
     }
     function parentKey(row) {
         if (!row.parent.startsWith('post:')) return row.parent;
@@ -197,16 +210,17 @@
                 copy[field] = value;
                 if (field === 'title') copy.slug = slug(plain(value));
                 let base = copy.slug || 'new-item', suffix = 2;
-                while (plan.rows.some(item => item.slug === copy.slug) || catalog.some(post => post.slug === copy.slug)) copy.slug = `${base}-${suffix++}`;
+                while (slugTaken(copy)) copy.slug = `${base}-${suffix++}`;
                 plan.rows.push(copy); editing = copy.id; markDirty(); render(); return;
             }
         }
         if (row.post_id) { await applyLinkedChange(row, field, value); return; }
         if (flags.includes(field)) { row.flags[field] = value; markDirty(); render(); return; }
         row[field] = value;
+        if (!row.slug) selected.delete(row.id);
         try { plan.rows.forEach(item => depth(item)); } catch (error) { row[field] = old; announce(error.message, true); render(); return; }
         if (field === 'slug' && !row.post_id) {
-            const matches = catalog.filter(post => post.slug === value);
+            const matches = catalog.filter(post => slugMatches(row, post, value));
             if (matches.length === 1 && !plan.rows.some(item => item.id !== row.id && item.post_id === matches[0].id)) {
                 const post = matches[0]; row.post_id = post.id;
                 row.baseline = { title: post.title, slug: post.slug, parent: post.parent };
@@ -221,7 +235,7 @@
         // CSV and automatic slug mapping follow the same confirmation rules as typed edits.
         for (const row of [...plan.rows]) {
             if (!row.post_id) {
-                const matches = catalog.filter(post => post.slug === row.slug);
+                const matches = catalog.filter(post => slugMatches(row, post));
                 if (matches.length === 1) {
                     const post = matches[0]; row.post_id = post.id; row.baseline = { title: post.title, slug: post.slug, parent: post.parent };
                 }
@@ -277,7 +291,7 @@
     }
     function rowView(row) {
         const tr = el('tr', { 'data-row': row.id });
-        const check = el('input', { type: 'checkbox', checked: selected.has(row.id), 'aria-label': __('Select') + ' ' + plain(row.title), onchange: event => {
+        const check = el('input', { type: 'checkbox', disabled: !row.slug, title: !row.slug ? __('Enter a slug to select this row') : '', checked: Boolean(row.slug) && selected.has(row.id), 'aria-label': __('Select') + ' ' + plain(row.title), onchange: event => {
             event.target.checked ? selected.add(row.id) : selected.delete(row.id); render();
         } });
         const title = el('td', { class: 'tncp-title-cell' }, [titleControl(row)]);
@@ -293,10 +307,10 @@
         const template = el('select', { 'aria-label': __('Template'), onchange: event => change(row, 'template', event.target.value) }, ['single', 'archive', 'custom'].map(value => el('option', { value, text: __(value[0].toUpperCase() + value.slice(1)) })));
         template.value = row.template;
         tr.append(el('td', {}, [check]), title,
-            el('td', {}, [el('input', { type: 'text', value: row.slug, required: '', maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
+            el('td', {}, [el('input', { type: 'text', value: row.slug, maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
             el('td', {}, [parent]), el('td', {}, [template]));
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => change(row, flag, event.target.checked) })])));
-        tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
+        tr.append(el('td', { class: 'tncp-pattern' }, [patternExamples[pattern(row)] ? postLink(patternExamples[pattern(row)], pattern(row)) : document.createTextNode(pattern(row))]), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
             const post = catalog.find(item => item.id === row.post_id);
             const choices = [['remove', row.post_id ? __('Remove row only') : __('Remove row')]];
@@ -390,12 +404,8 @@
             onclick: async () => {
                 if (busy) return;
                 if (dirty) {
-                    const decision = await ask(__('Unsaved plan'), __('Save your changes, discard them, or cancel to stay on this tab.'), [['discard', __('Discard')], ['cancel', __('Cancel')], ['save', __('Save plan now')]]);
-                    if (decision === 'cancel') return;
-                    if (decision === 'save') {
-                        if (type === 'xp-patterns') await savePatterns(); else await save();
-                        if (dirty) return;
-                    }
+                    if (type === 'xp-patterns') await savePatterns(); else await save();
+                    if (dirty) return;
                 }
                 const prior = type; type = item.name;
                 await work(async () => { try {
@@ -434,13 +444,13 @@
         else {
             const table = el('table', { class: 'widefat striped tncp-table' });
             const head = el('tr');
-            const selectAll = el('input', { type: 'checkbox', id: 'tncp-select-all', 'aria-label': __('Select all rows'), checked: plan.rows.every(row => selected.has(row.id)), onchange: event => {
-                selected = event.target.checked ? new Set(plan.rows.map(row => row.id)) : new Set(); render();
+            const selectAll = el('input', { type: 'checkbox', id: 'tncp-select-all', 'aria-label': __('Select all rows'), disabled: !plan.rows.some(row => row.slug), checked: plan.rows.some(row => row.slug) && plan.rows.filter(row => row.slug).every(row => selected.has(row.id)), onchange: event => {
+                selected = event.target.checked ? new Set(plan.rows.filter(row => row.slug).map(row => row.id)) : new Set(); render();
                 document.getElementById('tncp-select-all')?.focus();
             } });
             selectAll.indeterminate = plan.rows.some(row => selected.has(row.id)) && !selectAll.checked;
             head.append(el('th', { scope: 'col' }, [selectAll]));
-            [__('Title *'), __('Content slug *'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
+            [__('Title *'), __('Content slug'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
             table.append(el('thead', {}, [head]), el('tbody', {}, orderedRows().map(rowView)));
             panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table]));
         }
@@ -460,7 +470,7 @@
         }
     }
     function startReview() {
-        reviewQueue = orderedRows().filter(row => selected.has(row.id)).map(row => row.id);
+        reviewQueue = orderedRows().filter(row => row.slug && selected.has(row.id)).map(row => row.id);
         reviewIndex = 0; reviewApplied = 0; reviewSkipped = 0;
         resetReviewItem(); step = 2; render();
     }
@@ -469,7 +479,7 @@
         reviewTarget = row?.post_id || 0; reviewDecision = '';
         reviewNewSlug = row?.slug || '';
         const base = reviewNewSlug; let suffix = 2;
-        while (catalog.some(post => post.slug === reviewNewSlug) || plan.rows.some(item => item.id !== row?.id && item.slug === reviewNewSlug)) reviewNewSlug = `${base}-${suffix++}`;
+        while (row && slugTaken(row, reviewNewSlug)) reviewNewSlug = `${base}-${suffix++}`;
     }
     function filterPatterns() {
         let visible = 0;
@@ -506,7 +516,7 @@
         patternsPlan.rows.forEach(row => {
             const update = () => {
                 dirty = true; document.getElementById('tncp-pattern-save-state').textContent = __('Unsaved changes');
-                patternCounts = { total: patternsPlan.rows.length, done: patternsPlan.rows.filter(item => item.status === 'done' && (patternsPlan.catalog[item.type] || []).some(post => post.id === item.post_id)).length };
+                patternCounts = { total: patternsPlan.rows.length, done: patternsPlan.rows.filter(item => item.status === 'done' && (item.example_ids || []).includes(item.post_id)).length };
                 const tab = document.getElementById('tncp-tab-xp-patterns');
                 tab.textContent = `${__('XP Patterns')} ${patternCounts.done}/${patternCounts.total}`;
                 tab.setAttribute('aria-label', `${__('XP Patterns')}, ${patternCounts.done} ${__('of')} ${patternCounts.total} ${__('done with examples')}`);
@@ -522,12 +532,12 @@
             assignee.value = String(row.user_id || 0);
             const example = el('select', { 'aria-label': `${__('Example post')} ${row.key}`, onchange: event => { row.post_id = Number(event.target.value); update(); link.replaceChildren(...(row.post_id ? [postLink(row.post_id)] : [])); } });
             example.append(el('option', { value: '0', text: __('— No example —') }));
-            const posts = patternsPlan.catalog[row.type] || [];
+            const posts = (patternsPlan.catalog[row.type] || []).filter(post => (row.example_ids || []).includes(post.id));
             posts.forEach(post => example.append(el('option', { value: String(post.id), text: `${plain(post.title) || __('Untitled')} (#${post.id})` })));
             if (row.post_id && !posts.some(post => post.id === row.post_id)) example.append(el('option', { value: String(row.post_id), text: __('Example unavailable — choose another') }));
             example.value = String(row.post_id);
             const link = el('span', { class: 'tncp-example-link' }, row.post_id && posts.some(post => post.id === row.post_id) ? [postLink(row.post_id)] : []);
-            body.append(el('tr', { 'data-pattern': row.key }, [el('th', { scope: 'row', text: row.key }), el('td', { text: String(row.count) }), el('td', {}, [description]), el('td', {}, [status]), el('td', {}, [assignee]), el('td', {}, [el('div', { class: 'tncp-example-control' }, [example, link])])]));
+            body.append(el('tr', { 'data-pattern': row.key }, [el('th', { scope: 'row', text: row.key }), el('td', { text: `${row.mapped_count}/${row.count}`, title: __('Mapped items / total items') }), el('td', {}, [description]), el('td', {}, [status]), el('td', {}, [assignee]), el('td', {}, [el('div', { class: 'tncp-example-control' }, [example, link])])]));
         });
         panel.append(el('p', { id: 'tncp-pattern-empty', hidden: true, text: __('No XP Patterns are assigned to you.') }));
         table.append(body); panel.append(el('div', { class: 'tncp-scroll tncp-pattern-scroll', tabindex: '0', role: 'region', 'aria-label': __('XP pattern table') }, [table]));
@@ -677,11 +687,11 @@
                 if (record.length !== columns.length) throw new Error(`${__('Wrong number of columns in CSV row')} ${index + 2}.`);
                 const data = Object.fromEntries(headers.map((key, column) => [key, record[column]]));
                 const row = newRow(); row.title = data.title; row.slug = slug(data.slug);
-                if (!plain(row.title).trim() || !row.slug) throw new Error(`${__('Invalid title or slug in CSV row')} ${index + 2}.`);
+                if (!plain(row.title).trim()) throw new Error(`${__('Invalid title or slug in CSV row')} ${index + 2}.`);
                 return row;
             });
             const combined = [...plan.rows, ...imported];
-            if (new Set(combined.map(row => row.slug)).size !== combined.length) throw new Error(__('Duplicate slugs found. CSV imports append rows; they do not replace existing plan rows.'));
+            if (new Set(combined.filter(row => row.slug).map(row => `${slugScope(row)}|${row.slug}`)).size !== combined.filter(row => row.slug).length) throw new Error(__('Duplicate slugs found. CSV imports append rows; they do not replace existing plan rows.'));
             plan.rows = combined;
             markDirty(); render(); announce(`${imported.length} ${__('rows imported. Review and save the plan. The import has not changed any posts.')}`);
         } catch (error) { announce(error.message, true); }

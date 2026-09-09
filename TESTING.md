@@ -1,5 +1,13 @@
 # Validation
 
+## 0.3.18
+
+- 23 new WordPress checks cover parent-scoped slugs, creation, scanning, immediate edits, collisions, blank-slug mapping rejection, pattern membership and example validity.
+- Existing integration (63), scan (54), immediate-change (42) and reconciliation (31) checks pass.
+- Browser tests cover mapping review, pattern counts/examples, description widths, editor links, blank-slug selection, automatic tab saving and failed-save preservation.
+- Desktop/mobile/narrow Axe WCAG A/AA checks, keyboard traversal, PHP lint, JavaScript syntax and whitespace checks pass. The XP table screenshot was inspected.
+
+
 ## 0.3.17
 
 Release/tag match `68dd958`; remote/local ZIP SHA-256: `d2050dd17a604bcd6ed80c08f36186ba2891ff2ee82aaf5a73fcbda10bb479e8`. Published ZIP installation through the WordPress installer passed and reports 0.3.17.

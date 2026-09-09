@@ -40,10 +40,13 @@ function tncp_change_field($request, $plan) {
         if (!is_string($value)) { return tncp_error(__('Enter a valid title or slug.', 'tn-content-planner')); }
         $value = 'title' === $field ? tncp_title($value) : sanitize_title($value);
         if ('' === trim(wp_strip_all_tags($value)) || strlen($value) > ('title' === $field ? 4000 : 200)) { return tncp_error(__('Enter a nonempty title or slug within the field limit.', 'tn-content-planner')); }
-        if ('slug' === $field) {
-            $matches = get_posts(array('post_type' => $post->post_type, 'name' => $value, 'post_status' => array('publish', 'draft', 'pending', 'private', 'future'), 'post__not_in' => array($post->ID), 'numberposts' => 1));
-            if ($matches || array_filter($plan['rows'], static fn($row) => $row['post_id'] !== $post->ID && $row['slug'] === $value)) { return tncp_error(__('That slug already belongs to another post or plan item.', 'tn-content-planner')); }
-        }
+    }
+    if (in_array($field, array('slug', 'parent'), true)) {
+        $desired = array('slug' => 'slug' === $field ? $value : $post->post_name, 'parent' => 'post:' . ('parent' === $field ? $value : $post->post_parent));
+        $args = array('post_type' => $post->post_type, 'name' => $desired['slug'], 'post_status' => array('publish', 'draft', 'pending', 'private', 'future'), 'post__not_in' => array($post->ID), 'numberposts' => 1);
+        if (is_post_type_hierarchical($post->post_type)) { $args['post_parent'] = 'parent' === $field ? $value : (int) $post->post_parent; }
+        $scope = tncp_slug_scope($post->post_type, $desired, $plan['rows']);
+        if (get_posts($args) || array_filter($plan['rows'], static fn($row) => $row['post_id'] !== $post->ID && $row['slug'] === $desired['slug'] && tncp_slug_scope($post->post_type, $row, $plan['rows']) === $scope)) { return tncp_error(__('That slug already belongs to another post or plan item under this parent.', 'tn-content-planner')); }
     }
     if (false !== $index) {
         if ($metadata && 'template' !== $field) { $plan['rows'][$index]['flags'][$field] = $value; }
