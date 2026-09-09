@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.18
+Stable tag: 0.3.19
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -24,7 +24,7 @@ TN Content Planner by Techn provides a two-step content planning workflow in Wor
 
 Existing slugs map within the post type and parent for hierarchical types. Different parents may share a slug; sibling duplicates are rejected. Non-hierarchical types retain global slug uniqueness. Slugs are optional in plans and CSV imports, but rows without slugs cannot be selected or mapped. Circular hierarchies and stale edits are rejected.
 
-New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a linked row offers keeping the post or moving it to the WordPress bin. Binning requires a saved plan and delete permission. Approved linked title, slug and parent changes apply immediately. Linked template and relationship settings save immediately as planning metadata, without changing theme templates. Creation and reconciliation still advance one item at a time during review.
+New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a linked row offers keeping the post or moving it to the WordPress bin. Binning a linked row saves unsaved edits first and requires delete permission. If saving fails, the post stays in place. Approved linked title, slug and parent changes apply immediately. Linked template and relationship settings save immediately as planning metadata, without changing theme templates. Creation and reconciliation still advance one item at a time during review.
 
 Font Awesome Free 6.7.2 is bundled locally for title previews. Permitted title tags are i, span, strong, em, b and br. Unsafe HTML attributes are removed. Your frontend theme must load its own icon styles if it renders icon markup in post titles.
 
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.19 =
+- Enable moving a linked post to the bin when the plan has unsaved edits.
+- Automatically save first; if saving fails, keep the post and all edits intact.
+
 
 = 0.3.18 =
 - Allow hierarchical posts to share a slug under different parents; use parent-aware mapping, scanning, collision checks and creation.

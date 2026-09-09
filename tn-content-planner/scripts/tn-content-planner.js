@@ -317,15 +317,15 @@
             let message = __('This removes the row from the plan.');
             if (row.post_id) {
                 message += ` ${__('Linked post')}: ${plain(post?.title || row.title)} (#${row.post_id}). ${__('Keep this post, or move only this post to the WordPress bin. Other posts are not deleted.')}`;
-                if (dirty) message += ' ' + __('Save the plan first to enable moving the linked post to the bin.');
-                else if (!post?.can_trash) message += ' ' + __('Moving this post to the bin is unavailable for this user or site.');
-                choices.push(['trash', __('Remove row & move post to bin'), dirty || !post?.can_trash]);
+                if (!post?.can_trash) message += ' ' + __('Moving this post to the bin is unavailable for this user or site.');
+                choices.push(['trash', __('Remove row & move post to bin'), !post?.can_trash]);
             }
             const description = el('span', { text: message });
             if (row.post_id) description.append(document.createTextNode(' '), postLink(row.post_id, __('Open linked post')));
             const answer = await ask(__('Remove plan row?'), description, choices);
             if (answer === 'remove') { plan.rows = plan.rows.filter(item => item.id !== row.id); selected.delete(row.id); markDirty(); render(); }
             if (answer === 'trash') {
+                if (dirty) { await save(); if (dirty) return; }
                 await work(async () => {
                     plan = await api('bin', { revision: plan.revision, row_id: row.id, confirmed: true }); selected.delete(row.id);
                     const data = await api('plan'); catalog = data.catalog; dirty = false; render();

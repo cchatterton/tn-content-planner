@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.19 - 2026-09-09
+
+- Enable moving a linked post to the bin when the plan has unsaved edits.
+- Automatically save first; if saving fails, keep the post and all edits intact.
+
 ## 0.3.18 - 2026-09-09
 
 - Allow hierarchical posts to share a slug under different parents; use parent-aware mapping, scanning, collision checks and creation.

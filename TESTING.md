@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.19
+
+- Browser regression verifies binning is enabled with unsaved edits, Cancel preserves the post, a failed save prevents binning, and retry saves edits before removing the row and trashing the post.
+- JavaScript syntax and diff whitespace checks pass.
+
 ## 0.3.18
 
 Release/tag match `6618ba8`; remote/local ZIP SHA-256: `a225d0e385c02fed747444941a5fc45ec7fd328eb4658684cb9729cd6bc2d656`. Published ZIP installation through the WordPress installer passed and reports 0.3.18.

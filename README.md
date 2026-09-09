@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.18 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.19 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -57,7 +57,7 @@ A stale plan revision or linked title/slug/parent stops mutation. Clicking a pos
 
 **Send selected to bin** is available below the content table after saving and selecting linked rows. Confirmation lists the posts; selected children are processed before parents. Unselected child rows block parent removal. Uncreated rows stay in the plan. Each successful bin action persists; a failure stops processing and keeps remaining rows selected for retry.
 
-Removing a linked row offers **Remove row only** or **Remove row & move post to bin**. Binning requires a saved plan, delete permission and an enabled WordPress bin; permanent deletion is never used. Planned children must be moved first. A row removed without binning its post is added again by the next complete scan. Deactivation/uninstall retains plans and content.
+Removing a linked row offers **Remove row only** or **Remove row & move post to bin**. Binning a single linked row automatically saves unsaved edits first; a save failure leaves the post intact. Bulk binning requires a saved plan, delete permission and an enabled WordPress bin; permanent deletion is never used. Planned children must be moved first. A row removed without binning its post is added again by the next complete scan. Deactivation/uninstall retains plans and content.
 
 Each review action persists independently. Failures stay on the current item for retry; completed items remain linked. The legacy batch endpoint remains available, capped at 50 selected rows. Third-party WordPress save filters may adjust submitted fields; the plugin records actual values and stops for review.
 
