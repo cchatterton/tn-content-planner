@@ -2,6 +2,8 @@
 
 ## 0.3.23
 
+Release/tag match `ac687c7`; remote/local ZIP SHA-256: `4bf3603fb3d70bacf11746cdf51133da6cf872936d89abada67f0f532bda62f1`. Published ZIP installation through the WordPress installer passed and reports 0.3.23.
+
 - Browser regression cycles all three saved statuses and verifies record/key colours, placement after the pattern, font-height sizing and accessible labels. Desktop/mobile Axe checks pass.
 - Existing 54 scan/pattern checks, PHP lint, JavaScript syntax and whitespace checks pass.
 
