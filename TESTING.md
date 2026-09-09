@@ -2,6 +2,8 @@
 
 ## 0.3.9
 
+Release/tag match `b2c8f8c`. Remote/local ZIP SHA-256: `831eeb2880de52b7d85816a68fc18fe5872e13efabe5a5e4c1a1a28901be9432`. The native update check initially received the older 0.3.8 manifest from GitHub; this was independently confirmed through WordPress HTTP retrieval. Direct installation of the published ZIP through the WordPress installer succeeded and reports 0.3.9. Automatic discovery of 0.3.9 is not verified.
+
 - Desktop, mobile and narrow browser checks verify exact watermark alignment with the eyebrow top and final tag right edge; screenshots visually inspected.
 - Axe WCAG A/AA, modal accessibility, keyboard traversal and selection-column alignment pass. JavaScript syntax and PHP lint pass.
 
