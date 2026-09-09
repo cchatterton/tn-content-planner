@@ -1,5 +1,12 @@
 # Validation
 
+## 0.3.10
+
+- Added the requested page-scoped CSS rule. PHP lint and diff whitespace checks pass.
+- Release/tag match `a2117a3`; remote/local ZIP SHA-256: `fbba1f4f7fe56db749f8fa1d81ecc06c136ff3abb0869ec238945d6e5c75ea81`.
+- Published ZIP installed successfully through the WordPress installer on the disposable site and reports 0.3.10.
+
+
 ## 0.3.9
 
 Release/tag match `b2c8f8c`. Remote/local ZIP SHA-256: `831eeb2880de52b7d85816a68fc18fe5872e13efabe5a5e4c1a1a28901be9432`. The native update check initially received the older 0.3.8 manifest from GitHub; this was independently confirmed through WordPress HTTP retrieval. Direct installation of the published ZIP through the WordPress installer succeeded and reports 0.3.9. Automatic discovery of 0.3.9 is not verified.
