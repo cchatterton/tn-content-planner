@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.6.1
+Stable tag: 0.3.8
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -71,26 +71,11 @@ Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-
 
 == Changelog ==
 
-= 0.6.1 =
-* Align header and row-selection checkboxes in a centered column.
-
-
-= 0.6.0 =
-* Add client-side Show Mine / Show All filtering to XP Patterns.
-* Keep table headings visible while scrolling.
-* Move Add row below the table and remove the redundant heading.
-
-
-= 0.5.0 =
-* Add a saved Assigned to user picklist for each XP Pattern.
-* Use consistent dropdown widths in the XP Patterns table.
-
-
-= 0.4.0 =
-* Apply linked title, slug and parent changes as soon as their modal is approved.
-* Save linked template and relationship metadata immediately; no second review step.
-* Replace the non-hierarchical notice with runtime CPT settings for diagnosis.
-
+= 0.3.8 =
+* Apply approved linked changes and planning settings immediately.
+* Add runtime CPT diagnostics, XP Pattern assignments and client-side filtering.
+* Align dropdowns and selection checkboxes, retain table headings while scrolling, and move Add row below the table.
+* Correct the unintended release numbering; includes all changes since 0.3.4.
 
 = 0.3.4 =
 * Show the installed version as a subtle watermark at the top right of the header.

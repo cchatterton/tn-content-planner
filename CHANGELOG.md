@@ -1,28 +1,12 @@
 # Changelog
 
-## 0.6.1 - 2026-09-09
+## 0.3.8 - 2026-09-09
 
-- Align the select-all checkbox and all row-selection checkboxes in one centered column.
-- Retain the 0.6.0 client-side pattern filter, sticky table headings and bottom Add row placement.
-
-## 0.6.0 - 2026-09-09
-
-- Add Show Mine / Show All beside the XP Patterns heading, using JavaScript row visibility without requests or rebuilding controls.
-- Keep table column headings visible below the WordPress admin bar during page scrolling.
-- Move Add row below the content table and remove the Build your content structure heading.
-
-## 0.5.0 - 2026-09-09
-
-- Add an Assigned to user picklist for each XP Pattern, persisted with its description, status and example.
-- Populate assignees from this site's WordPress users, with an Unassigned option.
-- Make XP Pattern dropdown widths consistent within each column.
-
-## 0.4.0 - 2026-09-09
-
-- Apply approved linked title, slug and parent changes immediately and clear their pending indicators.
-- Save linked template and relationship settings immediately; these update planning metadata and XP Pattern keys, not theme templates.
-- Apply earlier saved approvals on refresh where the linked post has not changed externally.
-- Replace the non-hierarchical notice with runtime CPT settings for diagnosing tab eligibility.
+- Apply approved linked title, slug and parent changes immediately; save template and relationship metadata without a second review.
+- Show runtime CPT settings in place of the non-hierarchical notice.
+- Add XP Pattern user assignments, consistent dropdown widths, and a client-side Show Mine / Show All toggle.
+- Keep table headings visible while scrolling, move Add row below the table, remove the redundant heading, and align selection checkboxes.
+- Correct the unintended 0.4.0–0.6.1 release numbering. Includes all changes since 0.3.4.
 
 ## 0.3.4 - 2026-09-09
 
