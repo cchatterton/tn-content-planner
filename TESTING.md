@@ -2,6 +2,8 @@
 
 ## 0.3.21
 
+Release/tag match `150e92b`; remote/local ZIP SHA-256: `f41bfb5daf1bb9e2ed98d8f841e43cd9f7d814f650ff9bcb5fcb37b93585461f`. Published ZIP installation through the WordPress installer passed and reports 0.3.21.
+
 - Browser regression confirms both instruction paragraphs are absent, comparison appears for a selected match and is absent on an unmatched item.
 - Full mapping review, retries, CSV, pattern controls and desktop/mobile accessibility checks pass. JavaScript syntax and diff whitespace checks pass.
 
