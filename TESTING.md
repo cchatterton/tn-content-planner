@@ -2,9 +2,11 @@
 
 ## 0.2.0
 
+Published release and tag match commit `eb81122`; the remote ZIP SHA-256 matches the local package: `ba6b1f20d188abe390ebc1f59139f0b5c1e05270297aad220fa63e79ce42415a`. Native WordPress update from 0.1.2 to 0.2.0 succeeded and retained the saved plan. The subsequent check reported the installed version current.
+
 - 63 existing WordPress integration checks and 31 reconciliation, refresh and bin checks pass.
 - Browser coverage passes for ordered matching, all reconciliation choices, advancement, failed retry, skip, header checkbox states, live counts, tab refresh/spinner and linked-post binning.
-- Desktop/mobile review and planner layouts pass Axe WCAG A/AA checks. Planner, review and bin screenshots were visually inspected.
+- Desktop/mobile review and desktop/mobile/narrow planner layouts pass Axe WCAG A/AA checks; keyboard field traversal and the modal audit pass. Planner, review and bin screenshots were visually inspected.
 - PHP/JavaScript syntax, package layout and version alignment were checked.
 
 
