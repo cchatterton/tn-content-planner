@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.14 - 2026-09-09
+
+- Display Publicly Queryable as a navy tick for native post types and remove the grey dot.
+- Keep WordPress registration settings and planner eligibility unchanged.
+
 ## 0.3.13 - 2026-09-09
 
 - Place XP Pattern example-post links beside their dropdowns and reserve equal link space in every row.

@@ -1,4 +1,4 @@
 {
-  "version": "0.3.13",
-  "body": "## 0.3.13 - 2026-09-09\n\n- Place XP Pattern example-post links beside their dropdowns and reserve equal link space in every row.\n- Offer Discard, Cancel and Save plan now when switching tabs with unsaved edits.\n- Save the active content plan or XP Patterns before switching; failed saves preserve edits and keep the current tab open.\n"
+  "version": "0.3.14",
+  "body": "## 0.3.14 - 2026-09-09\n\n- Display Publicly Queryable as a navy tick for native post types and remove the grey dot.\n- Keep WordPress registration settings and planner eligibility unchanged.\n"
 }

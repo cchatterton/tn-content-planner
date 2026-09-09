@@ -373,13 +373,9 @@
         const settingNames = { public: __('Public'), publicly_queryable: __('Publicly Queryable'), exclude_from_search: __('Include in Search'), hierarchical: __('Hierarchical') };
         Object.entries(settingNames).forEach(([key, label]) => {
             const rawValue = typeSettings[key];
-            const value = key === 'exclude_from_search' && typeof rawValue === 'boolean' ? !rawValue : rawValue;
-            const nativeSetting = key === 'publicly_queryable' && typeSettings._builtin === true;
-            const nativeExplanation = __('Native post type — WordPress handles public visibility.');
-            const display = nativeSetting ? el('dd', { title: nativeExplanation }, [
-                el('span', { class: 'tncp-setting-native', 'aria-hidden': 'true', text: '●' }),
-                el('span', { class: 'screen-reader-text', text: nativeExplanation })
-            ]) : typeof value === 'boolean' ? el('dd', {}, [
+            const value = key === 'publicly_queryable' && typeSettings._builtin === true ? true
+                : key === 'exclude_from_search' && typeof rawValue === 'boolean' ? !rawValue : rawValue;
+            const display = typeof value === 'boolean' ? el('dd', {}, [
                 el('span', { class: value ? 'tncp-setting-yes' : 'tncp-setting-no', 'aria-hidden': 'true', text: value ? '✓' : '×' }),
                 el('span', { class: 'screen-reader-text', text: value ? __('Enabled') : __('Disabled') })
             ]) : el('dd', { text: value === undefined ? __('Unavailable') : JSON.stringify(value) });

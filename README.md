@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.13 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.14 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -16,7 +16,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - The task header reads Content Planner, with the eyebrow Plan. Organise. Publish. and three feature tags: Visual hierarchy, CSV import, Publish or draft. Plugin metadata retains TN Content Planner / Techn authorship.
 
 - Approving a linked title, slug or parent change applies that field immediately in WordPress and saves it in the plan. Template and relationship settings on linked rows save immediately without a modal. Successful changes clear their pending indicators; errors remain visible without pretending the change succeeded. Unapproved differences remain marked pending.
-- Each content tab shows WordPress’s runtime Public, Publicly Queryable, Include in Search and Hierarchical settings as navy ticks or orange crosses, plus a Native or orange Custom declaration. Publicly Queryable uses a neutral grey dot for native types, with a tooltip and screen-reader explanation that WordPress handles their public visibility. Include in Search displays the inverse of WordPress’s exclude_from_search flag for both native and custom types. Values refresh with the catalog; unusual non-boolean values are displayed literally for diagnosis.
+- Each content tab shows WordPress’s runtime Public, Publicly Queryable, Include in Search and Hierarchical settings as navy ticks or orange crosses, plus a Native or orange Custom declaration. Publicly Queryable displays a navy tick for native types to reflect their frontend availability; this display convention does not modify the registered WordPress flag. Include in Search displays the inverse of WordPress’s exclude_from_search flag for both native and custom types. Values refresh with the catalog; unusual non-boolean values are displayed literally for diagnosis.
 
 - Custom post-type eligibility reads `publicly_queryable` from the site's registered type object. Public and Exclude From Search do not affect this decision. Native Posts/Pages use WordPress visibility handling. Edit permission is still required and media attachments are excluded. This same rule drives tabs, scans, REST access, examples and XP Patterns; there is no site-specific name list.
 
