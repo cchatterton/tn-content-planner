@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.14
+
+- Native Publicly Queryable presentation now uses the existing affirmative tick; no backend registration or eligibility code changed. JavaScript syntax, PHP lint and whitespace checks pass.
+- Release/tag match `d9b0ddb`; remote/local ZIP SHA-256: `a338c6b0b23ae5208698715758ea688724e57576cf868dc9b49dbd5264a73c11`. Published ZIP installation through the WordPress installer passed and reports 0.3.14.
+
+
 ## 0.3.13
 
 Release/tag match `ce4f260`. Remote/local ZIP SHA-256: `9b8e404e2fe9581d9744a84d3fcb4210ee449527b013f37a69de594297611dfd`. Published ZIP installation through the WordPress installer passed and reports 0.3.13.
