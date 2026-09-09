@@ -5,6 +5,8 @@ const {chromium}=require('playwright');
  await page.goto('http://127.0.0.1:8765/wp-login.php');
  await page.evaluate(password=>{document.getElementById('user_login').value='tncp_admin';document.getElementById('user_pass').value=password;},process.env.TNCP_TEST_PASSWORD);await page.locator('#wp-submit').click();await page.waitForURL('**/wp-admin/');
  await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();await page.locator('tbody tr').first().waitFor();
+ const selectionPositions=await page.locator('.tncp-table :is(th,td):first-child input[type="checkbox"]').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().x));
+ if(!selectionPositions.every(x=>Math.abs(x-selectionPositions[0])<1))throw Error('Selection checkboxes do not align');
  await page.addScriptTag({path:process.env.TNCP_AXE_PATH});
  for(const viewport of [{width:1600,height:1050},{width:390,height:844},{width:800,height:700}]){
   await page.setViewportSize(viewport);

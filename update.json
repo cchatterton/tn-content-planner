@@ -1,4 +1,4 @@
 {
-  "version": "0.6.0",
-  "body": "## 0.6.0 - 2026-09-09\n\n- Add Show Mine / Show All beside the XP Patterns heading, using JavaScript row visibility without requests or rebuilding controls.\n- Keep table column headings visible below the WordPress admin bar during page scrolling.\n- Move Add row below the content table and remove the Build your content structure heading.\n"
+  "version": "0.6.1",
+  "body": "## 0.6.1 - 2026-09-09\n\n- Align the select-all checkbox and all row-selection checkboxes in one centered column.\n- Retain the 0.6.0 client-side pattern filter, sticky table headings and bottom Add row placement.\n"
 }

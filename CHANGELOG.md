@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1 - 2026-09-09
+
+- Align the select-all checkbox and all row-selection checkboxes in one centered column.
+- Retain the 0.6.0 client-side pattern filter, sticky table headings and bottom Add row placement.
+
 ## 0.6.0 - 2026-09-09
 
 - Add Show Mine / Show All beside the XP Patterns heading, using JavaScript row visibility without requests or rebuilding controls.

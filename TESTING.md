@@ -1,5 +1,10 @@
 # Validation
 
+## 0.6.1
+
+- Browser checks compare horizontal positions of every selection checkbox, including the header. Desktop/mobile/narrow and modal Axe checks pass.
+
+
 ## 0.6.0
 
 - Browser tests verify the original pattern rows remain mounted while Show Mine / Show All filters without network requests, and visible assignments match the logged-in user.

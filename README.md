@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.6.0 · Branding mode: Author Branded
+Author: Techn · Version: 0.6.1 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 

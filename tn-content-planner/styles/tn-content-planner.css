@@ -34,6 +34,8 @@
 .tncp-wrap .tncp-table { min-width: 95rem; table-layout: fixed; }
 .tncp-wrap .tncp-table th, .tncp-wrap .tncp-table td { vertical-align: middle; padding: .5rem; }
 .tncp-wrap .tncp-table th:first-child { width: 3rem; }
+.tncp-wrap .tncp-table :is(th, td):first-child { text-align: center; padding-inline: .5rem; }
+.tncp-wrap .tncp-table :is(th, td):first-child input[type="checkbox"] { display: block; margin: 0 auto; }
 .tncp-wrap .tncp-table th:nth-child(2) { width: 18rem; }
 .tncp-wrap .tncp-table th:nth-child(3) { width: 12rem; }
 .tncp-wrap .tncp-table th:nth-child(4) { width: 12rem; }
