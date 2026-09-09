@@ -1,4 +1,4 @@
 {
-  "version": "0.3.12",
-  "body": "## 0.3.12 - 2026-09-09\n\n- Replace Exclude From Search with Include in Search in the settings bar.\n- Show a navy tick when the type is included and an orange cross when excluded, for native and custom types alike.\n- Keep the neutral native marker only for Publicly Queryable.\n"
+  "version": "0.3.13",
+  "body": "## 0.3.13 - 2026-09-09\n\n- Place XP Pattern example-post links beside their dropdowns and reserve equal link space in every row.\n- Offer Discard, Cancel and Save plan now when switching tabs with unsaved edits.\n- Save the active content plan or XP Patterns before switching; failed saves preserve edits and keep the current tab open.\n"
 }

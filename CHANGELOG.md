@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.13 - 2026-09-09
+
+- Place XP Pattern example-post links beside their dropdowns and reserve equal link space in every row.
+- Offer Discard, Cancel and Save plan now when switching tabs with unsaved edits.
+- Save the active content plan or XP Patterns before switching; failed saves preserve edits and keep the current tab open.
+
 ## 0.3.12 - 2026-09-09
 
 - Replace Exclude From Search with Include in Search in the settings bar.

@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.12 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.13 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -22,7 +22,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 
 - Initial load and tab clicks scan existing editable published, draft, pending, private and scheduled posts into the plan, including title, slug, parent and planning metadata. Trashed posts and auto-drafts are excluded. Existing links are retained; a unique existing slug maps a matching unlinked row. Pending edits are preserved.
 - Tabs show mapped/planned counts. Click a tab to refresh linked data; the loading spinner remains visible until completion. The table header checkbox selects or clears all rows and shows partial selection.
-- XP Patterns is the last tab. It groups saved plan items by XP key across eligible post types, showing counts, a short description (240 characters), todo/in-progress/done status, an Assigned to picklist of this site’s WordPress users, and an existing example post from the same post type. Assignment defaults to Unassigned and persists with Save patterns. Deleted or removed assignees appear unavailable until replaced or cleared. Save patterns persists this metadata separately from content plans.
+- XP Patterns is the last tab. It groups saved plan items by XP key across eligible post types, showing counts, a short description (240 characters), todo/in-progress/done status, an Assigned to picklist of this site’s WordPress users, and an existing example post from the same post type. Example-post editor links sit beside their dropdowns, with equal link space reserved in every row. Assignment defaults to Unassigned and persists with Save patterns. Deleted or removed assignees appear unavailable until replaced or cleared. Save patterns persists this metadata separately from content plans.
 - Mapped Post IDs, review matches and pattern examples open the WordPress editor in a new tab. Parent selectors show the relationship without an extra link; use the parent's own mapped Post ID to edit it. Mapped Post IDs have two stacked dots: content on top and featured image below. Dots are visible only when present. Missing indicators are fully hidden while their positions remain reserved. Content means the stored post body is nonempty after trimming whitespace.
 - The loading indicator stays fixed at the bottom right without moving the page.
 - Review selected rows one at a time: Item X of Y. Apply advances only after success; Skip leaves the item selected for later. Parents are reviewed first.
@@ -52,7 +52,7 @@ Only `title` and `slug` are accepted, in that order. Imported rows start with no
 
 Each site's `tncp_plan_{post_type}` option stores a revision and rows, including stable row IDs, post links, snapshots and confirmed pending changes. Options do not autoload. Generated posts use `_tncp_row_id` as a durable recovery marker, plus `_tncp_template`, `_tncp_flags` and `_tncp_pattern` metadata. `tncp_patterns` stores revisioned descriptions, statuses and example IDs by pattern key; counts are calculated from saved plans. Metadata for unused keys is retained so it returns if the pattern is needed again. `tncp_lock_patterns` serialises pattern saves. `tncp_lock_{post_type}` serialises writes; an interrupted request's lock expires after ten minutes.
 
-A stale plan revision or linked title/slug/parent stops mutation. Clicking a post-type tab reloads linked values for unchanged rows and preserves saved pending edits. Unsaved edits require an explicit discard before reloading. A trashed/deleted mapped post must be restored or its row removed. For a pending row with an external conflict, review the current destination before choosing which values to accept.
+A stale plan revision or linked title/slug/parent stops mutation. Clicking a post-type tab reloads linked values for unchanged rows and preserves saved pending edits. When switching tabs with unsaved edits, choose Discard, Cancel or Save plan now. Saving persists the active content plan or XP Patterns before switching; failure keeps the current tab and edits. A trashed/deleted mapped post must be restored or its row removed. For a pending row with an external conflict, review the current destination before choosing which values to accept.
 
 Removing a linked row offers **Remove row only** or **Remove row & move post to bin**. Binning requires a saved plan, delete permission and an enabled WordPress bin; permanent deletion is never used. Planned children must be moved first. A row removed without binning its post is added again by the next complete scan. Deactivation/uninstall retains plans and content.
 

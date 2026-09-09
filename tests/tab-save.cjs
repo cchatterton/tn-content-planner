@@ -1,0 +1,36 @@
+const {chromium}=require('playwright');
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:'chrome'});
+ const page=await browser.newPage({viewport:{width:1600,height:1050}});
+ await page.goto('http://127.0.0.1:8765/wp-login.php');
+ await page.evaluate(password=>{document.getElementById('user_login').value='tncp_admin';document.getElementById('user_pass').value=password;},process.env.TNCP_TEST_PASSWORD);await page.locator('#wp-submit').click();await page.waitForURL('**/wp-admin/');
+ await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();await page.locator('tbody tr').first().waitFor();
+ const assert=require('node:assert/strict');
+ const pages=page.getByRole('tab',{name:/^Pages,/}), xp=page.getByRole('tab',{name:'XP Patterns',exact:true});
+ async function ready(){await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');}
+ await xp.click();await ready();
+ const description=page.locator('[data-pattern]').first().getByRole('textbox'), original=await description.inputValue();
+ const savedText='Tab save '+Date.now();await description.fill(savedText);await pages.click();
+ assert.deepEqual(await page.locator('#tncp-dialog-actions button').allTextContents(),['Discard','Cancel','Save plan now']);
+ await page.getByRole('button',{name:'Cancel',exact:true}).click();assert.equal(await xp.getAttribute('aria-selected'),'true');assert.equal(await description.inputValue(),savedText);
+ const failing=async route=>{if(route.request().method()==='POST')await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({message:'Simulated save failure'})});else await route.continue();};
+ await page.route('**/tncp/v1/patterns',failing);
+ await pages.click();await page.getByRole('button',{name:'Save plan now',exact:true}).click();await page.getByText('Simulated save failure',{exact:true}).waitFor();await ready();
+ assert.equal(await xp.getAttribute('aria-selected'),'true');assert.equal(await description.inputValue(),savedText);
+ await page.unroute('**/tncp/v1/patterns',failing);
+ await pages.click();await page.getByRole('button',{name:'Save plan now',exact:true}).click();await ready();await page.waitForFunction(()=>document.querySelector('[id="tncp-tab-page"]').getAttribute('aria-selected')==='true');
+ await xp.click();await ready();assert.equal(await description.inputValue(),savedText);
+ await description.fill('Discard this test edit');await pages.click();await page.getByRole('button',{name:'Discard',exact:true}).click();await ready();
+ await xp.click();await ready();assert.equal(await description.inputValue(),savedText);
+ await description.fill(original);await page.getByRole('button',{name:'Save patterns',exact:true}).click();await ready();
+ await pages.click();await ready();
+ await page.getByRole('button',{name:'Add row',exact:true}).click();
+ const title='Tab save row '+Date.now();
+ await page.locator('[data-title]').last().fill(title);await page.locator('[data-title]').last().press('Tab');
+ const row=page.locator('tbody tr').last();await row.getByRole('textbox',{name:'Content slug',exact:true}).fill(title.toLowerCase().replaceAll(' ','-'));await row.getByRole('textbox',{name:'Content slug',exact:true}).press('Tab');
+ await xp.click();await page.getByRole('button',{name:'Save plan now',exact:true}).click();await ready();await page.waitForFunction(()=>document.querySelector('#tncp-tab-xp-patterns').getAttribute('aria-selected')==='true');
+ const found=await page.evaluate(async title=>{const h={'X-WP-Nonce':TNCP.nonce,'Content-Type':'application/json'};const data=await(await fetch(TNCP.api+'plan/page',{headers:h})).json();const found=data.plan.rows.some(r=>r.title===title);if(found){const result=await fetch(TNCP.api+'save/page',{method:'POST',headers:h,body:JSON.stringify({revision:data.plan.revision,rows:data.plan.rows.filter(r=>r.title!==title)})});if(!result.ok)throw Error('Fixture cleanup failed');}return found;},title);
+ assert.equal(found,true);
+ console.log('PASS: modal button order, Cancel preserves edits, Discard restores saved data, failed save stays on tab, and Save plan now persists both patterns and content plans before switching.');
+ await browser.close();
+})().catch(error=>{console.error(error);process.exit(1)});

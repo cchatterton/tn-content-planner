@@ -1,5 +1,12 @@
 # Validation
 
+## 0.3.13
+
+- Browser checks confirm example links sit beside dropdowns, with matching dropdown and ID-slot widths; screenshot inspected and Axe passed.
+- `tests/tab-save.cjs` verifies button order, Cancel and Discard, saving both content and patterns before navigation, and simulated server failure preserving the current tab and edits.
+- PHP lint, JavaScript syntax and diff whitespace checks pass.
+
+
 ## 0.3.12
 
 - Browser verification confirms native Pages show an Include in Search tick and retain the grey native Publicly Queryable marker.
