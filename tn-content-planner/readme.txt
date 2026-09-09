@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,7 +17,7 @@ TN Content Planner by Techn provides a two-step content planning workflow in Wor
 1. Plan your WBS: add rows in post-type tabs, edit safe title HTML, choose parents, templates and relationship flags, then save.
 2. Review and create: select saved rows and apply draft creations or explicitly confirmed changes to linked posts.
 
-Existing slugs map to editable posts in the same post type. Ambiguous matches are rejected; CSV can specify an explicit Post ID. Circular hierarchies, duplicate planned slugs and stale edits are rejected.
+Existing slugs map to editable posts in the same post type. Ambiguous matches are rejected; use a unique slug. Circular hierarchies, duplicate planned slugs and stale edits are rejected.
 
 New posts are drafts. Existing posts keep their content and publication status. Removing a plan row does not delete its post. Saves store the plan only; changes to WordPress posts are applied in Step 2.
 
@@ -42,9 +42,9 @@ posttype-level-template-count, for example page-1-single-3. Root level is 0 and 
 
 = How does CSV import work? =
 Download the blank template from the current post-type tab. Keep the columns in order:
-title,slug,parent,template,local,related,children,siblings,parents,post_id
+title,slug
 
-Parent accepts another planned slug, an existing slug, or post:123. Leave blank for no parent. Flags accept 1/0, true/false, yes/no or blank. Post ID is optional. Template accepts Single, Archive or Custom. Standard quoted CSV supports commas, newlines and double quotes in titles. Imports append and must be saved. The XP pattern is computed and is not imported.
+Only title and slug are accepted, in that order. Imported rows start with no parent, Single template and all relationship flags unchecked. Set other fields in the planner after importing. Unique existing slugs still map to posts when saved. Standard quoted CSV supports commas, newlines and double quotes in titles. Imports append and must be saved.
 
 = What are the limits? =
 500 plan rows and 2,000 catalog posts per post type; 1 MB per CSV; 50 selected rows per apply batch; 100 hierarchy levels. Include uncreated ancestors in the selected batch. For non-hierarchical post types, post_parent is stored but native permalinks and editors may not reflect it.
@@ -65,6 +65,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.1.1 =
+
+* Replaced row removal text buttons with discreet, labelled trash icons.
+* Reduced CSV import and the downloadable template to title and slug only.
+* Use public post types for planner tabs and REST access, including public custom types with hidden admin UI. Exclude non-public internal types.
 
 = 0.1.0 =
 * Initial WBS editor, CSV import, safe HTML previews, hierarchy planning and XP patterns.

@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.1.0 · Branding mode: Author Branded
+Author: Techn · Version: 0.1.1 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, then review and create selected drafts or apply confirmed changes to linked posts.
 
@@ -10,6 +10,8 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 
 ## Scope and decisions
 
+- Tabs include public registered post types the current user can edit, even when their native admin UI is hidden. Attachments and non-public internal types are excluded.
+
 - Step 1 implements the specified WBS. Step 2 is the review/apply stage; no unspecified content-writing steps are added.
 - Plan save is separate from post creation and mutation. Modal choices stage title, slug and parent changes for review and apply.
 - “Create new plan item” keeps the original mapped item and gives the copy a unique slug, adding a suffix if necessary.
@@ -17,7 +19,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - XP pattern is `posttype-level-template-flagcount`, e.g. `page-1-single-3`. It identifies a pattern combination, not an individual row. Identical combinations intentionally share a key; rows have independent UUIDs.
 - Single / Archive / Custom and the five flags are planning metadata, not theme-template generation or automatic related-content queries.
 - New posts are drafts; updates retain existing content and publication status.
-- Slug mapping uses the current post type. Ambiguous existing slugs require an explicit CSV Post ID. Duplicate planned slugs are rejected, including an attempted rename onto another post's slug.
+- Slug mapping uses the current post type. Ambiguous existing slugs are rejected; choose a unique slug. Duplicate planned slugs are rejected, including an attempted rename onto another post's slug.
 - Font Awesome Free is bundled for admin preview. Safe HTML allowlist: `i`, `span`, `strong`, `em`, `b`, `br`; `class` and `aria-hidden` on `i`/`span`. Frontend icon loading belongs to the active theme.
 - Limits: 500 rows / 2,000 catalog posts per type; 1 MB CSV; 50 selected rows per batch; 100 hierarchy levels. Post types with no native hierarchy still store `post_parent`, without changing their permalink rules.
 
@@ -26,10 +28,10 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 Use the per-tab **Download CSV template** button. The blank CSV contains:
 
 ```csv
-title,slug,parent,template,local,related,children,siblings,parents,post_id
+title,slug
 ```
 
-Parent is a planned slug, an unambiguous existing slug, or `post:123`. Template is Single, Archive or Custom. Flags use `1`/`0` (also accepts true/false and yes/no). Post ID is optional; XP pattern is computed. Imports append, never replace, and invalid imports leave the plan unchanged.
+Only `title` and `slug` are accepted, in that order. Imported rows start with no parent, Single template and all relationship flags unchecked. Set the other fields in the planner after import. Slugs are normalised and unique existing slugs still map to posts when saved. Imports append, never replace; invalid imports leave the plan unchanged. Standard CSV quoting supports HTML, commas and newlines in titles.
 
 ## Data and recovery
 

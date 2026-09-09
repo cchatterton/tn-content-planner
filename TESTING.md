@@ -1,4 +1,14 @@
-# Validation — 0.1.0
+# Validation
+
+## 0.1.1
+
+- 60 WordPress integration checks pass, including public built-in and custom post types, public types with hidden admin UI, exclusion of non-public types and attachments, capability enforcement, and save/create through the REST API for a public custom type.
+- Browser regression passes with public/hidden-UI/non-public fixtures. Public tabs appear; internal types are absent. Two-column CSV imports, the exact blank `title,slug` template, default planning fields and rejection of extra columns are verified.
+- Row actions render an icon with no visible text, a tooltip and accessible name. Cancelling removal keeps the row. Existing linked-post confirmations and draft creation still pass.
+- Axe WCAG A/AA, keyboard navigation and modal checks pass at desktop, mobile and narrow widths. The trash controls were visually reviewed in the horizontally scrolled table.
+- PHP and JavaScript syntax checks pass. Techn Author Branded styling and the previously applied standards remain in place.
+
+## 0.1.0
 
 Test environment: disposable local WordPress 7.1, PHP 8.5.7, MySQL, Chrome through Playwright. No production content was used.
 

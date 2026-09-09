@@ -6,7 +6,7 @@ function tncp_error($message, $status = 400) {
 }
 
 function tncp_types() {
-    $types = get_post_types(array('show_ui' => true), 'objects');
+    $types = get_post_types(array('public' => true), 'objects');
     foreach ($types as $name => $type) {
         if ('attachment' === $name || !current_user_can($type->cap->edit_posts)) { unset($types[$name]); }
     }
@@ -117,7 +117,7 @@ function tncp_validate_rows($input, $type, $old) {
         $previous = $old_rows[$id] ?? null;
         if ($previous && $previous['post_id'] && $previous['post_id'] !== $post_id) { return tncp_error(__('A linked row cannot be detached. Create a new plan item instead.', 'tn-content-planner')); }
         $matches = array_values(array_filter($catalog, static fn($post) => $post['slug'] === $slug));
-        if (!$post_id && count($matches) > 1) { return tncp_error(sprintf(__('Slug "%s" matches multiple posts. Use a unique slug or specify the intended Post ID in CSV.', 'tn-content-planner'), $slug)); }
+        if (!$post_id && count($matches) > 1) { return tncp_error(sprintf(__('Slug "%s" matches multiple posts. Use a unique slug.', 'tn-content-planner'), $slug)); }
         if (!$post_id && count($matches) === 1) { $post_id = $matches[0]['id']; }
         if ($post_id && isset($posts[$post_id]) && $posts[$post_id]['slug'] !== $slug && array_filter($matches, static fn($match) => $match['id'] !== $post_id)) { return tncp_error(__('This slug already belongs to another post in this post type.', 'tn-content-planner')); }
         if ($post_id && !isset($posts[$post_id])) { return tncp_error(__('A linked post is unavailable or cannot be edited.', 'tn-content-planner')); }

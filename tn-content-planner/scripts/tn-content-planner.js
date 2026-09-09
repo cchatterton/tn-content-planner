@@ -3,7 +3,7 @@
     'use strict';
     const __ = (text) => wp.i18n.__(text, 'tn-content-planner');
     const flags = ['local', 'related', 'children', 'siblings', 'parents'];
-    const columns = ['title', 'slug', 'parent', 'template', ...flags, 'post_id'];
+    const columns = ['title', 'slug'];
     const app = document.getElementById('tncp-app');
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [];
@@ -158,7 +158,7 @@
                 if (!row.title) row.title = post.title;
                 if (!row.parent) row.parent = post.parent ? `post:${post.parent}` : '';
                 announce(__('Existing slug found. This row is now linked to Post ID') + ` ${post.id}.`);
-            } else if (matches.length) announce(__('This slug is ambiguous or already linked in the plan. Choose a unique slug or use an explicit Post ID in CSV.'), true);
+            } else if (matches.length) announce(__('This slug is ambiguous or already linked in the plan. Choose a unique slug.'), true);
         }
         markDirty(); setTimeout(render, 0);
     }
@@ -222,11 +222,11 @@
             el('td', {}, [el('input', { type: 'text', value: row.slug, required: '', maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
             el('td', {}, [parent]), el('td', {}, [template]));
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => { row.flags[flag] = event.target.checked; markDirty(); render(); } })])));
-        tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', { text: row.post_id ? String(row.post_id) : '—' }), el('td', {}, [button(__('Remove row'), async () => {
+        tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', { text: row.post_id ? String(row.post_id) : '—' }), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
             const answer = await ask(__('Remove plan row?'), __('This removes the row from the plan. Linked WordPress posts are kept.'), [['remove', __('Remove row')]]);
             if (answer === 'remove') { plan.rows = plan.rows.filter(item => item.id !== row.id); selected.delete(row.id); markDirty(); render(); }
-        })]));
+        } }, [el('span', { class: 'dashicons dashicons-trash', 'aria-hidden': 'true' })])]));
         return tr;
     }
     function render() {
@@ -347,35 +347,13 @@
             const imported = records.map((record, index) => {
                 if (record.length !== columns.length) throw new Error(`${__('Wrong number of columns in CSV row')} ${index + 2}.`);
                 const data = Object.fromEntries(headers.map((key, column) => [key, record[column]]));
-                const row = newRow(); row.title = data.title; row.slug = slug(data.slug); row.template = data.template.trim().toLowerCase() || 'single';
-                if (!plain(row.title).trim() || !row.slug || !['single', 'archive', 'custom'].includes(row.template)) throw new Error(`${__('Invalid title, slug or template in CSV row')} ${index + 2}.`);
-                row.csvParent = data.parent.trim();
-                flags.forEach(flag => {
-                    const value = data[flag].trim().toLowerCase();
-                    if (!['', '0', '1', 'true', 'false', 'yes', 'no'].includes(value)) throw new Error(`${__('Use 1 or 0 for CSV checkboxes in row')} ${index + 2}.`);
-                    row.flags[flag] = ['1', 'true', 'yes'].includes(value);
-                });
-                if (data.post_id && !/^[1-9]\d*$/.test(data.post_id.trim())) throw new Error(__('Post ID must be a positive number or blank.'));
-                const post = data.post_id ? catalog.find(item => item.id === Number(data.post_id)) : null;
-                if (data.post_id && !post) throw new Error(__('A CSV Post ID is unavailable in this post type.'));
-                if (post) { row.post_id = post.id; row.baseline = { title: post.title, slug: post.slug, parent: post.parent }; }
+                const row = newRow(); row.title = data.title; row.slug = slug(data.slug);
+                if (!plain(row.title).trim() || !row.slug) throw new Error(`${__('Invalid title or slug in CSV row')} ${index + 2}.`);
                 return row;
             });
             const combined = [...plan.rows, ...imported];
             if (new Set(combined.map(row => row.slug)).size !== combined.length) throw new Error(__('Duplicate slugs found. CSV imports append rows; they do not replace existing plan rows.'));
-            for (const row of imported) {
-                const value = row.csvParent;
-                if (value) {
-                    const planned = combined.filter(item => item.slug === slug(value));
-                    const existing = value.startsWith('post:') ? catalog.filter(post => `post:${post.id}` === value) : catalog.filter(post => post.slug === slug(value));
-                    if (planned.length === 1 && !value.startsWith('post:')) row.parent = `row:${planned[0].id}`;
-                    else if (existing.length === 1) row.parent = `post:${existing[0].id}`;
-                    else throw new Error(__('CSV parent is missing or ambiguous. Use a parent slug or post:ID.'));
-                }
-                delete row.csvParent;
-            }
-            const previous = plan.rows; plan.rows = combined;
-            try { plan.rows.forEach(row => depth(row)); } catch (error) { plan.rows = previous; throw error; }
+            plan.rows = combined;
             markDirty(); render(); announce(`${imported.length} ${__('rows imported. Review and save the plan. The import has not changed any posts.')}`);
         } catch (error) { announce(error.message, true); }
     }

@@ -14,19 +14,30 @@ let lastPage;
  await page.locator('#wp-submit').click();
  await page.waitForURL('**/wp-admin/');
  await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');
+ if(process.env.TNCP_TEST_PUBLIC_TYPES){
+  await page.getByRole('tab',{name:'Public demo',exact:true}).waitFor();
+  await page.getByRole('tab',{name:'Hidden UI public demo',exact:true}).click();
+  await page.getByRole('heading',{name:'Build your content structure',exact:true}).waitFor();
+  assert.equal(await page.getByRole('tab',{name:'Internal demo',exact:true}).count(),0);
+  assert.equal(await page.getByRole('tab',{name:'Patterns',exact:true}).count(),0);
+ }
  await page.getByRole('tab',{name:'Pages',exact:true}).click();
  await page.getByRole('button',{name:'Add row',exact:true}).waitFor();
  fs.mkdirSync('tests/artifacts',{recursive:true});
  await page.screenshot({path:'tests/artifacts/empty-desktop.png',fullPage:true});
  const token = Date.now();
  const rootSlug = `browser-${token}-home`, childSlug = `browser-${token}-child`;
- const csv = 'title,slug,parent,template,local,related,children,siblings,parents,post_id\r\n' +
-   `"<i class=""fa-solid fa-house"" aria-hidden=""true""></i> Home",${rootSlug},,Archive,1,0,1,0,0,\r\n` +
-   `"Services, overview",${childSlug},${rootSlug},Single,1,1,0,0,1,\r\n`;
+ const csv = 'title,slug\r\n' +
+   `"<i class=""fa-solid fa-house"" aria-hidden=""true""></i> Home",${rootSlug}\r\n` +
+   `"Services, overview",${childSlug}\r\n`;
  await page.locator('#tncp-csv').setInputFiles({name:'plan.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
  await page.getByText('2 rows imported.',{exact:false}).waitFor();
  assert.equal(await page.locator('tbody tr').count(),2);
- assert.equal(await page.locator('tbody tr').nth(1).locator('.tncp-pattern').innerText(),'page-1-single-3');
+ assert.equal(await page.locator('tbody tr').nth(1).locator('.tncp-pattern').innerText(),'page-0-single-0');
+ assert.equal(await page.locator('tbody tr input[type="checkbox"]:checked').count(),0);
+ const rootId=await page.locator('tbody tr').first().getAttribute('data-row');
+ await page.locator('tbody tr').nth(1).getByRole('combobox',{name:'Parent',exact:true}).selectOption(`row:${rootId}`);
+ await page.waitForFunction(()=>document.querySelectorAll('.tncp-pattern')[1]?.textContent==='page-1-single-0');
  assert.equal(await page.locator('tbody tr').first().locator('.fa-house').count(),1);
  const iconFont = await page.locator('.tncp-title .fa-house').evaluate(node => getComputedStyle(node).fontFamily);
  assert(iconFont.includes('Font Awesome'));
@@ -60,7 +71,7 @@ let lastPage;
  // Parent changes move row immediately and require explicit modal confirmation.
  await page.locator('tbody tr').nth(1).getByRole('combobox',{name:'Parent',exact:true}).selectOption('');
  await page.getByRole('button',{name:'Move linked post',exact:true}).click();
- await page.waitForFunction(() => document.querySelectorAll('.tncp-pattern')[1]?.textContent === 'page-0-single-3');
+ await page.waitForFunction(() => document.querySelectorAll('.tncp-pattern')[1]?.textContent === 'page-0-single-0');
  // Creating a new item preserves original mapped row.
  const root = page.locator('tbody tr').first();
  await root.getByRole('button',{name:'Edit title:',exact:false}).click();
@@ -72,15 +83,22 @@ let lastPage;
  await page.getByRole('button',{name:'Save plan',exact:true}).click();
  await page.getByText('Plan saved.',{exact:false}).waitFor();
  await page.screenshot({path:'tests/artifacts/planner-desktop.png',fullPage:true});
+ // Trash actions remain labelled, discreet and protected by confirmation.
+ const trash=page.locator('tbody tr').last().getByRole('button',{name:'Remove row: New content idea',exact:true});
+ assert.equal(await trash.innerText(),'');
+ assert.equal(await trash.getAttribute('title'),'Remove row');
+ assert.equal(await trash.locator('.dashicons-trash').count(),1);
+ await trash.click(); await page.getByRole('button',{name:'Cancel',exact:true}).click();
+ assert.equal(await page.locator('tbody tr').count(),3);
  // CSV template download is exactly the documented blank header.
  const downloadPromise = page.waitForEvent('download');
  await page.getByRole('button',{name:'Download CSV template',exact:true}).click();
  const download = await downloadPromise;
  const path = await download.path();
- assert.equal(fs.readFileSync(path,'utf8').replace(/^\uFEFF/,''),'title,slug,parent,template,local,related,children,siblings,parents,post_id\r\n');
+ assert.equal(fs.readFileSync(path,'utf8').replace(/^\uFEFF/,''),'title,slug\r\n');
  // Invalid imports do not alter rows.
- await page.locator('#tncp-csv').setInputFiles({name:'bad.csv',mimeType:'text/csv',buffer:Buffer.from(csv.replace('1,0,1','maybe,0,1'))});
- await page.getByText('Use 1 or 0 for CSV checkboxes',{exact:false}).waitFor();
+ await page.locator('#tncp-csv').setInputFiles({name:'bad.csv',mimeType:'text/csv',buffer:Buffer.from('title,slug,parent\r\nUnexpected,unexpected,extra\r\n')});
+ await page.getByText('Use the column order in the downloadable CSV template.',{exact:false}).waitFor();
  assert.equal(await page.locator('tbody tr').count(),3);
  // Unauthenticated/missing nonce request fails through actual HTTP authentication.
  const denied = await page.evaluate(async () => (await fetch(TNCP.api+'save/page',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision:0,rows:[]})})).status);

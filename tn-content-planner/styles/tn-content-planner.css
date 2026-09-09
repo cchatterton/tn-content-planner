@@ -38,7 +38,7 @@
 .tncp-wrap .tncp-table th:nth-child(n+6):nth-child(-n+10) { width: 4rem; }
 .tncp-wrap .tncp-table th:nth-child(11) { width: 12rem; }
 .tncp-wrap .tncp-table th:nth-child(12) { width: 4rem; }
-.tncp-wrap .tncp-table th:last-child { width: 7rem; }
+.tncp-wrap .tncp-table th:last-child { width: 4rem; white-space: nowrap; }
 .tncp-wrap .tncp-table input[type="text"], .tncp-wrap .tncp-table select { width: 100%; min-width: 0; }
 .tncp-wrap .tncp-title { display: block; border: .0625rem solid transparent; background: transparent; text-align: start; width: 100%; padding: .375rem; cursor: text; font: inherit; color: #0a263b; overflow-wrap: anywhere; }
 .tncp-wrap .tncp-title:hover { border-color: var(--tncp-border); }
@@ -58,3 +58,7 @@
     .tncp-wrap .tncp-actions { gap: .5rem; }
     .tncp-wrap .tncp-dialog { width: calc(100% - 3rem); padding: 1rem; }
 }
+
+.tncp-wrap .tncp-remove { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; padding: .375rem; border: 0; border-radius: .4rem; background: transparent; color: var(--tncp-muted); cursor: pointer; }
+.tncp-wrap .tncp-remove:hover { color: #b32d2e; background: #fcf0f1; }
+.tncp-wrap .tncp-remove .dashicons { width: 1.125rem; height: 1.125rem; font-size: 1.125rem; line-height: 1; }

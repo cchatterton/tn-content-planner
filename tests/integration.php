@@ -22,6 +22,29 @@ $run = strtolower($run);
 $original = get_option('tncp_plan_page', null);
 $created = array();
 try {
+    register_post_type('tncp_public_test', array('public' => true, 'show_ui' => true));
+    register_post_type('tncp_hidden_test', array('public' => true, 'show_ui' => false));
+    register_post_type('tncp_private_test', array('public' => false, 'show_ui' => true));
+    register_post_type('tncp_cap_test', array('public' => true, 'capability_type' => 'tncp_restricted', 'map_meta_cap' => true));
+    $types = tncp_types();
+    tncp_test(isset($types['post'], $types['page']), 'Public built-in content types included');
+    tncp_test(isset($types['tncp_public_test']), 'Public custom post type included');
+    tncp_test(isset($types['tncp_hidden_test']), 'Public custom type with hidden admin UI included');
+    tncp_test(!isset($types['tncp_private_test']), 'Non-public admin-visible type excluded');
+    tncp_test(!isset($types['attachment']), 'Media attachments excluded');
+    tncp_test(!isset($types['tncp_cap_test']), 'Public type without edit capability excluded');
+    tncp_test(200 === tncp_test_request('plan', array(), 'tncp_hidden_test', 'GET')->get_status(), 'REST permits public type with hidden admin UI');
+    tncp_test(403 === tncp_test_request('plan', array(), 'tncp_private_test', 'GET')->get_status(), 'REST rejects non-public type');
+    tncp_test(403 === tncp_test_request('plan', array(), 'tncp_cap_test', 'GET')->get_status(), 'REST rejects public type without capability');
+    $custom = tncp_test_row($run . '-custom', 'Public custom content');
+    $saved_custom = tncp_test_request('save', array('revision' => 0, 'rows' => array($custom)), 'tncp_hidden_test')->get_data();
+    tncp_test(isset($saved_custom['revision']), 'Public custom type plan saves');
+    $applied_custom = tncp_test_request('apply', array('revision' => $saved_custom['revision'], 'selected' => array($custom['id'])), 'tncp_hidden_test')->get_data();
+    tncp_test(isset($applied_custom['plan']), 'Public custom type creates draft');
+    $custom_id = $applied_custom['plan']['rows'][0]['post_id'];
+    tncp_test('tncp_hidden_test' === get_post_type($custom_id) && 'draft' === get_post_status($custom_id), 'Created draft belongs to public custom type');
+    wp_delete_post($custom_id, true);
+    delete_option('tncp_plan_tncp_hidden_test');
     delete_option('tncp_plan_page');
     $root = tncp_test_row($run . '-root', '<i class="fa-solid fa-house" aria-hidden="true"></i> Home');
     $child = tncp_test_row($run . '-child', 'Child', 'row:' . $root['id']);
@@ -160,4 +183,6 @@ try {
     foreach ($created as $id) { wp_delete_post($id, true); }
     if (null === $original) { delete_option('tncp_plan_page'); } else { update_option('tncp_plan_page', $original, false); }
     tncp_clear_update_cache();
+    delete_option('tncp_plan_tncp_hidden_test');
+    foreach (array('tncp_public_test', 'tncp_hidden_test', 'tncp_private_test', 'tncp_cap_test') as $fixture) { unregister_post_type($fixture); }
 }

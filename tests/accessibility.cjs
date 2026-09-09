@@ -24,6 +24,8 @@ const {chromium}=require('playwright');
  const result=await page.evaluate(async()=>await axe.run('.tncp-dialog',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
  if(result.violations.length)throw Error(JSON.stringify(result.violations));
  await page.keyboard.press('Escape');await page.locator('dialog[open]').waitFor({state:'hidden'});
+ await page.locator('.tncp-scroll').evaluate(node=>{node.scrollLeft=node.scrollWidth});
+ await page.screenshot({path:'tests/artifacts/trash-buttons.png',fullPage:true});
  console.log('PASS: Axe WCAG A/AA at desktop/mobile/narrow widths, modal audit, keyboard field traversal and slug normalization.');
  await browser.close();
 })().catch(error=>{console.error(error);process.exit(1)});
