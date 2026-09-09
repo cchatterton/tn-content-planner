@@ -1,5 +1,12 @@
 # Validation
 
+## 0.3.11
+
+- Browser verification confirms the grey query marker appears for native Pages and not for custom types, and Custom has its own colour class.
+- Custom-bar contrast and desktop/mobile/narrow Axe checks pass, alongside existing header alignment, keyboard traversal and selection alignment checks.
+- JavaScript syntax, PHP lint and diff whitespace checks pass.
+
+
 ## 0.3.10
 
 - Added the requested page-scoped CSS rule. PHP lint and diff whitespace checks pass.

@@ -365,13 +365,18 @@
         const settingNames = { public: __('Public'), publicly_queryable: __('Publicly Queryable'), exclude_from_search: __('Exclude From Search'), hierarchical: __('Hierarchical') };
         Object.entries(settingNames).forEach(([key, label]) => {
             const value = typeSettings[key];
-            const display = typeof value === 'boolean' ? el('dd', {}, [
+            const nativeQuery = key === 'publicly_queryable' && typeSettings._builtin === true;
+            const nativeExplanation = __('Native post type — WordPress handles public visibility.');
+            const display = nativeQuery ? el('dd', { title: nativeExplanation }, [
+                el('span', { class: 'tncp-setting-native', 'aria-hidden': 'true', text: '●' }),
+                el('span', { class: 'screen-reader-text', text: nativeExplanation })
+            ]) : typeof value === 'boolean' ? el('dd', {}, [
                 el('span', { class: value ? 'tncp-setting-yes' : 'tncp-setting-no', 'aria-hidden': 'true', text: value ? '✓' : '×' }),
                 el('span', { class: 'screen-reader-text', text: value ? __('Enabled') : __('Disabled') })
             ]) : el('dd', { text: value === undefined ? __('Unavailable') : JSON.stringify(value) });
             settings.append(el('div', {}, [el('dt', { text: label }), display]));
         });
-        settings.append(el('div', { class: 'tncp-type-origin' }, [el('dt', { class: 'screen-reader-text', text: __('Post type origin') }), el('dd', { text: typeSettings._builtin === true ? __('Native') : typeSettings._builtin === false ? __('Custom') : __('Unavailable') })]));
+        settings.append(el('div', { class: 'tncp-type-origin' + (typeSettings._builtin === false ? ' tncp-type-custom' : '') }, [el('dt', { class: 'screen-reader-text', text: __('Post type origin') }), el('dd', { text: typeSettings._builtin === true ? __('Native') : typeSettings._builtin === false ? __('Custom') : __('Unavailable') })]));
         panel.append(settings);
         if (step === 2) { renderReview(panel); return; }
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.11 - 2026-09-09
+
+- Show a neutral grey dot for Publicly Queryable on native post types, with an explanation that WordPress handles their public visibility.
+- Keep Native in its existing colour and display Custom in accessible orange.
+- Preserve post-type eligibility, including native Pages.
+
 ## 0.3.10 - 2026-09-09
 
 - Hide #screen-id on the Content Planner admin page.
