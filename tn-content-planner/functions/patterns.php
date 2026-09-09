@@ -78,6 +78,7 @@ function tncp_patterns_save($request) {
         foreach ($rows as $row) {
             if (!is_array($row) || !isset($row['key']) || !is_string($row['key']) || !isset($patterns[$row['key']]) || isset($seen[$row['key']])) { return tncp_error(__('The pattern list changed. Reload before saving.', 'tn-content-planner'), 409); }
             $key = $row['key']; $seen[$key] = true;
+            if (isset($row['description']) && is_string($row['description'])) { $row['description'] = tncp_trim($row['description']); }
             if (!isset($row['description']) || !is_string($row['description']) || mb_strlen($row['description']) > 240 || !in_array($row['status'] ?? null, array('todo', 'in-progress', 'done'), true)) { return tncp_error(__('Use a description up to 240 characters and a valid status.', 'tn-content-planner')); }
             if (!isset($row['post_id']) || !is_scalar($row['post_id']) || !ctype_digit((string) $row['post_id'])) { return tncp_error(__('Choose a valid example post.', 'tn-content-planner')); }
             $post_id = (int) $row['post_id'];
@@ -88,7 +89,7 @@ function tncp_patterns_save($request) {
             $user_id = (int) $user_id;
             $previous_user = (int) ($saved['entries'][$key]['user_id'] ?? 0);
             if ($user_id && $user_id !== $previous_user && !in_array($user_id, array_column($data['users'], 'id'), true)) { return tncp_error(__('Choose a user from this site.', 'tn-content-planner')); }
-            $saved['entries'][$key] = array('description' => sanitize_text_field($row['description']), 'status' => $row['status'], 'post_id' => $post_id, 'user_id' => $user_id);
+            $saved['entries'][$key] = array('description' => tncp_trim(sanitize_textarea_field($row['description'])), 'status' => $row['status'], 'post_id' => $post_id, 'user_id' => $user_id);
         }
         ++$saved['revision'];
         if (!update_option('tncp_patterns', $saved, false)) { return tncp_error(__('The patterns could not be saved. Please retry.', 'tn-content-planner'), 500); }

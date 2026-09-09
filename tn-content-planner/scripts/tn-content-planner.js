@@ -199,6 +199,8 @@
         if (busy || (flags.includes(field) ? row.flags[field] : row[field]) === value) return;
         const old = row[field];
         if (field === 'slug') value = slug(value);
+        if (field === 'title') value = value.trim();
+        if (row[field] === value) { render(); return; }
         if (row.post_id && ['title', 'slug', 'parent'].includes(field)) {
             const message = field === 'parent' ? __('Do you want to move this post under the new parent?') : field === 'title' ? __('Do you want to change the linked post’s title or create a new item in the plan with the new name?') : __('Do you want to change the linked post’s slug or create a new item in the plan with this new slug?');
             const choices = [['update', field === 'parent' ? __('Move linked post') : __('Change linked post')]];
@@ -255,6 +257,10 @@
     }
     async function save() {
         if (busy) return;
+        for (const row of plan.rows) {
+            if (!row.baseline || row.title !== row.baseline.title) row.title = row.title.trim();
+            row.slug = row.slug.trim();
+        }
         if (!await confirmPending()) { render(); return; }
         await work(async () => {
             plan = await api('save', { revision: plan.revision, rows: plan.rows }); dirty = false; render(); announce(__('Plan saved. Select rows, then choose Map Selected.'));
@@ -498,7 +504,7 @@
     }
     async function savePatterns() {
         await work(async () => {
-            patternsPlan = await api('patterns', { revision: patternsPlan.revision, rows: patternsPlan.rows });
+            patternsPlan = await api('patterns', { revision: patternsPlan.revision, rows: patternsPlan.rows.map(row => ({ ...row, description: row.description.trim() })) });
             dirty = false; render(); announce(__('Patterns saved.'));
         });
     }
@@ -686,7 +692,7 @@
             const imported = records.map((record, index) => {
                 if (record.length !== columns.length) throw new Error(`${__('Wrong number of columns in CSV row')} ${index + 2}.`);
                 const data = Object.fromEntries(headers.map((key, column) => [key, record[column]]));
-                const row = newRow(); row.title = data.title; row.slug = slug(data.slug);
+                const row = newRow(); row.title = data.title.trim(); row.slug = slug(data.slug);
                 if (!plain(row.title).trim()) throw new Error(`${__('Invalid title or slug in CSV row')} ${index + 2}.`);
                 return row;
             });

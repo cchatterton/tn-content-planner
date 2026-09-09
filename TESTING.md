@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.20
+
+- 65 integration, 54 scan/pattern and 42 immediate-change checks pass, including Unicode edge trimming and preserved title HTML/internal spaces.
+- Automatic tab-save browser test confirms padded titles are saved trimmed; manual saving and failed-save recovery still pass.
+- PHP lint, JavaScript syntax and whitespace checks pass.
+
 ## 0.3.19
 
 Release/tag match `e1995f9`; remote/local ZIP SHA-256: `1c9bfc31f3dafa85f1c6c5296a9fcf1262518ad79b6670044fe0e9ef0bca9fa0`. Published ZIP installation through the WordPress installer passed and reports 0.3.19.

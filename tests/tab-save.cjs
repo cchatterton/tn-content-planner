@@ -22,7 +22,7 @@ const {chromium}=require('playwright');
  await pages.click();await ready();
  await page.getByRole('button',{name:'Add row',exact:true}).click();
  const title='Tab save row '+Date.now();
- await page.locator('[data-title]').last().fill(title);await page.locator('[data-title]').last().press('Tab');
+ await page.locator('[data-title]').last().fill('  '+title+'  ');await page.locator('[data-title]').last().press('Tab');
  const row=page.locator('tbody tr').last();await row.getByRole('textbox',{name:'Content slug',exact:true}).fill(title.toLowerCase().replaceAll(' ','-'));await row.getByRole('textbox',{name:'Content slug',exact:true}).press('Tab');
  await xp.click();await ready();await page.waitForFunction(()=>document.querySelector('#tncp-tab-xp-patterns').getAttribute('aria-selected')==='true');
  const found=await page.evaluate(async title=>{const h={'X-WP-Nonce':TNCP.nonce,'Content-Type':'application/json'};const data=await(await fetch(TNCP.api+'plan/page',{headers:h})).json();const found=data.plan.rows.some(r=>r.title===title);if(found){const result=await fetch(TNCP.api+'save/page',{method:'POST',headers:h,body:JSON.stringify({revision:data.plan.revision,rows:data.plan.rows.filter(r=>r.title!==title)})});if(!result.ok)throw Error('Fixture cleanup failed');}return found;},title);

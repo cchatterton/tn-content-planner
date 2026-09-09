@@ -75,7 +75,7 @@ try {
  $entry=array_values(array_filter($own,fn($r)=>$r['key']==='tncp_scan_test-1-custom-1'))[0];
  scan_assert(1===$entry['count'] && 'todo'===$entry['status'],'Pattern key and default status');
  $entry['user_id']=1;
- $entry['description']='Layout <b>example</b>';$entry['status']='in-progress';$entry['post_id']=$ids[1];
+ $entry['description']="\u{00A0}  Layout <b>example</b>  \u{00A0}";$entry['status']='in-progress';$entry['post_id']=$ids[1];
  $request=new WP_REST_Request('POST','/tncp/v1/patterns');$request->set_param('revision',$patterns['revision']);$request->set_param('rows',array($entry));
  $saved_patterns=rest_do_request($request);
  scan_assert(200===$saved_patterns->get_status(),'Save XP pattern metadata');

@@ -22,6 +22,10 @@ $run = strtolower($run);
 $original = get_option('tncp_plan_page', null);
 $created = array();
 try {
+    tncp_test('<i class="fa fa-star"></i> Our  purpose' === tncp_title("\u{00A0} <i class=\"fa fa-star\"></i> Our  purpose \t\n"), 'Trim title edges while preserving HTML and inner spaces');
+    $trim_row = tncp_test_row('trim-fixture', "\u{00A0}  Trim  title  \u{00A0}"); $trim_row['slug'] = '  trim-fixture  ';
+    $trimmed = tncp_validate_rows(array($trim_row), 'page', array('rows' => array()));
+    tncp_test(!is_wp_error($trimmed) && 'Trim  title' === $trimmed[0]['title'] && 'trim-fixture' === $trimmed[0]['slug'], 'Saved plan trims title and slug edges');
     register_post_type('tncp_public_test', array('public' => true, 'show_ui' => true));
     register_post_type('tncp_hidden_test', array('public' => true, 'show_ui' => false, 'capabilities' => array('publish_posts' => 'tncp_test_publish')));
     register_post_type('tncp_private_test', array('public' => false, 'show_ui' => true));

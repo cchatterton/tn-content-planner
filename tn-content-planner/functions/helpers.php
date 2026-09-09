@@ -22,12 +22,17 @@ function tncp_type_settings($name) {
         'exclude_from_search' => $type->exclude_from_search, 'hierarchical' => $type->hierarchical, '_builtin' => $type->_builtin);
 }
 
+/** Trim pasted Unicode whitespace as well as ordinary spaces and line breaks. */
+function tncp_trim($value) {
+    return preg_replace('/^[\s\p{Z}\x{FEFF}]+|[\s\p{Z}\x{FEFF}]+$/u', '', $value) ?? trim($value);
+}
+
 function tncp_title($title) {
-    return wp_kses($title, array(
+    return tncp_trim(wp_kses($title, array(
         'i' => array('class' => true, 'aria-hidden' => true),
         'span' => array('class' => true, 'aria-hidden' => true),
         'strong' => array(), 'em' => array(), 'b' => array(), 'br' => array(),
-    ));
+    )));
 }
 
 function tncp_snapshot($post) {
@@ -139,7 +144,7 @@ function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
         $native_title = !empty($previous['post_id']) && $raw['title'] === $previous['baseline']['title'];
         $native_slug = !empty($previous['post_id']) && $raw['slug'] === $previous['baseline']['slug'];
         $title = $native_title ? $raw['title'] : tncp_title($raw['title']);
-        $slug = sanitize_title($raw['slug']);
+        $slug = sanitize_title(tncp_trim($raw['slug']));
         if ((!$native_title && (strlen($title) > 4000 || '' === trim(wp_strip_all_tags($title)))) || (!$native_slug && strlen($slug) > 200)) { return tncp_error(__('Every row needs a text title (up to 4,000 bytes). Optional slugs must be at most 200 characters.', 'tn-content-planner')); }
         if (!in_array($raw['template'], array('single', 'archive', 'custom'), true)) { return tncp_error(__('Choose Single, Archive or Custom.', 'tn-content-planner')); }
         if ($raw['parent'] && !preg_match('/^(row:[a-zA-Z0-9_-]{1,80}|post:[1-9][0-9]*)$/', $raw['parent'])) { return tncp_error(__('Invalid parent reference.', 'tn-content-planner')); }

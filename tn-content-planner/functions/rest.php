@@ -239,7 +239,7 @@ function tncp_resolve_item($request, $plan) {
         $row['baseline'] = null;
         $row['confirmed'] = array();
         if (null !== $request['new_slug'] && !is_string($request['new_slug'])) { return tncp_error(__('Enter a valid slug.', 'tn-content-planner')); }
-        $slug = sanitize_title($request['new_slug'] ?? $row['slug']);
+        $slug = sanitize_title(tncp_trim($request['new_slug'] ?? $row['slug']));
         if (!$slug) { return tncp_error(__('Enter a slug for the new post.', 'tn-content-planner')); }
         foreach ($catalog as $post) {
             if (tncp_slug_matches($type, array_merge($row, array('slug' => $slug)), $post, $plan['rows'])) { return tncp_error(__('That slug already exists. Choose a distinct slug to create a new post.', 'tn-content-planner')); }

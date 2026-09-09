@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.20 - 2026-09-09
+
+- Trim leading and trailing whitespace from entered titles, slugs and XP Pattern descriptions before saving.
+- Apply trimming to automatic saves, CSV imports and approved linked edits; preserve title HTML and internal spacing.
+- Handle pasted non-breaking spaces and validate description lengths after trimming.
+
 ## 0.3.19 - 2026-09-09
 
 - Enable moving a linked post to the bin when the plan has unsaved edits.

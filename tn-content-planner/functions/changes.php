@@ -38,7 +38,7 @@ function tncp_change_field($request, $plan) {
         }
     } else {
         if (!is_string($value)) { return tncp_error(__('Enter a valid title or slug.', 'tn-content-planner')); }
-        $value = 'title' === $field ? tncp_title($value) : sanitize_title($value);
+        $value = 'title' === $field ? tncp_title($value) : sanitize_title(tncp_trim($value));
         if ('' === trim(wp_strip_all_tags($value)) || strlen($value) > ('title' === $field ? 4000 : 200)) { return tncp_error(__('Enter a nonempty title or slug within the field limit.', 'tn-content-planner')); }
     }
     if (in_array($field, array('slug', 'parent'), true)) {
