@@ -132,3 +132,7 @@
 .tncp-wrap .tncp-setting-yes { color: var(--tncp-navy); }
 .tncp-wrap .tncp-setting-no { color: #d95b00; }
 .tncp-wrap .tncp-type-origin { font-weight: 600; }
+
+.toplevel_page_tn-content-planner #screen-id {
+    display: none;
+}

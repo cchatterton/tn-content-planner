@@ -1,4 +1,4 @@
 {
-  "version": "0.3.9",
-  "body": "## 0.3.9 - 2026-09-09\n\n- Simplify the runtime settings bar: omit the repeated post-type key, use navy ticks and orange crosses, and declare Native or Custom.\n- Keep accessible Enabled/Disabled labels for the setting symbols.\n- Align the version watermark with the eyebrow top and the right edge of the last feature tag across screen sizes.\n"
+  "version": "0.3.10",
+  "body": "## 0.3.10 - 2026-09-09\n\n- Hide #screen-id on the Content Planner admin page.\n"
 }

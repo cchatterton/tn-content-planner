@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.10 - 2026-09-09
+
+- Hide #screen-id on the Content Planner admin page.
+
 ## 0.3.9 - 2026-09-09
 
 - Simplify the runtime settings bar: omit the repeated post-type key, use navy ticks and orange crosses, and declare Native or Custom.
