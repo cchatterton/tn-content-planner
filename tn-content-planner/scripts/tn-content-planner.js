@@ -588,7 +588,7 @@
         const candidates = suggestedMatches(row);
         const target = catalog.find(post => post.id === reviewTarget);
         panel.append(el('p', { class: 'tncp-review-progress', role: 'status', text: `${__('Item')} ${reviewIndex + 1} ${__('of')} ${reviewQueue.length}` }),
-            el('h2', { text: plain(row.title) }), el('p', { text: __('Does this content already exist? Choose a match and decide which values to keep, or create a separate post. Only this item will be applied.') }));
+            el('h2', { text: plain(row.title) }));
         const matches = el('fieldset', { class: 'tncp-matches' }, [el('legend', { text: __('Do any of these match?') })]);
         if (!candidates.length) matches.append(el('p', { text: __('No close matches found in this post type.') }));
         candidates.forEach(match => {
@@ -597,7 +597,6 @@
             matches.append(el('label', { class: 'tncp-match' }, [input, el('span', {}, [el('strong', { text: plain(match.post.title) }),
                 el('span', { class: 'tncp-match-detail' }, [document.createTextNode(`/${match.post.slug} · `), postLink(match.post.id), document.createTextNode(` · ${match.reason}${match.linked ? ' · ' + __('Currently linked') : ''}`)])])]));
         });
-        matches.append(el('p', { class: 'description', text: __('Matches are ranked by exact slug, exact title, then shared title words. No match is accepted automatically.') }));
         panel.append(matches);
         const table = el('table', { class: 'widefat tncp-compare' });
         table.append(el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: __('Field') }), el('th', { scope: 'col', text: __('Source — your plan') }), el('th', { scope: 'col', text: __('Destination — WordPress') })])]));
@@ -618,7 +617,8 @@
             }
             body.append(el('tr', { class: target && source !== destination ? 'tncp-difference' : '' }, [el('th', { scope: 'row', text: label }), sourceCell, destinationCell]));
         });
-        table.append(body); panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Source and destination comparison') }, [table]));
+        table.append(body);
+        if (target) panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Source and destination comparison') }, [table]));
         const choices = el('fieldset', { class: 'tncp-decisions' }, [el('legend', { text: __('What should happen to this item?') })]);
         [['source', __('Accept source'), __('Use the plan’s title, slug, parent, template and relationship flags on the chosen post. Its content and publication status stay unchanged.')],
             ['destination', __('Accept destination'), __('Link this plan item to the chosen post and adopt its values. The WordPress post is not changed.')],

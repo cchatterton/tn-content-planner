@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.21 - 2026-09-09
+
+- Remove the two introductory and match-ranking instruction paragraphs from review.
+- Show the source/destination comparison only when an existing match is selected or already linked.
+
 ## 0.3.20 - 2026-09-09
 
 - Trim leading and trailing whitespace from entered titles, slugs and XP Pattern descriptions before saving.

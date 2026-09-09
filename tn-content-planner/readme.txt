@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.20
+Stable tag: 0.3.21
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.21 =
+- Remove the two introductory and match-ranking instruction paragraphs from review.
+- Show the source/destination comparison only when an existing match is selected or already linked.
+
 
 = 0.3.20 =
 - Trim leading and trailing whitespace from entered titles, slugs and XP Pattern descriptions before saving.

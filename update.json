@@ -1,4 +1,4 @@
 {
-  "version": "0.3.20",
-  "body": "## 0.3.20 - 2026-09-09\n\n- Trim leading and trailing whitespace from entered titles, slugs and XP Pattern descriptions before saving.\n- Apply trimming to automatic saves, CSV imports and approved linked edits; preserve title HTML and internal spacing.\n- Handle pasted non-breaking spaces and validate description lengths after trimming.\n"
+  "version": "0.3.21",
+  "body": "## 0.3.21 - 2026-09-09\n\n- Remove the two introductory and match-ranking instruction paragraphs from review.\n- Show the source/destination comparison only when an existing match is selected or already linked.\n"
 }

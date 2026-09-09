@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.21
+
+- Browser regression confirms both instruction paragraphs are absent, comparison appears for a selected match and is absent on an unmatched item.
+- Full mapping review, retries, CSV, pattern controls and desktop/mobile accessibility checks pass. JavaScript syntax and diff whitespace checks pass.
+
 ## 0.3.20
 
 Release/tag match `00e974e`; remote/local ZIP SHA-256: `fd7aa31f053185753ddec603812e95f38f16f5ab150faff1040ac6aa10474218`. Published ZIP installation through the WordPress installer passed and reports 0.3.20.

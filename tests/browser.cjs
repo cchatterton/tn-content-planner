@@ -32,13 +32,15 @@ let lastPage;
  for(const id of ['review-one','review-two','review-three'])await page.locator(`[data-row="${id}"] td:first-child input`).check();
  await page.getByRole('button',{name:'Map Selected',exact:true}).click();
  await page.getByText('Item 1 of 3',{exact:true}).waitFor();
+ assert.equal(await page.getByText('Does this content already exist?',{exact:false}).count(),0);
+ assert.equal(await page.getByText('Matches are ranked by exact slug',{exact:false}).count(),0);
  const matches=page.locator('.tncp-match');
  assert.match(await matches.nth(0).innerText(),/Exact slug/);
  assert.match(await matches.nth(1).innerText(),/Exact title/);
  assert.match(await matches.nth(2).innerText(),/2 words matched/);
  assert.match(await matches.nth(3).innerText(),/1 word matched/);
  assert.equal(await page.getByRole('button',{name:'Apply & next',exact:true}).isDisabled(),true);
- await matches.nth(1).click();await page.getByRole('radio',{name:/^Accept destination/}).check();
+ await matches.nth(1).click();assert.equal(await page.locator('.tncp-compare').count(),1);await page.getByRole('radio',{name:/^Accept destination/}).check();
  fs.mkdirSync('tests/artifacts',{recursive:true});
  await page.screenshot({path:'tests/artifacts/reconcile-desktop.png',fullPage:true});
  if(process.env.TNCP_AXE_PATH){
@@ -50,7 +52,7 @@ let lastPage;
   }
   await page.screenshot({path:'tests/artifacts/reconcile-mobile.png',fullPage:true});await page.setViewportSize({width:1600,height:1100});
  }
- await page.getByRole('button',{name:'Apply & next',exact:true}).click();await page.getByText('Item 2 of 3',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Apply & next',exact:true}).click();await page.getByText('Item 2 of 3',{exact:true}).waitFor();assert.equal(await page.locator('.tncp-compare').count(),0);
  await page.getByRole('radio',{name:/^Create new/}).check();
  assert.equal(await page.getByRole('combobox',{name:'New post status',exact:true}).inputValue(),'publish');
  await page.getByRole('combobox',{name:'New post status',exact:true}).selectOption('draft');
