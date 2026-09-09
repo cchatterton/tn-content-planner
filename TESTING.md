@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.9
+
+- Desktop, mobile and narrow browser checks verify exact watermark alignment with the eyebrow top and final tag right edge; screenshots visually inspected.
+- Axe WCAG A/AA, modal accessibility, keyboard traversal and selection-column alignment pass. JavaScript syntax and PHP lint pass.
+
+
 ## 0.3.8 — corrected release numbering
 
 Published/tagged source `55cd4ae`. GitHub latest resolves to v0.3.8; mistakenly numbered releases were returned to draft. Remote/local ZIP SHA-256: `c47beb1768db9de39b1fe74f801507f31a4701e31e034ac72d81206692465a86`. WordPress installer replacement of the disposable 0.6.1 installation with the public 0.3.8 ZIP succeeded and reports version 0.3.8.

@@ -5,20 +5,22 @@
     color: #0a263b;
 }
 .tncp-wrap .tncp-hero {
+    --tncp-hero-y: 1.5rem;
+    --tncp-hero-x: 2rem;
     position: relative;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 2rem;
     margin-top: 1.25rem;
-    padding: 1.5rem 2rem;
+    padding: var(--tncp-hero-y) var(--tncp-hero-x);
     border-radius: .875rem;
     color: #fff;
     background: radial-gradient(circle at 88% 10%, rgba(18,92,138,.58), transparent 24rem), linear-gradient(125deg,#001d31,#063b5d);
 }
 .tncp-wrap .tncp-hero h2 { color: #fff; font-size: 1.75rem; margin: .5rem 0; line-height: 1.25; }
 .tncp-wrap .tncp-hero p { margin: .5rem 0 0; font-size: .9375rem; }
-.tncp-wrap .tncp-eyebrow { color: #ff6b00; font-size: .75rem; letter-spacing: .0625rem; font-weight: 600; }
+.tncp-wrap .tncp-eyebrow { display: block; line-height: 1.25; padding-right: 3rem; color: #ff6b00; font-size: .75rem; letter-spacing: .0625rem; font-weight: 600; }
 .tncp-wrap .tncp-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
 .tncp-wrap .tncp-tabs { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.05rem; }
 .tncp-wrap .tncp-tabs button { cursor: pointer; border: .0625rem solid var(--tncp-border); border-bottom: 0; padding: .75rem 1.25rem; background: #f2f6f8; color: var(--tncp-navy); border-radius: .4rem .4rem 0 0; font: inherit; }
@@ -58,7 +60,7 @@
 .tncp-wrap :is(button,input,select,a,[tabindex]):focus-visible { outline: .1875rem solid #125c8a; outline-offset: .125rem; }
 .tncp-wrap [aria-busy="true"] { cursor: progress; }
 @media (max-width: 48rem) {
-    .tncp-wrap .tncp-hero { padding: 1.25rem; }
+    .tncp-wrap .tncp-hero { --tncp-hero-y: 1.25rem; --tncp-hero-x: 1.25rem; }
     .tncp-wrap .tncp-panel { padding: 1rem; }
     .tncp-wrap .tncp-actions { gap: .5rem; }
     .tncp-wrap .tncp-dialog { width: calc(100% - 3rem); padding: 1rem; }
@@ -79,7 +81,7 @@
 .tncp-wrap .tncp-capabilities li { margin: 0; padding: .45rem .75rem; border: .0625rem solid rgba(255,255,255,.26); border-radius: 999rem; background: rgba(255,255,255,.1); font-size: .78rem; font-weight: 600; color: #fff; }
 @media (max-width: 65rem) {
     .tncp-wrap .tncp-hero { flex-direction: column; align-items: flex-start; gap: 1rem; }
-    .tncp-wrap .tncp-capabilities { flex-shrink: 1; justify-content: flex-start; }
+    .tncp-wrap .tncp-capabilities { flex-shrink: 1; justify-content: flex-end; align-self: stretch; }
 }
 
 .tncp-wrap .tncp-review-progress { color: var(--tncp-muted); font-weight: 600; }
@@ -107,7 +109,7 @@
 .tncp-wrap .tncp-post-dot { visibility: hidden; width: .375rem; height: .375rem; border: .0625rem solid #607585; border-radius: 50%; box-sizing: border-box; }
 .tncp-wrap .tncp-post-dot.is-present { visibility: visible; background: #16703c; border-color: #16703c; }
 
-.tncp-wrap .tncp-version { position: absolute; top: .5rem; right: 1rem; color: rgba(255,255,255,.75); font-size: .75rem; line-height: 1.25; font-weight: 400; font-variant-numeric: tabular-nums; }
+.tncp-wrap .tncp-version { position: absolute; top: var(--tncp-hero-y); right: var(--tncp-hero-x); color: rgba(255,255,255,.75); font-size: .75rem; line-height: 1.25; font-weight: 400; font-variant-numeric: tabular-nums; }
 
 .tncp-wrap .tncp-type-settings { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: 0 0 1rem; padding: .75rem 1rem; background: #f4f6f7; border: 1px solid #d5dce1; }
 .tncp-wrap .tncp-type-settings > div { display: flex; flex-wrap: wrap; gap: .35rem; }
@@ -124,3 +126,9 @@
 .tncp-wrap .tncp-scroll thead { position: relative; z-index: 2; }
 .tncp-wrap .tncp-scroll thead th { background: #fff; }
 .tncp-wrap .tncp-scroll .tncp-header-pinned { box-shadow: 0 2px 3px rgba(0,40,64,.15); }
+
+.tncp-wrap .tncp-type-settings > div { align-items: center; }
+.tncp-wrap .tncp-setting-yes, .tncp-wrap .tncp-setting-no { display: inline-block; font-size: 1.125rem; font-weight: 700; line-height: 1; vertical-align: middle; }
+.tncp-wrap .tncp-setting-yes { color: var(--tncp-navy); }
+.tncp-wrap .tncp-setting-no { color: #d95b00; }
+.tncp-wrap .tncp-type-origin { font-weight: 600; }

@@ -1,4 +1,4 @@
 {
-  "version": "0.3.8",
-  "body": "## 0.3.8 - 2026-09-09\n\n- Apply approved linked title, slug and parent changes immediately; save template and relationship metadata without a second review.\n- Show runtime CPT settings in place of the non-hierarchical notice.\n- Add XP Pattern user assignments, consistent dropdown widths, and a client-side Show Mine / Show All toggle.\n- Keep table headings visible while scrolling, move Add row below the table, remove the redundant heading, and align selection checkboxes.\n- Correct the unintended 0.4.0\u20130.6.1 release numbering. Includes all changes since 0.3.4.\n"
+  "version": "0.3.9",
+  "body": "## 0.3.9 - 2026-09-09\n\n- Simplify the runtime settings bar: omit the repeated post-type key, use navy ticks and orange crosses, and declare Native or Custom.\n- Keep accessible Enabled/Disabled labels for the setting symbols.\n- Align the version watermark with the eyebrow top and the right edge of the last feature tag across screen sizes.\n"
 }

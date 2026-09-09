@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.9 - 2026-09-09
+
+- Simplify the runtime settings bar: omit the repeated post-type key, use navy ticks and orange crosses, and declare Native or Custom.
+- Keep accessible Enabled/Disabled labels for the setting symbols.
+- Align the version watermark with the eyebrow top and the right edge of the last feature tag across screen sizes.
+
 ## 0.3.8 - 2026-09-09
 
 - Apply approved linked title, slug and parent changes immediately; save template and relationship metadata without a second review.

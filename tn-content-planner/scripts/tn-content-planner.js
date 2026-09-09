@@ -362,12 +362,16 @@
         app.replaceChildren(tabs, panel);
         if (type === 'xp-patterns') { renderPatterns(panel); return; }
         const settings = el('dl', { class: 'tncp-type-settings', 'aria-label': __('Registered post type settings') });
-        const settingNames = { name: __('Post type'), public: __('Public'), publicly_queryable: __('Publicly Queryable'), exclude_from_search: __('Exclude From Search'), hierarchical: __('Hierarchical'), _builtin: __('Built-in') };
+        const settingNames = { public: __('Public'), publicly_queryable: __('Publicly Queryable'), exclude_from_search: __('Exclude From Search'), hierarchical: __('Hierarchical') };
         Object.entries(settingNames).forEach(([key, label]) => {
             const value = typeSettings[key];
-            const display = typeof value === 'boolean' ? (value ? __('Enabled') : __('Disabled')) : value === undefined ? __('Unavailable') : JSON.stringify(value);
-            settings.append(el('div', {}, [el('dt', { text: label }), el('dd', { text: display })]));
+            const display = typeof value === 'boolean' ? el('dd', {}, [
+                el('span', { class: value ? 'tncp-setting-yes' : 'tncp-setting-no', 'aria-hidden': 'true', text: value ? '✓' : '×' }),
+                el('span', { class: 'screen-reader-text', text: value ? __('Enabled') : __('Disabled') })
+            ]) : el('dd', { text: value === undefined ? __('Unavailable') : JSON.stringify(value) });
+            settings.append(el('div', {}, [el('dt', { text: label }), display]));
         });
+        settings.append(el('div', { class: 'tncp-type-origin' }, [el('dt', { class: 'screen-reader-text', text: __('Post type origin') }), el('dd', { text: typeSettings._builtin === true ? __('Native') : typeSettings._builtin === false ? __('Custom') : __('Unavailable') })]));
         panel.append(settings);
         if (step === 2) { renderReview(panel); return; }
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });
