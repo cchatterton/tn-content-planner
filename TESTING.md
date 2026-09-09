@@ -2,6 +2,8 @@
 
 ## 0.3.13
 
+Release/tag match `ce4f260`. Remote/local ZIP SHA-256: `9b8e404e2fe9581d9744a84d3fcb4210ee449527b013f37a69de594297611dfd`. Published ZIP installation through the WordPress installer passed and reports 0.3.13.
+
 - Browser checks confirm example links sit beside dropdowns, with matching dropdown and ID-slot widths; screenshot inspected and Axe passed.
 - `tests/tab-save.cjs` verifies button order, Cancel and Discard, saving both content and patterns before navigation, and simulated server failure preserving the current tab and edits.
 - PHP lint, JavaScript syntax and diff whitespace checks pass.
