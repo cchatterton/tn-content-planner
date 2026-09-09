@@ -7,6 +7,7 @@
     const app = document.getElementById('tncp-app');
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [];
+    let patternsPlan = { revision: 0, rows: [], catalog: {} };
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
     let reviewQueue = [], reviewIndex = 0, reviewTarget = 0, reviewDecision = '', reviewNewSlug = '', reviewApplied = 0, reviewSkipped = 0;
     let creationStatus = TNCP.types[0]?.can_publish ? 'publish' : 'draft';
@@ -25,6 +26,20 @@
     function button(text, action, primary = false, disabled = false) {
         return el('button', { type: 'button', class: `button ${primary ? 'button-primary' : ''}`, text, onclick: action, disabled });
     }
+    function postLink(id, label = `#${id}`) {
+        return el('a', { href: `${TNCP.editor}?post=${Number(id)}&action=edit`, target: '_blank', rel: 'noopener noreferrer', text: label, title: __('Open in WordPress editor (new tab)'), onclick: event => event.stopPropagation() });
+    }
+    function mappedPost(id) {
+        const post = catalog.find(item => item.id === id);
+        const content = post?.has_content ? __('Has content') : __('No content');
+        const featured = post?.has_featured_image ? __('Has featured image') : __('No featured image');
+        const dots = el('span', { class: 'tncp-post-indicators', role: 'img', 'aria-label': `${content}; ${featured}`, title: `${content}; ${featured}` }, [
+            el('span', { class: `tncp-post-dot${post?.has_content ? ' is-present' : ''}`, 'aria-hidden': 'true', title: content }),
+            el('span', { class: `tncp-post-dot${post?.has_featured_image ? ' is-present' : ''}`, 'aria-hidden': 'true', title: featured })
+        ]);
+        return el('span', { class: 'tncp-post-reference' }, [postLink(id), dots]);
+    }
+    function parentPostId(value) { return value.startsWith('post:') ? Number(value.slice(5)) : plan.rows.find(row => `row:${row.id}` === value)?.post_id || 0; }
     function announce(message, error = false) {
         const notice = document.getElementById('tncp-notice');
         notice.hidden = !message;
@@ -32,7 +47,7 @@
         notice.querySelector('p').textContent = message;
     }
     async function api(action, data) {
-        const response = await fetch(`${TNCP.api}${action}/${type}`, {
+        const response = await fetch(`${TNCP.api}${action}${action === 'patterns' ? '' : '/' + type}`, {
             method: data ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': TNCP.nonce },
             credentials: 'same-origin', ...(data ? { body: JSON.stringify(data) } : {})
         });
@@ -58,7 +73,7 @@
     function ask(title, description, choices) {
         return new Promise(resolve => {
             document.getElementById('tncp-dialog-title').textContent = title;
-            document.getElementById('tncp-dialog-description').textContent = description;
+            document.getElementById('tncp-dialog-description').replaceChildren(description);
             const actions = document.getElementById('tncp-dialog-actions');
             actions.replaceChildren(...choices.map(([value, label, disabled = false]) => el('button', { value, class: 'button', text: label, disabled })), el('button', { value: 'cancel', class: 'button', text: __('Cancel'), autofocus: '' }));
             dialog.returnValue = 'cancel';
@@ -128,6 +143,8 @@
     function markDirty() { dirty = true; step = 1; }
     async function load() {
         await work(async () => {
+            const saved = await api('plan');
+            await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true });
             const data = await api('plan'); plan = data.plan; catalog = data.catalog; dirty = false; selected.clear(); step = 1; render();
         });
     }
@@ -243,9 +260,9 @@
         template.value = row.template;
         tr.append(el('td', {}, [check]), title,
             el('td', {}, [el('input', { type: 'text', value: row.slug, required: '', maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
-            el('td', {}, [parent]), el('td', {}, [template]));
+            el('td', {}, [parent, ...(parentPostId(row.parent) ? [postLink(parentPostId(row.parent))] : [])]), el('td', {}, [template]));
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => { row.flags[flag] = event.target.checked; markDirty(); render(); } })])));
-        tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', { text: row.post_id ? String(row.post_id) : '—' }), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
+        tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
             const post = catalog.find(item => item.id === row.post_id);
             const choices = [['remove', row.post_id ? __('Remove row only') : __('Remove row')]];
@@ -256,7 +273,9 @@
                 else if (!post?.can_trash) message += ' ' + __('Moving this post to the bin is unavailable for this user or site.');
                 choices.push(['trash', __('Remove row & move post to bin'), dirty || !post?.can_trash]);
             }
-            const answer = await ask(__('Remove plan row?'), message, choices);
+            const description = el('span', { text: message });
+            if (row.post_id) description.append(document.createTextNode(' '), postLink(row.post_id, __('Open linked post')));
+            const answer = await ask(__('Remove plan row?'), description, choices);
             if (answer === 'remove') { plan.rows = plan.rows.filter(item => item.id !== row.id); selected.delete(row.id); markDirty(); render(); }
             if (answer === 'trash') {
                 await work(async () => {
@@ -277,12 +296,13 @@
         const currentType = TNCP.types.find(item => item.name === type);
         if (currentType) currentType.counts = { mapped: plan.rows.filter(row => row.post_id && catalog.some(post => post.id === row.post_id)).length, planned: plan.rows.length };
         const tabs = el('div', { class: 'tncp-tabs', role: 'tablist', 'aria-label': __('Post types') });
-        TNCP.types.forEach(item => tabs.append(el('button', {
-            type: 'button', role: 'tab', id: `tncp-tab-${item.name}`, 'aria-selected': String(type === item.name), 'aria-controls': 'tncp-panel', tabindex: type === item.name ? '0' : '-1', text: `${item.label} ${item.counts?.mapped || 0}/${item.counts?.planned || 0}`, 'aria-label': `${item.label}, ${item.counts?.mapped || 0} ${__('of')} ${item.counts?.planned || 0} ${__('mapped')}`, title: __('Mapped items / total plan items'),
+        const tabTypes = [...TNCP.types, { name: 'xp-patterns', label: __('XP Patterns') }];
+        tabTypes.forEach(item => tabs.append(el('button', {
+            type: 'button', role: 'tab', id: `tncp-tab-${item.name}`, 'aria-selected': String(type === item.name), 'aria-controls': 'tncp-panel', tabindex: type === item.name ? '0' : '-1', text: item.name === 'xp-patterns' ? item.label : `${item.label} ${item.counts?.mapped || 0}/${item.counts?.planned || 0}`, 'aria-label': item.name === 'xp-patterns' ? item.label : `${item.label}, ${item.counts?.mapped || 0} ${__('of')} ${item.counts?.planned || 0} ${__('mapped')}`, title: __('Mapped items / total plan items'),
             onkeydown: event => {
                 if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-                event.preventDefault(); const index = TNCP.types.findIndex(entry => entry.name === item.name);
-                const next = event.key === 'Home' ? 0 : event.key === 'End' ? TNCP.types.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + TNCP.types.length) % TNCP.types.length;
+                event.preventDefault(); const index = tabTypes.findIndex(entry => entry.name === item.name);
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabTypes.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabTypes.length) % tabTypes.length;
                 tabs.children[next].focus(); tabs.children[next].click();
             },
             onclick: async () => {
@@ -290,15 +310,17 @@
                 if (dirty && await ask(__('Unsaved plan'), __('Save this post type first, or discard its unsaved edits to change tabs.'), [['discard', __('Discard edits')]]) !== 'discard') return;
                 const prior = type; type = item.name;
                 await work(async () => { try {
+                    if (type === 'xp-patterns') { patternsPlan = await api('patterns'); dirty = false; step = 1; render(); return; }
                     const saved = await api('plan');
-                    const refreshed = await api('refresh', { revision: saved.plan.revision, preserve_pending: true });
-                    const data = await api('plan'); plan = refreshed; catalog = data.catalog; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
-                    document.getElementById(`tncp-tab-${type}`)?.focus();
+                    await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true });
+                    const data = await api('plan'); plan = data.plan; catalog = data.catalog; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
                 } catch (error) { type = prior; throw error; } });
+                document.getElementById(`tncp-tab-${type}`)?.focus();
             }
         })));
         const panel = el('section', { id: 'tncp-panel', class: 'tncp-panel', role: 'tabpanel', 'aria-labelledby': `tncp-tab-${type}` });
         app.replaceChildren(tabs, panel);
+        if (type === 'xp-patterns') { renderPatterns(panel); return; }
         if (step === 2) { renderReview(panel); return; }
         panel.append(el('h2', { text: __('Build your content structure') }));
         if (!TNCP.types.find(item => item.name === type)?.hierarchical) panel.append(el('p', { class: 'description', text: __('This post type is non-hierarchical. Parent relationships are stored, but its native permalinks and editor may not display them.') }));
@@ -346,6 +368,29 @@
         const base = reviewNewSlug; let suffix = 2;
         while (catalog.some(post => post.slug === reviewNewSlug) || plan.rows.some(item => item.id !== row?.id && item.slug === reviewNewSlug)) reviewNewSlug = `${base}-${suffix++}`;
     }
+    function renderPatterns(panel) {
+        panel.append(el('h2', { text: __('XP Patterns') }));
+        if (!patternsPlan.rows.length) { panel.append(el('p', { text: __('No patterns yet. Scan a post type or save a content plan to get started.') })); return; }
+        const table = el('table', { class: 'widefat striped tncp-patterns-table' });
+        table.append(el('thead', {}, [el('tr', {}, [__('Pattern'), __('Content items'), __('Short description'), __('Status'), __('Example post')].map(text => el('th', { scope: 'col', text })))]));
+        const body = el('tbody');
+        patternsPlan.rows.forEach(row => {
+            const update = () => { dirty = true; document.getElementById('tncp-pattern-save-state').textContent = __('Unsaved changes'); };
+            const description = el('input', { type: 'text', value: row.description, maxlength: '240', 'aria-label': `${__('Description')} ${row.key}`, oninput: event => { row.description = event.target.value; update(); } });
+            const status = el('select', { 'aria-label': `${__('Status')} ${row.key}`, onchange: event => { row.status = event.target.value; update(); } }, ['todo', 'in-progress', 'done'].map(value => el('option', { value, text: value })));
+            status.value = row.status;
+            const example = el('select', { 'aria-label': `${__('Example post')} ${row.key}`, onchange: event => { row.post_id = Number(event.target.value); update(); link.replaceChildren(...(row.post_id ? [postLink(row.post_id)] : [])); } });
+            example.append(el('option', { value: '0', text: __('— No example —') }));
+            const posts = patternsPlan.catalog[row.type] || [];
+            posts.forEach(post => example.append(el('option', { value: String(post.id), text: `${plain(post.title) || __('Untitled')} (#${post.id})` })));
+            if (row.post_id && !posts.some(post => post.id === row.post_id)) example.append(el('option', { value: String(row.post_id), text: __('Example unavailable — choose another') }));
+            example.value = String(row.post_id);
+            const link = el('span', { class: 'tncp-example-link' }, row.post_id && posts.some(post => post.id === row.post_id) ? [postLink(row.post_id)] : []);
+            body.append(el('tr', { 'data-pattern': row.key }, [el('th', { scope: 'row', text: row.key }), el('td', { text: String(row.count) }), el('td', {}, [description]), el('td', {}, [status]), el('td', {}, [example, link])]));
+        });
+        table.append(body); panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('XP pattern table') }, [table]));
+        panel.append(el('div', { class: 'tncp-actions' }, [button(__('Save patterns'), async () => { await work(async () => { patternsPlan = await api('patterns', { revision: patternsPlan.revision, rows: patternsPlan.rows }); dirty = false; render(); announce(__('Patterns saved.')); }); }, true), el('span', { id: 'tncp-pattern-save-state', role: 'status', text: dirty ? __('Unsaved changes') : __('Saved patterns') })]));
+    }
     function matchText(value) {
         let decoded = value;
         try { decoded = decodeURIComponent(value); } catch { /* Keep malformed percent escapes as text. */ }
@@ -354,7 +399,7 @@
     function suggestedMatches(row) {
         const title = plain(row.title).trim().toLowerCase().replace(/\s+/g, ' ');
         const titleWords = new Set(matchText(row.title).split(' ').filter(Boolean));
-        const matches = catalog.filter(post => !plan.rows.some(item => item.id !== row.id && item.post_id === post.id)).map(post => {
+        const matches = catalog.filter(post => !plan.rows.some(item => item.id !== row.id && item.post_id === post.id && !(item.scanned && !['title', 'slug', 'parent', 'template', ...flags].some(field => pendingChange(item, field))))).map(post => {
             const exactSlug = row.slug.trim().toLowerCase() === post.slug.trim().toLowerCase();
             const exactTitle = title === plain(post.title).trim().toLowerCase().replace(/\s+/g, ' ');
             const sharedWords = [...new Set(matchText(post.title).split(' ').filter(Boolean))].filter(word => titleWords.has(word));
@@ -374,6 +419,7 @@
     }
     function reviewSnapshot(post) { return { title: post.title, slug: post.slug, parent: post.parent, planning: post.planning }; }
     function renderReview(panel) {
+        while (reviewIndex < reviewQueue.length && !plan.rows.some(row => row.id === reviewQueue[reviewIndex])) { selected.delete(reviewQueue[reviewIndex]); reviewIndex++; resetReviewItem(); }
         if (reviewIndex >= reviewQueue.length) {
             panel.append(el('h2', { text: __('Review complete') }), el('p', { text: `${reviewApplied} ${__('applied')} · ${reviewSkipped} ${__('skipped')}. ${__('Skipped items remain selected in the plan.')}` }), button(__('Back to plan'), () => { step = 1; render(); }));
             return;
@@ -390,7 +436,7 @@
             const input = el('input', { type: 'radio', name: 'tncp-match', value: String(match.post.id), checked: reviewTarget === match.post.id,
                 onchange: () => { reviewTarget = match.post.id; reviewDecision = ''; render(); } });
             matches.append(el('label', { class: 'tncp-match' }, [input, el('span', {}, [el('strong', { text: plain(match.post.title) }),
-                el('span', { class: 'tncp-match-detail', text: `/${match.post.slug} · #${match.post.id} · ${match.reason}${match.linked ? ' · ' + __('Currently linked') : ''}` })])]));
+                el('span', { class: 'tncp-match-detail' }, [document.createTextNode(`/${match.post.slug} · `), postLink(match.post.id), document.createTextNode(` · ${match.reason}${match.linked ? ' · ' + __('Currently linked') : ''}`)])])]));
         });
         matches.append(el('p', { class: 'description', text: __('Matches are ranked by exact slug, exact title, then shared title words. No match is accepted automatically.') }));
         panel.append(matches);
@@ -403,7 +449,19 @@
             [__('Template'), row.template, target?.planning.template],
             [__('Relationships'), flags.filter(flag => row.flags[flag]).join(', ') || __('None'), target ? flags.filter(flag => target.planning.flags[flag]).join(', ') || __('None') : null]
         ];
-        fields.forEach(([label, source, destination]) => body.append(el('tr', { class: target && source !== destination ? 'tncp-difference' : '' }, [el('th', { scope: 'row', text: label }), el('td', { text: source }), el('td', { text: destination ?? __('Choose a match above') })])));
+        fields.forEach(([label, source, destination]) => {
+            const sourceCell = el('td', { text: source });
+            const destinationCell = el('td', { text: destination ?? __('Choose a match above') });
+            if (label === __('Title') || label === __('Slug')) {
+                if (row.post_id) sourceCell.replaceChildren(postLink(row.post_id, source));
+                if (target) destinationCell.replaceChildren(postLink(target.id, destination));
+            } else if (label === __('Parent')) {
+                const sourceParent = parentPostId(row.parent);
+                if (sourceParent) sourceCell.replaceChildren(postLink(sourceParent, source));
+                if (target?.parent) destinationCell.replaceChildren(postLink(target.parent, destination));
+            }
+            body.append(el('tr', { class: target && source !== destination ? 'tncp-difference' : '' }, [el('th', { scope: 'row', text: label }), sourceCell, destinationCell]));
+        });
         table.append(body); panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Source and destination comparison') }, [table]));
         const choices = el('fieldset', { class: 'tncp-decisions' }, [el('legend', { text: __('What should happen to this item?') })]);
         [['source', __('Accept source'), __('Use the plan’s title, slug, parent, template and relationship flags on the chosen post. Its content and publication status stay unchanged.')],
@@ -474,7 +532,7 @@
             const records = parseCSV(await file.text());
             const headers = records.shift()?.map(value => value.trim().toLowerCase());
             if (!headers || headers.length !== columns.length || headers.some((value, index) => value !== columns[index])) throw new Error(__('Use the column order in the downloadable CSV template.'));
-            if (records.length + plan.rows.length > 500) throw new Error(__('Use no more than 500 plan rows per post type.'));
+            if (records.length + plan.rows.length > 2000) throw new Error(__('Use no more than 2,000 plan rows per post type.'));
             const imported = records.map((record, index) => {
                 if (record.length !== columns.length) throw new Error(`${__('Wrong number of columns in CSV row')} ${index + 2}.`);
                 const data = Object.fromEntries(headers.map((key, column) => [key, record[column]]));

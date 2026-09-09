@@ -2,6 +2,10 @@
 if (!defined('ABSPATH')) { exit; }
 add_action('rest_api_init', 'tncp_register_routes');
 function tncp_register_routes() {
+    register_rest_route('tncp/v1', '/patterns', array(
+        array('methods' => 'GET', 'callback' => 'tncp_patterns_data', 'permission_callback' => 'tncp_patterns_permission'),
+        array('methods' => 'POST', 'callback' => 'tncp_patterns_save', 'permission_callback' => 'tncp_patterns_permission'),
+    ));
     foreach (array('plan' => 'GET', 'save' => 'POST', 'apply' => 'POST', 'refresh' => 'POST', 'resolve' => 'POST', 'bin' => 'POST') as $action => $method) {
         register_rest_route('tncp/v1', '/' . $action . '/(?P<type>[a-z0-9_-]+)', array('methods' => $method, 'callback' => 'tncp_' . $action . '_request', 'permission_callback' => 'tncp_permissions'));
     }
@@ -70,6 +74,10 @@ function tncp_refresh_plan($request, $plan) {
         $row['confirmed'] = array('title' => false, 'slug' => false, 'parent' => false);
     }
     unset($row);
+    if (!empty($request['scan'])) {
+        $plan = tncp_scan_rows($plan, $request['type']);
+        if (is_wp_error($plan)) { return $plan; }
+    }
     foreach ($plan['rows'] as &$row) {
         $level = tncp_ancestry($row, $plan['rows'], $request['type']);
         if (is_wp_error($level)) { return $level; }
@@ -190,6 +198,18 @@ function tncp_resolve_item($request, $plan) {
         if (!is_scalar($request['target_id']) || !ctype_digit((string) $request['target_id'])) { return tncp_error(__('Choose a matching WordPress post.', 'tn-content-planner')); }
         foreach ($catalog as $post) { if ($post['id'] === (int) $request['target_id']) { $target = $post; break; } }
         if (!$target) { return tncp_error(__('The matching post is unavailable or cannot be edited.', 'tn-content-planner'), 403); }
+        foreach ($plan['rows'] as $candidate_index => $candidate) {
+            if ($candidate['id'] === $original_id || $candidate['post_id'] !== $target['id']) { continue; }
+            if (!tncp_scan_row_unchanged($candidate, $target, $plan['rows'])) { return tncp_error(__('This post has another edited plan row. Review that row instead.', 'tn-content-planner')); }
+            foreach ($plan['rows'] as &$child) {
+                if ('row:' . $candidate['id'] === $child['parent']) { $child['parent'] = 'post:' . $target['id']; }
+            }
+            unset($child);
+            unset($plan['rows'][$candidate_index]);
+            $plan['rows'] = array_values($plan['rows']);
+            $index = array_search($original_id, array_column($plan['rows'], 'id'), true);
+            break;
+        }
         // Compare the values actually displayed to the reviewer, including planning metadata.
         $expected = $request['target_snapshot'];
         $actual = array_intersect_key($target, array_flip(array('title', 'slug', 'parent', 'planning')));
@@ -222,6 +242,7 @@ function tncp_resolve_item($request, $plan) {
         }
         unset($child);
     }
+    $row['scanned'] = false;
     $plan['rows'][$index] = $row;
     // Reconciliation explicitly authorises this row's new mapping; normal Save cannot detach it.
     $rows = tncp_validate_rows($plan['rows'], $type, $plan, array($row['id']));

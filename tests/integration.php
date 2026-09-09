@@ -147,12 +147,12 @@ try {
     $calls = array();
     $mock = static function($pre, $args, $url) use (&$calls) {
         $calls[] = $url;
-        return array('headers' => array(), 'body' => wp_json_encode(array('version' => '0.2.0', 'body' => 'Test release')), 'response' => array('code' => 200, 'message' => 'OK'), 'cookies' => array());
+        return array('headers' => array(), 'body' => wp_json_encode(array('version' => '99.0.0', 'body' => 'Test release')), 'response' => array('code' => 200, 'message' => 'OK'), 'cookies' => array());
     };
     add_filter('pre_http_request', $mock, 10, 3); tncp_clear_update_cache();
     $update = tncp_inject_update((object) array('response' => 'invalid', 'no_update' => 'invalid'));
     tncp_test(1 === count($calls) && str_contains($calls[0], 'update.json'), 'Valid manifest avoids GitHub API');
-    tncp_test('0.2.0' === $update->response[plugin_basename(TNCP_PLUGIN_FILE)]->new_version, 'Native update injected');
+    tncp_test('99.0.0' === $update->response[plugin_basename(TNCP_PLUGIN_FILE)]->new_version, 'Native update injected');
     tncp_test(!isset($update->no_update[plugin_basename(TNCP_PLUGIN_FILE)]), 'No stale no_update');
     tncp_release_lookup(); tncp_test(1 === count($calls), 'Successful lookup cached');
     remove_filter('pre_http_request', $mock, 10);

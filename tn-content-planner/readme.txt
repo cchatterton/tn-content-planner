@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -11,6 +11,11 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Plan a content WBS by post type, import CSV, arrange parents and create selected WordPress posts.
 
 == Description ==
+
+Scans add existing editable posts to complete linked plans on initial load and tab clicks, preserving pending changes. Only front-end-viewable post types are included. Drafts remain included for eligible types; trashed posts and auto-drafts are excluded. Removing only a row means the next scan will add its existing post again.
+
+XP Patterns groups saved content items by pattern key with counts, a short description, todo/in-progress/done status and an example post. Pattern details are saved separately. Editor links open post references in a new tab. Two stacked dots beside mapped Post IDs show stored content (top) and featured image (bottom), filled when present.
+
 
 TN Content Planner by Techn provides a two-step content planning workflow in WordPress admin.
 
@@ -47,7 +52,7 @@ title,slug
 Only title and slug are accepted, in that order. Imported rows start with no parent, Single template and all relationship flags unchecked. Set other fields in the planner after importing. Unique existing slugs still map to posts when saved. Standard quoted CSV supports commas, newlines and double quotes in titles. Imports append and must be saved.
 
 = What are the limits? =
-500 plan rows and 2,000 catalog posts per post type; 1 MB per CSV; 100 hierarchy levels. Review uncreated ancestors before their children. For non-hierarchical post types, post_parent is stored but native permalinks and editors may not reflect it.
+2,000 plan rows and 2,000 catalog posts per post type; 1 MB per CSV; 100 hierarchy levels. Review uncreated ancestors before their children. For non-hierarchical post types, post_parent is stored but native permalinks and editors may not reflect it.
 
 = What if another editor changes a post? =
 Saving or applying is stopped when linked title, slug or parent differs from the saved snapshot. Clicking a post-type tab refreshes unchanged linked rows with a loading spinner while preserving saved pending changes. Unsaved edits require explicit discard. Removed or trashed linked posts must be restored before refreshing.
@@ -65,6 +70,16 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.0 =
+* Scan existing posts into complete linked plans on initial load and tab clicks, preserving pending changes and avoiding duplicate rows.
+* Restrict post-type tabs and REST access to WordPress front-end-viewable types.
+* Keep scanned posts available as review matches; absorb untouched scan rows when linking a planned item.
+* Add XP Patterns with saved-plan counts, short descriptions, todo/in-progress/done status and example-post selection.
+* Open mapped posts, parents, review references and pattern examples in a new editor tab.
+* Add stacked content and featured-image indicators beside mapped Post IDs.
+* Move the Ajax spinner to a fixed bottom-right position without shifting the page.
+* Support up to 2,000 plan rows, including existing untitled drafts and legitimate shared slugs.
 
 = 0.2.0 =
 * Review selected rows one at a time, with Item X of Y, Apply & next, retry and skip.

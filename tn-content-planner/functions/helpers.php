@@ -6,9 +6,9 @@ function tncp_error($message, $status = 400) {
 }
 
 function tncp_types() {
-    $types = get_post_types(array('public' => true), 'objects');
+    $types = get_post_types(array(), 'objects');
     foreach ($types as $name => $type) {
-        if ('attachment' === $name || !current_user_can($type->cap->edit_posts)) { unset($types[$name]); }
+        if ('attachment' === $name || !is_post_type_viewable($type) || !current_user_can($type->cap->edit_posts)) { unset($types[$name]); }
     }
     return $types;
 }
@@ -36,7 +36,7 @@ function tncp_catalog($type) {
             foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($stored_flags[$flag]); }
             $template = get_post_meta($post->ID, '_tncp_template', true);
             $planning = array('template' => in_array($template, array('single', 'archive', 'custom'), true) ? $template : 'single', 'flags' => $flags);
-            $catalog[] = array_merge(array('id' => $post->ID, 'planning' => $planning, 'can_trash' => defined('EMPTY_TRASH_DAYS') && EMPTY_TRASH_DAYS > 0 && current_user_can('delete_post', $post->ID)), tncp_snapshot($post));
+            $catalog[] = array_merge(array('id' => $post->ID, 'has_content' => '' !== trim($post->post_content), 'has_featured_image' => has_post_thumbnail($post->ID), 'planning' => $planning, 'can_trash' => defined('EMPTY_TRASH_DAYS') && EMPTY_TRASH_DAYS > 0 && current_user_can('delete_post', $post->ID)), tncp_snapshot($post));
         }
     }
     return $catalog;
@@ -98,7 +98,7 @@ function tncp_parent_id($row, $rows) {
 }
 
 function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
-    if (!is_array($input) || count($input) > 500) { return tncp_error(__('Use no more than 500 rows per post type.', 'tn-content-planner')); }
+    if (!is_array($input) || count($input) > 2000) { return tncp_error(__('Use no more than 500 rows per post type.', 'tn-content-planner')); }
     $catalog = tncp_catalog($type);
     if (is_wp_error($catalog)) { return $catalog; }
     $posts = array_column($catalog, null, 'id');
@@ -112,9 +112,12 @@ function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
         $id = $raw['id'];
         if (!preg_match('/^[a-zA-Z0-9_-]{1,80}$/', $id) || isset($ids[$id])) { return tncp_error(__('Row IDs must be unique.', 'tn-content-planner')); }
         $ids[$id] = true;
-        $title = tncp_title($raw['title']);
+        $previous = $old_rows[$id] ?? null;
+        $native_title = !empty($previous['post_id']) && $raw['title'] === $previous['baseline']['title'];
+        $native_slug = !empty($previous['post_id']) && $raw['slug'] === $previous['baseline']['slug'];
+        $title = $native_title ? $raw['title'] : tncp_title($raw['title']);
         $slug = sanitize_title($raw['slug']);
-        if (strlen($title) > 4000 || '' === trim(wp_strip_all_tags($title)) || !$slug || strlen($slug) > 200) { return tncp_error(__('Every row needs a text title (up to 4,000 bytes) and a slug of at most 200 characters.', 'tn-content-planner')); }
+        if ((!$native_title && (strlen($title) > 4000 || '' === trim(wp_strip_all_tags($title)))) || (!$native_slug && (!$slug || strlen($slug) > 200))) { return tncp_error(__('Every row needs a text title (up to 4,000 bytes) and a slug of at most 200 characters.', 'tn-content-planner')); }
         if (!in_array($raw['template'], array('single', 'archive', 'custom'), true)) { return tncp_error(__('Choose Single, Archive or Custom.', 'tn-content-planner')); }
         if ($raw['parent'] && !preg_match('/^(row:[a-zA-Z0-9_-]{1,80}|post:[1-9][0-9]*)$/', $raw['parent'])) { return tncp_error(__('Invalid parent reference.', 'tn-content-planner')); }
         if (isset($raw['post_id']) && (!is_scalar($raw['post_id']) || !preg_match('/^[0-9]+$/', (string) $raw['post_id']))) { return tncp_error(__('Post ID must be a non-negative integer.', 'tn-content-planner')); }
@@ -134,7 +137,7 @@ function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
         foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($raw['flags'][$flag]); }
         $confirmed = array();
         foreach (array('title', 'slug', 'parent') as $field) { $confirmed[$field] = !empty($raw['confirmed'][$field]); }
-        $rows[] = array('id' => $id, 'title' => $title, 'slug' => $slug, 'parent' => $raw['parent'], 'template' => $raw['template'], 'flags' => $flags, 'post_id' => $post_id, 'baseline' => $baseline, 'confirmed' => $confirmed);
+        $rows[] = array('id' => $id, 'title' => $title, 'slug' => $slug, 'parent' => $raw['parent'], 'template' => $raw['template'], 'flags' => $flags, 'post_id' => $post_id, 'baseline' => $baseline, 'confirmed' => $confirmed, 'scanned' => !empty($previous['scanned']));
     }
     $slugs = array();
     foreach ($rows as &$row) {
@@ -142,8 +145,8 @@ function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
         if (is_wp_error($level)) { return $level; }
         $row['pattern'] = $type . '-' . $level . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
         $key = $row['slug'];
-        if (isset($slugs[$key])) { return tncp_error(__('Each planned slug must be unique within its post type.', 'tn-content-planner')); }
-        $slugs[$key] = true;
+        if (isset($slugs[$key]) && !($row['post_id'] && $row['baseline']['slug'] === $key && $slugs[$key]['post_id'] && $slugs[$key]['baseline']['slug'] === $key)) { return tncp_error(__('Each planned slug must be unique within its post type.', 'tn-content-planner')); }
+        $slugs[$key] = $row;
         if ($row['baseline'] && (null === $confirmation_ids || in_array($row['id'], $confirmation_ids, true))) {
             $desired = array('title' => $row['title'], 'slug' => $row['slug'], 'parent' => tncp_parent_id($row, $rows));
             foreach ($desired as $field => $value) {
@@ -164,4 +167,38 @@ function tncp_plan_counts($type) {
         foreach ($posts as $post) { if (current_user_can('edit_post', $post->ID)) { ++$mapped; } }
     }
     return array('mapped' => $mapped, 'planned' => count($plan['rows']));
+}
+
+/** Only untouched scan rows may be absorbed when reviewing a separate planned item. */
+function tncp_scan_row_unchanged($row, $post, $rows) {
+    return !empty($row['scanned']) && $row['title'] === $post['title'] && $row['slug'] === $post['slug']
+        && tncp_parent_id($row, $rows) === $post['parent'] && $row['template'] === $post['planning']['template']
+        && $row['flags'] == $post['planning']['flags'];
+}
+
+function tncp_scan_rows($plan, $type) {
+    $catalog = tncp_catalog($type);
+    if (is_wp_error($catalog)) { return $catalog; }
+    $mapped = array_fill_keys(array_filter(array_column($plan['rows'], 'post_id')), true);
+    foreach ($catalog as $post) {
+        if (isset($mapped[$post['id']])) { continue; }
+        // A unique slug already in the plan is the same item, not a second row.
+        $matches = array_keys(array_filter($plan['rows'], static fn($row) => !$row['post_id'] && $row['slug'] && $row['slug'] === $post['slug']));
+        $post_matches = array_filter($catalog, static fn($candidate) => $candidate['slug'] === $post['slug']);
+        $baseline = array_intersect_key($post, array_flip(array('title', 'slug', 'parent')));
+        if (1 === count($matches) && 1 === count($post_matches)) {
+            $index = $matches[0];
+            $plan['rows'][$index]['post_id'] = $post['id'];
+            $plan['rows'][$index]['baseline'] = $baseline;
+            $plan['rows'][$index]['confirmed'] = array('title' => false, 'slug' => false, 'parent' => false);
+        } else {
+            $plan['rows'][] = array('id' => 'scan_' . wp_generate_uuid4(), 'title' => $post['title'], 'slug' => $post['slug'],
+                'parent' => $post['parent'] ? 'post:' . $post['parent'] : '', 'template' => $post['planning']['template'],
+                'flags' => $post['planning']['flags'], 'post_id' => $post['id'], 'baseline' => $baseline,
+                'confirmed' => array('title' => false, 'slug' => false, 'parent' => false), 'scanned' => true);
+        }
+        $mapped[$post['id']] = true;
+    }
+    if (count($plan['rows']) > 2000) { return tncp_error(__('The complete scan exceeds the 2,000-row plan limit. No scan changes were saved.', 'tn-content-planner')); }
+    return $plan;
 }

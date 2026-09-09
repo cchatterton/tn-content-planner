@@ -1,5 +1,12 @@
 # Validation
 
+## 0.3.0
+
+- 63 existing integration checks, 31 reconciliation checks and 27 scan, front-end visibility, pattern metadata and content/image indicator checks pass.
+- Browser coverage includes complete scans, scanned-match reconciliation, pattern metadata persistence, editor-link targets, indicator labels, and unchanged table coordinates during the fixed spinner.
+- Desktop/mobile pattern and review layouts pass Axe WCAG A/AA audits.
+
+
 ## 0.2.0
 
 Published release and tag match commit `eb81122`; the remote ZIP SHA-256 matches the local package: `ba6b1f20d188abe390ebc1f59139f0b5c1e05270297aad220fa63e79ce42415a`. Native WordPress update from 0.1.2 to 0.2.0 succeeded and retained the saved plan. The subsequent check reported the installed version current.

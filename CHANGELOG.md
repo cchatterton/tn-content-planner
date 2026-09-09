@@ -1,6 +1,17 @@
 # Changelog
 
 
+## 0.3.0 - 2026-09-09
+
+- Scan existing posts into complete linked plans on initial load and tab clicks, preserving pending changes and avoiding duplicate rows.
+- Restrict post-type tabs and REST access to WordPress front-end-viewable types.
+- Keep scanned posts available as review matches; absorb untouched scan rows when linking a planned item.
+- Add XP Patterns with saved-plan counts, short descriptions, todo/in-progress/done status and example-post selection.
+- Open mapped posts, parents, review references and pattern examples in a new editor tab.
+- Add stacked content and featured-image indicators beside mapped Post IDs.
+- Move the Ajax spinner to a fixed bottom-right position without shifting the page.
+- Support up to 2,000 plan rows, including existing untitled drafts and legitimate shared slugs.
+
 ## 0.2.0 - 2026-09-09
 
 - Review selected rows one at a time, with Item X of Y, Apply & next, retry and skip.

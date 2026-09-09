@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.2.0 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.0 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, then review and create selected posts or apply confirmed changes to linked posts.
 
@@ -14,11 +14,15 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 
 - Unapplied linked-post title, slug, parent, template and relationship-flag changes are marked red with a Pending change label. Saving preserves these indicators; applying the changes clears them.
 
-- Tabs include public registered post types the current user can edit, even when their native admin UI is hidden. Attachments and non-public internal types are excluded.
+- Tabs include editable post types that WordPress reports as front-end viewable (`is_post_type_viewable`). A custom type marked public but not publicly queryable is excluded. Attachments are excluded; admin-menu visibility does not decide front-end visibility.
 
+- Initial load and tab clicks scan existing editable published, draft, pending, private and scheduled posts into the plan, including title, slug, parent and planning metadata. Trashed posts and auto-drafts are excluded. Existing links are retained; a unique existing slug maps a matching unlinked row. Pending edits are preserved.
 - Tabs show mapped/planned counts. Click a tab to refresh linked data; the loading spinner remains visible until completion. The table header checkbox selects or clears all rows and shows partial selection.
+- XP Patterns is the last tab. It groups saved plan items by XP key across eligible post types, showing counts, a short description (240 characters), todo/in-progress/done status, and an existing example post from the same post type. Save patterns persists this metadata separately from content plans.
+- Post references open the WordPress editor in a new tab. Mapped Post IDs have two stacked dots: content on top and featured image below. Filled means present, outlined means absent. Content means the stored post body is nonempty after trimming whitespace.
+- The loading indicator stays fixed at the bottom right without moving the page.
 - Review selected rows one at a time: Item X of Y. Apply advances only after success; Skip leaves the item selected for later. Parents are reviewed first.
-- Match ranking: exact slug, exact title, then the number of distinct shared title words within the same post type. Repeated words count once. Up to five suggestions are shown, plus the currently linked post where needed.
+- Match ranking: exact slug, exact title, then the number of distinct shared title words within the same post type. Repeated words count once. Up to five suggestions are shown, plus the currently linked post where needed. Untouched scan rows remain eligible; accepting one absorbs that automatic row to keep one link per post. Edited or manually linked rows cannot be absorbed.
 - Accept source applies the plan title, slug, parent, template and flags to the chosen post while preserving its content/status. Accept destination adopts the chosen post’s values into the plan without changing the post. Create new makes a separate post with a unique slug. Planned children follow the new row reference but move in WordPress only when reviewed.
 - Plan save is separate from post creation and mutation. Modal choices stage title, slug and parent changes for review and apply.
 - “Create new plan item” keeps the original mapped item and gives the copy a unique slug, adding a suffix if necessary.
@@ -26,9 +30,9 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - XP pattern is `posttype-level-template-flagcount`, e.g. `page-1-single-3`. It identifies a pattern combination, not an individual row. Identical combinations intentionally share a key; rows have independent UUIDs.
 - Single / Archive / Custom and the five flags are planning metadata, not theme-template generation or automatic related-content queries.
 - New posts default to Published, with a Draft option in the review step; updates retain existing content and publication status. Publishing requires the post type’s publish capability; users without it can create drafts.
-- Slug mapping uses the current post type. Ambiguous existing slugs are rejected; choose a unique slug. Duplicate planned slugs are rejected, including an attempted rename onto another post's slug.
+- Slug mapping uses the current post type. Ambiguous existing slugs are rejected; choose a unique slug. Duplicate planned slugs are rejected, including an attempted rename onto another post's slug. Existing linked posts may retain identical native slugs (for example under different parents).
 - Font Awesome Free is bundled for admin preview. Safe HTML allowlist: `i`, `span`, `strong`, `em`, `b`, `br`; `class` and `aria-hidden` on `i`/`span`. Frontend icon loading belongs to the active theme.
-- Limits: 500 rows / 2,000 catalog posts per type; 1 MB CSV; 100 hierarchy levels. Post types with no native hierarchy still store `post_parent`, without changing their permalink rules.
+- Limits: 2,000 rows / 2,000 catalog posts per type; 1 MB CSV; 100 hierarchy levels. Post types with no native hierarchy still store `post_parent`, without changing their permalink rules.
 
 ## CSV
 
@@ -42,11 +46,11 @@ Only `title` and `slug` are accepted, in that order. Imported rows start with no
 
 ## Data and recovery
 
-Each site's `tncp_plan_{post_type}` option stores a revision and rows, including stable row IDs, post links, snapshots and confirmed pending changes. Options do not autoload. Generated posts use `_tncp_row_id` as a durable recovery marker, plus `_tncp_template`, `_tncp_flags` and `_tncp_pattern` metadata. `tncp_lock_{post_type}` serialises writes; an interrupted request's lock expires after ten minutes.
+Each site's `tncp_plan_{post_type}` option stores a revision and rows, including stable row IDs, post links, snapshots and confirmed pending changes. Options do not autoload. Generated posts use `_tncp_row_id` as a durable recovery marker, plus `_tncp_template`, `_tncp_flags` and `_tncp_pattern` metadata. `tncp_patterns` stores revisioned descriptions, statuses and example IDs by pattern key; counts are calculated from saved plans. Metadata for unused keys is retained so it returns if the pattern is needed again. `tncp_lock_patterns` serialises pattern saves. `tncp_lock_{post_type}` serialises writes; an interrupted request's lock expires after ten minutes.
 
 A stale plan revision or linked title/slug/parent stops mutation. Clicking a post-type tab reloads linked values for unchanged rows and preserves saved pending edits. Unsaved edits require an explicit discard before reloading. A trashed/deleted mapped post must be restored or its row removed. For a pending row with an external conflict, review the current destination before choosing which values to accept.
 
-Removing a linked row offers **Remove row only** or **Remove row & move post to bin**. Binning requires a saved plan, delete permission and an enabled WordPress bin; permanent deletion is never used. Planned children must be moved first. Deactivation/uninstall retains plans and content.
+Removing a linked row offers **Remove row only** or **Remove row & move post to bin**. Binning requires a saved plan, delete permission and an enabled WordPress bin; permanent deletion is never used. Planned children must be moved first. A row removed without binning its post is added again by the next complete scan. Deactivation/uninstall retains plans and content.
 
 Each review action persists independently. Failures stay on the current item for retry; completed items remain linked. The legacy batch endpoint remains available, capped at 50 selected rows. Third-party WordPress save filters may adjust submitted fields; the plugin records actual values and stops for review.
 
@@ -59,6 +63,7 @@ find tn-content-planner -name '*.php' -exec php -l {} \;
 node --check tn-content-planner/scripts/tn-content-planner.js
 wp eval-file tests/integration.php --path=/path/to/disposable/wordpress
 wp eval-file tests/reconciliation.php --path=/path/to/disposable/wordpress
+wp eval-file tests/scan.php --path=/path/to/disposable/wordpress
 wp eval-file tests/seed-review.php --path=/path/to/disposable/wordpress > /tmp/tncp-review-fixture.json
 TNCP_TEST_PASSWORD=your-local-password TNCP_REVIEW_FIXTURE=/tmp/tncp-review-fixture.json node tests/browser.cjs
 scripts/build-plugin-zip.sh

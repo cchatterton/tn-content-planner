@@ -91,6 +91,15 @@
 .tncp-wrap .tncp-difference td { background: #fff5f5; }
 .tncp-wrap .tncp-review-warning { color: #b32d2e; font-weight: 600; }
 
-.tncp-loading { display: flex; align-items: center; gap: .5rem; padding: .75rem 0; }
+.tncp-loading { position: fixed; right: 1rem; bottom: 1rem; z-index: 100001; display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem; background: #fff; color: #0a263b; border: .0625rem solid #ccd9e2; border-radius: .5rem; box-shadow: 0 .2rem .8rem rgba(0,40,64,.12); }
 .tncp-loading[hidden] { display: none; }
 .tncp-loading .spinner { float: none; margin: 0; }
+
+.tncp-wrap .tncp-patterns-table { min-width: 55rem; }
+.tncp-wrap .tncp-patterns-table input { width: 100%; min-width: 14rem; }
+.tncp-wrap .tncp-example-link { display: block; margin-top: .25rem; }
+
+.tncp-wrap .tncp-post-reference { display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap; }
+.tncp-wrap .tncp-post-indicators { display: inline-flex; flex-direction: column; gap: .1875rem; }
+.tncp-wrap .tncp-post-dot { width: .375rem; height: .375rem; border: .0625rem solid #607585; border-radius: 50%; box-sizing: border-box; }
+.tncp-wrap .tncp-post-dot.is-present { background: #16703c; border-color: #16703c; }
