@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.16 - 2026-09-09
+
+- Lead the settings bar with Native: or Custom:, including a colour-matched colon.
+- Keep Native navy and Custom orange.
+
 ## 0.3.15 - 2026-09-09
 
 - Add Send selected to bin below the content table, with a confirmation listing the linked posts.

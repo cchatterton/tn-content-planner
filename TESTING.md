@@ -2,6 +2,8 @@
 
 ## 0.3.15
 
+Release/tag match `8d66eb3`; remote/local ZIP SHA-256: `e1add5aa8d466942866373082baa5a1fcec874da3ce5b94569e5fe3cb25b9326`. Published ZIP installation through the WordPress installer passed and reports 0.3.15.
+
 - Bulk-bin browser tests cover confirmation/cancel, child protection and ordering, mixed unlinked rows, partial failure, retry, persisted removals and remaining selection.
 - The confirmation modal passes Axe WCAG A/AA; Map Selected is present. Existing 31 reconciliation integration checks pass.
 - JavaScript syntax, PHP lint and whitespace checks pass.

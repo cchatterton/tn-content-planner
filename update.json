@@ -1,4 +1,4 @@
 {
-  "version": "0.3.15",
-  "body": "## 0.3.15 - 2026-09-09\n\n- Add Send selected to bin below the content table, with a confirmation listing the linked posts.\n- Bin selected children before parents; protect unselected child rows and leave uncreated rows in the plan.\n- Stop on failure and keep remaining rows selected for retry.\n- Rename Review & create selected to Map Selected.\n"
+  "version": "0.3.16",
+  "body": "## 0.3.16 - 2026-09-09\n\n- Lead the settings bar with Native: or Custom:, including a colour-matched colon.\n- Keep Native navy and Custom orange.\n"
 }
