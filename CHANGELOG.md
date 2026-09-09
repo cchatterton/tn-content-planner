@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 0.3.4 - 2026-09-09
+
+- Show the installed plugin version as a subtle watermark in the header's top-right corner.
+- Read the watermark from the plugin version constant so it reflects the installed package.
+
 ## 0.3.3 - 2026-09-09
 
 - Completely hide missing content and featured-image dots, retaining their top/bottom positions.

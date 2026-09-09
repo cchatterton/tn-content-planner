@@ -1,4 +1,4 @@
 {
-  "version": "0.3.3",
-  "body": "## 0.3.3 - 2026-09-09\n\n- Completely hide missing content and featured-image dots, retaining their top/bottom positions.\n- Remove parent editor links from dropdowns and review comparisons. Open the parent through its own mapped Post ID instead.\n- Reduce tab spacing to 0.05rem.\n- Includes 0.3.2's Publicly Queryable-driven custom post-type eligibility.\n"
+  "version": "0.3.4",
+  "body": "## 0.3.4 - 2026-09-09\n\n- Show the installed plugin version as a subtle watermark in the header's top-right corner.\n- Read the watermark from the plugin version constant so it reflects the installed package.\n"
 }

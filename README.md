@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.3 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.4 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, then review and create selected posts or apply confirmed changes to linked posts.
 
@@ -10,6 +10,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 
 ## Scope and decisions
 
+- The header displays the installed plugin version in its top-right corner.
 - The task header reads Content Planner, with the eyebrow Plan. Organise. Publish. and three feature tags: Visual hierarchy, CSV import, Publish or draft. Plugin metadata retains TN Content Planner / Techn authorship.
 
 - Unapplied linked-post title, slug, parent, template and relationship-flag changes are marked red with a Pending change label. Saving preserves these indicators; applying the changes clears them.

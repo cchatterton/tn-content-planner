@@ -5,6 +5,7 @@
     color: #0a263b;
 }
 .tncp-wrap .tncp-hero {
+    position: relative;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
@@ -103,3 +104,5 @@
 .tncp-wrap .tncp-post-indicators { display: inline-flex; flex-direction: column; gap: .1875rem; }
 .tncp-wrap .tncp-post-dot { visibility: hidden; width: .375rem; height: .375rem; border: .0625rem solid #607585; border-radius: 50%; box-sizing: border-box; }
 .tncp-wrap .tncp-post-dot.is-present { visibility: visible; background: #16703c; border-color: #16703c; }
+
+.tncp-wrap .tncp-version { position: absolute; top: .5rem; right: 1rem; color: rgba(255,255,255,.75); font-size: .75rem; line-height: 1.25; font-weight: 400; font-variant-numeric: tabular-nums; }

@@ -3,6 +3,7 @@
     <h1 class="screen-reader-text"><?php esc_html_e('Content Planner', 'tn-content-planner'); ?></h1>
     <div id="tncp-notice" class="notice" role="status" aria-live="polite" hidden><p></p></div>
     <div class="tncp-hero">
+        <span class="tncp-version" aria-label="<?php echo esc_attr(sprintf(__('Plugin version %s', 'tn-content-planner'), TNCP_VERSION)); ?>">v<?php echo esc_html(TNCP_VERSION); ?></span>
         <div class="tncp-hero-copy">
         <span class="tncp-eyebrow"><?php esc_html_e('Plan. Organise. Publish.', 'tn-content-planner'); ?></span>
         <h2><?php esc_html_e('Content Planner', 'tn-content-planner'); ?></h2>

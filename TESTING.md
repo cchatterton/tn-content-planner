@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.4
+
+- Header watermark is sourced from the installed PHP version constant. Responsive bounds and Axe checks cover desktop, narrow and mobile widths.
+- PHP template lint and package/version checks pass.
+
+
 ## 0.3.3
 
 - Browser regression verifies present dots remain visible, missing dots are hidden (including both absent), and parent cells contain no editor link. Existing review, pattern editing and desktop/mobile Axe checks pass.
