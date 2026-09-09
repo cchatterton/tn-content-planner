@@ -2,6 +2,8 @@
 
 ## 0.6.1
 
+Release/tag match `55ed542`. Remote/local ZIP SHA-256: `550d4c76b05b82d8a153dcca5543a88e25bedb05ff726eb3a57b89402827712c`. The first native check reported 0.4.0 current; after the new GitHub manifest became available, a retry discovered and installed 0.6.1, retained the saved plan, and reported it current. This validates the disposable site, not the user site’s updater issue.
+
 - Browser checks compare horizontal positions of every selection checkbox, including the header. Desktop/mobile/narrow and modal Axe checks pass.
 
 
