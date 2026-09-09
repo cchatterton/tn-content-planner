@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.16
+
+- Declaration moved before the other settings; the colon inherits the existing native/custom colour. JavaScript syntax, PHP lint and whitespace checks pass.
+- Release/tag match `635816e`; remote/local ZIP SHA-256: `ff13fa4a8b29431941b52a73d7dc36766b7e76489482c50c443c25303379d23d`. Published ZIP installation through the WordPress installer passed and reports 0.3.16.
+
+
 ## 0.3.15
 
 Release/tag match `8d66eb3`; remote/local ZIP SHA-256: `e1add5aa8d466942866373082baa5a1fcec874da3ce5b94569e5fe3cb25b9326`. Published ZIP installation through the WordPress installer passed and reports 0.3.15.
