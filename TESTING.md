@@ -1,5 +1,13 @@
 # Validation
 
+## 0.1.2
+
+- 63 WordPress integration checks pass, including Published as the default for new content, explicit Draft creation, publishing permission enforcement and rejection of unsupported statuses.
+- Browser regression verifies that pending title, slug, parent, template and relationship-flag indicators appear, survive save/reload and clear after application. The review selector defaults to Published and switches to Draft. The simplified header, eyebrow and all three feature tags are verified.
+- Desktop pending-change states pass Axe WCAG A/AA checks. Desktop, mobile and narrow-width checks, keyboard navigation and modal accessibility also pass. Screenshots of the red pending states, feature tags and status selector were visually reviewed.
+- PHP/JavaScript syntax checks and ZIP/version checks pass. The WordPress, general development and update standards remain applied. The Techn navy/orange palette remains, with visible header branding removed as requested.
+
+
 ## 0.1.1
 
 - 60 WordPress integration checks pass, including public built-in and custom post types, public types with hidden admin UI, exclusion of non-public types and attachments, capability enforcement, and save/create through the REST API for a public custom type.

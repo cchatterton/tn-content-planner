@@ -31,7 +31,12 @@ function tncp_catalog($type) {
     $catalog = array();
     foreach ($posts as $post) {
         if (current_user_can('edit_post', $post->ID)) {
-            $catalog[] = array_merge(array('id' => $post->ID), tncp_snapshot($post));
+            $stored_flags = get_post_meta($post->ID, '_tncp_flags', true);
+            $flags = array();
+            foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($stored_flags[$flag]); }
+            $template = get_post_meta($post->ID, '_tncp_template', true);
+            $planning = array('template' => in_array($template, array('single', 'archive', 'custom'), true) ? $template : 'single', 'flags' => $flags);
+            $catalog[] = array_merge(array('id' => $post->ID, 'planning' => $planning), tncp_snapshot($post));
         }
     }
     return $catalog;

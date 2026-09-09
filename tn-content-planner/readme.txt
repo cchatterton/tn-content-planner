@@ -3,23 +3,23 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Plan a content WBS by post type, import CSV, arrange parents and create selected WordPress drafts.
+Plan a content WBS by post type, import CSV, arrange parents and create selected WordPress posts.
 
 == Description ==
 
 TN Content Planner by Techn provides a two-step content planning workflow in WordPress admin.
 
 1. Plan your WBS: add rows in post-type tabs, edit safe title HTML, choose parents, templates and relationship flags, then save.
-2. Review and create: select saved rows and apply draft creations or explicitly confirmed changes to linked posts.
+2. Review and create: select saved rows and apply new post creations or explicitly confirmed changes to linked posts.
 
 Existing slugs map to editable posts in the same post type. Ambiguous matches are rejected; use a unique slug. Circular hierarchies, duplicate planned slugs and stale edits are rejected.
 
-New posts are drafts. Existing posts keep their content and publication status. Removing a plan row does not delete its post. Saves store the plan only; changes to WordPress posts are applied in Step 2.
+New posts default to Published, with a Draft option in the review step. Publishing requires the post-type publish capability; users without it can create drafts. Existing posts keep their content and publication status. Removing a plan row does not delete its post. Saves store the plan only; changes to WordPress posts are applied in Step 2.
 
 Font Awesome Free 6.7.2 is bundled locally for title previews. Permitted title tags are i, span, strong, em, b and br. Unsafe HTML attributes are removed. Your frontend theme must load its own icon styles if it renders icon markup in post titles.
 
@@ -65,6 +65,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.1.2 =
+* Default new posts to Published with a Draft option and publishing capability enforcement.
+* Simplified the header and added three descriptive feature tags.
+* Added red Pending change indicators for unapplied linked title, slug, parent, template and relationship-flag changes.
 
 = 0.1.1 =
 

@@ -62,3 +62,12 @@
 .tncp-wrap .tncp-remove { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; padding: .375rem; border: 0; border-radius: .4rem; background: transparent; color: var(--tncp-muted); cursor: pointer; }
 .tncp-wrap .tncp-remove:hover { color: #b32d2e; background: #fcf0f1; }
 .tncp-wrap .tncp-remove .dashicons { width: 1.125rem; height: 1.125rem; font-size: 1.125rem; line-height: 1; }
+
+.tncp-wrap .tncp-table td.tncp-pending { background: #fff5f5; }
+.tncp-wrap .tncp-pending :is(input, select, .tncp-title) { border-color: #b32d2e; color: #b32d2e; }
+.tncp-wrap .tncp-pending input[type="checkbox"] { outline: .0625rem solid #b32d2e; outline-offset: .125rem; }
+.tncp-wrap .tncp-pending-label { display: block; margin-top: .25rem; font-size: .6875rem; font-weight: 600; line-height: 1.3; color: #b32d2e; }
+
+.tncp-wrap .tncp-eyebrow { text-transform: uppercase; }
+.tncp-wrap .tncp-capabilities { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.tncp-wrap .tncp-capabilities li { margin: 0; padding: .25rem .625rem; border: .0625rem solid rgba(255,255,255,.4); border-radius: .4rem; font-size: .75rem; color: #fff; }

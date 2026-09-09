@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 - 2026-09-09
+
+- Defaulted new posts to Published, with a Draft selector and publish capability enforcement.
+- Simplified the visible header and eyebrow and added Visual hierarchy, CSV import and Publish or draft tags.
+
+- Marked unapplied linked title, slug, parent, template and relationship-flag changes in red with accessible Pending change labels.
+- Kept pending indicators after saving and reloading the plan; clear them when the changes are applied.
+
 ## 0.1.1 - 2026-09-09
 
 - Replaced row removal text buttons with discreet, labelled trash icons.

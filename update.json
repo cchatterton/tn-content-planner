@@ -1,4 +1,4 @@
 {
-  "version": "0.1.1",
-  "body": "Added discreet row trash icons. Reduced CSV import and template to title and slug only. Fixed public post-type discovery, including public custom types with hidden admin UI; excluded non-public internal types while retaining permission checks."
+  "version": "0.1.2",
+  "body": "Default new posts to Published with a Draft option. Simplified the header and added three feature tags. Added red Pending change indicators for unapplied linked title, slug, parent, template and relationship-flag changes. Indicators remain after saving and clear after applying."
 }

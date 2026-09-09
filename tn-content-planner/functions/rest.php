@@ -74,6 +74,8 @@ function tncp_refresh_plan($request, $plan) {
 }
 function tncp_apply_request($request) { return tncp_mutate($request, 'tncp_apply_plan'); }
 function tncp_apply_plan($request, $plan) {
+    $creation_status = $request['creation_status'] ?? 'publish';
+    if (!in_array($creation_status, array('publish', 'draft'), true)) { return tncp_error(__('Choose Published or Draft for new posts.', 'tn-content-planner')); }
     $selected = $request['selected'];
     if (!is_array($selected) || !$selected || count($selected) > 50 || array_filter($selected, static fn($id) => !is_string($id))) {
         return tncp_error(__('Select between 1 and 50 saved rows per batch.', 'tn-content-planner'));
@@ -93,6 +95,7 @@ function tncp_apply_plan($request, $plan) {
             $parent = $ancestor['parent'];
         }
         $object = get_post_type_object($request['type']);
+        if (!$row['post_id'] && 'publish' === $creation_status && !current_user_can($object->cap->publish_posts)) { return tncp_error(__('You cannot publish this post type. Choose Draft instead.', 'tn-content-planner'), 403); }
         if (!$row['post_id'] && !current_user_can($object->cap->create_posts)) { return tncp_error(__('You cannot create posts of this type.', 'tn-content-planner'), 403); }
     }
     // Validate the graph that this batch actually applies, not unselected future moves.
@@ -129,7 +132,7 @@ function tncp_apply_plan($request, $plan) {
             if ($recovered) {
                 $post_id = $recovered[0]->ID;
             } else {
-                $data['post_status'] = 'draft';
+                $data['post_status'] = $creation_status;
                 $data['meta_input'] = array('_tncp_row_id' => $id);
                 $post_id = wp_insert_post(wp_slash($data), true);
             }

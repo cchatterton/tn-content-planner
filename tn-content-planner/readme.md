@@ -1,14 +1,18 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.1.1 · Branding mode: Author Branded
+Author: Techn · Version: 0.1.2 · Branding mode: Author Branded
 
-A WordPress content planning wizard: plan a WBS by post type, then review and create selected drafts or apply confirmed changes to linked posts.
+A WordPress content planning wizard: plan a WBS by post type, then review and create selected posts or apply confirmed changes to linked posts.
 
 ## Install
 
 Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New → Upload Plugin. Activate it, then open **Content Planner**. GitHub release updates appear in the native Plugins screen.
 
 ## Scope and decisions
+
+- The task header reads Content Planner, with the eyebrow Plan. Organise. Publish. and three feature tags: Visual hierarchy, CSV import, Publish or draft. Plugin metadata retains TN Content Planner / Techn authorship.
+
+- Unapplied linked-post title, slug, parent, template and relationship-flag changes are marked red with a Pending change label. Saving preserves these indicators; applying the changes clears them.
 
 - Tabs include public registered post types the current user can edit, even when their native admin UI is hidden. Attachments and non-public internal types are excluded.
 
@@ -18,7 +22,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - Parent references can target planned rows or existing posts. Root depth is 0. The display moves and indents descendants immediately.
 - XP pattern is `posttype-level-template-flagcount`, e.g. `page-1-single-3`. It identifies a pattern combination, not an individual row. Identical combinations intentionally share a key; rows have independent UUIDs.
 - Single / Archive / Custom and the five flags are planning metadata, not theme-template generation or automatic related-content queries.
-- New posts are drafts; updates retain existing content and publication status.
+- New posts default to Published, with a Draft option in the review step; updates retain existing content and publication status. Publishing requires the post type’s publish capability; users without it can create drafts.
 - Slug mapping uses the current post type. Ambiguous existing slugs are rejected; choose a unique slug. Duplicate planned slugs are rejected, including an attempted rename onto another post's slug.
 - Font Awesome Free is bundled for admin preview. Safe HTML allowlist: `i`, `span`, `strong`, `em`, `b`, `br`; `class` and `aria-hidden` on `i`/`span`. Frontend icon loading belongs to the active theme.
 - Limits: 500 rows / 2,000 catalog posts per type; 1 MB CSV; 50 selected rows per batch; 100 hierarchy levels. Post types with no native hierarchy still store `post_parent`, without changing their permalink rules.

@@ -8,6 +8,7 @@
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [];
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
+    let creationStatus = TNCP.types[0]?.can_publish ? 'publish' : 'draft';
 
     function el(tag, attributes = {}, children = []) {
         const node = document.createElement(tag);
@@ -201,6 +202,25 @@
             editing = row.id; render(); const input = app.querySelector(`[data-title="${row.id}"]`); input?.focus();
         } }, [preview(row.title || __('Click to add a title'))]);
     }
+    function pendingChange(row, field) {
+        if (!row.post_id || !row.baseline) return false;
+        if (field === 'parent') return parentId(row) !== row.baseline.parent;
+        if (field === 'title' || field === 'slug') return row[field] !== row.baseline[field];
+        const applied = catalog.find(post => post.id === row.post_id)?.planning;
+        if (!applied) return false;
+        return field === 'template' ? row.template !== applied.template : Boolean(row.flags[field]) !== Boolean(applied.flags[field]);
+    }
+    function markPendingFields(tr, row) {
+        ['title', 'slug', 'parent', 'template', ...flags].forEach((field, index) => {
+            if (!pendingChange(row, field)) return;
+            const cell = tr.children[index + 1];
+            const id = `tncp-pending-${row.id}-${field}`;
+            cell.classList.add('tncp-pending'); cell.dataset.pending = field;
+            const control = cell.querySelector('input, select, button');
+            control?.setAttribute('aria-describedby', id);
+            cell.append(el('span', { id, class: 'tncp-pending-label', text: __('Pending change') }));
+        });
+    }
     function rowView(row) {
         const tr = el('tr', { 'data-row': row.id });
         const check = el('input', { type: 'checkbox', checked: selected.has(row.id), 'aria-label': __('Select') + ' ' + plain(row.title), onchange: event => {
@@ -227,6 +247,7 @@
             const answer = await ask(__('Remove plan row?'), __('This removes the row from the plan. Linked WordPress posts are kept.'), [['remove', __('Remove row')]]);
             if (answer === 'remove') { plan.rows = plan.rows.filter(item => item.id !== row.id); selected.delete(row.id); markDirty(); render(); }
         } }, [el('span', { class: 'dashicons dashicons-trash', 'aria-hidden': 'true' })])]));
+        markPendingFields(tr, row);
         return tr;
     }
     function render() {
@@ -253,7 +274,7 @@
                 if (dirty && await ask(__('Unsaved plan'), __('Save this post type first, or discard its unsaved edits to change tabs.'), [['discard', __('Discard edits')]]) !== 'discard') return;
                 const prior = type; type = item.name;
                 await work(async () => { try {
-                    const data = await api('plan'); plan = data.plan; catalog = data.catalog; selected.clear(); dirty = false; step = 1; render();
+                    const data = await api('plan'); plan = data.plan; catalog = data.catalog; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
                     document.getElementById(`tncp-tab-${type}`)?.focus();
                 } catch (error) { type = prior; throw error; } });
             }
@@ -261,7 +282,7 @@
         const panel = el('section', { id: 'tncp-panel', class: 'tncp-panel', role: 'tabpanel', 'aria-labelledby': `tncp-tab-${type}` });
         app.replaceChildren(steps, tabs, panel);
         if (step === 2) { renderReview(panel); return; }
-        panel.append(el('h2', { text: __('Build your content structure') }), el('p', { class: 'description', text: __('Add rows, choose parents, then save your plan. Click a title to edit its HTML. New posts are created as drafts in Step 2.') }));
+        panel.append(el('h2', { text: __('Build your content structure') }), el('p', { class: 'description', text: __('Add rows, choose parents, then save your plan. Click a title to edit its HTML. Choose Published or Draft for new posts in Step 2. Published is the default.') }));
         if (!TNCP.types.find(item => item.name === type)?.hierarchical) panel.append(el('p', { class: 'description', text: __('This post type is non-hierarchical. Parent relationships are stored, but its native permalinks and editor may not display them.') }));
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });
         panel.append(el('div', { class: 'tncp-actions' }, [
@@ -278,7 +299,7 @@
             const head = el('tr');
             [__('Select'), __('Title *'), __('Content slug *'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
             table.append(el('thead', {}, [head]), el('tbody', {}, orderedRows().map(rowView)));
-            panel.append(el('p', { class: 'description', text: __('Scroll the table horizontally to see all planning fields.') }));
+            panel.append(el('p', { class: 'description', text: __('Scroll the table horizontally to see all planning fields. Red fields marked Pending change have not yet been applied to WordPress.') }));
             panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table]));
         }
         panel.append(el('div', { class: 'tncp-actions tncp-footer' }, [button(__('Save plan'), save, true),
@@ -297,17 +318,29 @@
     }
     function renderReview(panel) {
         panel.append(el('h2', { text: __('Review selected content') }), el('p', { text: __('Only the selected saved rows are applied. Include any uncreated parents. Existing posts keep their publication status and content. Maximum 50 rows per batch.') }));
+        const hasNewPosts = plan.rows.some(row => selected.has(row.id) && !row.post_id);
+        if (hasNewPosts) {
+            const canPublish = TNCP.types.find(item => item.name === type)?.can_publish;
+            const status = el('select', { id: 'tncp-creation-status', onchange: event => { creationStatus = event.target.value; render(); document.getElementById('tncp-creation-status')?.focus(); } }, [
+                el('option', { value: 'publish', text: __('Published'), disabled: !canPublish }),
+                el('option', { value: 'draft', text: __('Draft') })
+            ]);
+            status.value = creationStatus;
+            panel.append(el('div', { class: 'tncp-actions' }, [el('label', { for: 'tncp-creation-status', text: __('New post status') }), status]));
+            panel.append(el('p', { class: 'description', text: creationStatus === 'publish' ? __('New posts will be published and visible on your site when you apply this selection.') : __('New posts will be saved as drafts.') }));
+            if (!canPublish) panel.append(el('p', { text: __('You can create drafts for this post type, but you do not have permission to publish it.') }));
+        }
         const list = el('ul', { class: 'tncp-review' });
         orderedRows().filter(row => selected.has(row.id)).forEach(row => {
             const changes = row.baseline ? ['title', 'slug', 'parent'].filter(field => (field === 'parent' ? parentId(row) : row[field]) !== row.baseline[field]) : [];
             const parent = row.parent.startsWith('row:') ? plan.rows.find(item => `row:${item.id}` === row.parent)?.title : catalog.find(post => `post:${post.id}` === row.parent)?.title;
-            const item = el('li', {}, [el('strong', { text: plain(row.title) }), el('p', { text: `${row.post_id ? __('Update linked post') + ' #' + row.post_id : __('Create draft')} · /${row.slug} · ${__('Parent')}: ${parent ? plain(parent) : __('None')}` })]);
+            const item = el('li', {}, [el('strong', { text: plain(row.title) }), el('p', { text: `${row.post_id ? __('Update linked post') + ' #' + row.post_id : (creationStatus === 'publish' ? __('Publish new post') : __('Create draft'))} · /${row.slug} · ${__('Parent')}: ${parent ? plain(parent) : __('None')}` })]);
             for (const field of changes) item.append(el('p', { text: `${__(field[0].toUpperCase() + field.slice(1))}: ${String(row.baseline[field])} → ${field === 'parent' ? (plain(parent || '') || __('None')) : row[field]}` }));
             list.append(item);
         });
         panel.append(list, el('div', { class: 'tncp-actions' }, [button(__('Back to plan'), () => { step = 1; render(); }), button(__('Create / update selected'), async () => {
             await work(async () => {
-                const result = await api('apply', { revision: plan.revision, selected: [...selected] }); plan = result.plan;
+                const result = await api('apply', { revision: plan.revision, selected: [...selected], creation_status: creationStatus }); plan = result.plan;
                 result.completed.forEach(id => selected.delete(id)); dirty = false; step = 1;
                 render(); announce(`${result.completed.length} ${__('rows applied.')} ${result.errors.join(' ')}`, result.errors.length > 0);
                 const data = await api('plan'); catalog = data.catalog; render();

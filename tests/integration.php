@@ -23,7 +23,7 @@ $original = get_option('tncp_plan_page', null);
 $created = array();
 try {
     register_post_type('tncp_public_test', array('public' => true, 'show_ui' => true));
-    register_post_type('tncp_hidden_test', array('public' => true, 'show_ui' => false));
+    register_post_type('tncp_hidden_test', array('public' => true, 'show_ui' => false, 'capabilities' => array('publish_posts' => 'tncp_test_publish')));
     register_post_type('tncp_private_test', array('public' => false, 'show_ui' => true));
     register_post_type('tncp_cap_test', array('public' => true, 'capability_type' => 'tncp_restricted', 'map_meta_cap' => true));
     $types = tncp_types();
@@ -39,12 +39,20 @@ try {
     $custom = tncp_test_row($run . '-custom', 'Public custom content');
     $saved_custom = tncp_test_request('save', array('revision' => 0, 'rows' => array($custom)), 'tncp_hidden_test')->get_data();
     tncp_test(isset($saved_custom['revision']), 'Public custom type plan saves');
-    $applied_custom = tncp_test_request('apply', array('revision' => $saved_custom['revision'], 'selected' => array($custom['id'])), 'tncp_hidden_test')->get_data();
+    tncp_test(403 === tncp_test_request('apply', array('revision' => $saved_custom['revision'], 'selected' => array($custom['id'])), 'tncp_hidden_test')->get_status(), 'Default publishing requires publish capability');
+    $applied_custom = tncp_test_request('apply', array('revision' => $saved_custom['revision'], 'selected' => array($custom['id']), 'creation_status' => 'draft'), 'tncp_hidden_test')->get_data();
     tncp_test(isset($applied_custom['plan']), 'Public custom type creates draft');
     $custom_id = $applied_custom['plan']['rows'][0]['post_id'];
     tncp_test('tncp_hidden_test' === get_post_type($custom_id) && 'draft' === get_post_status($custom_id), 'Created draft belongs to public custom type');
     wp_delete_post($custom_id, true);
     delete_option('tncp_plan_tncp_hidden_test');
+    $published = tncp_test_request('save', array('revision' => 0, 'rows' => array($custom)), 'tncp_public_test')->get_data();
+    tncp_test(400 === tncp_test_request('apply', array('revision' => $published['revision'], 'selected' => array($custom['id']), 'creation_status' => 'private'), 'tncp_public_test')->get_status(), 'Unsupported creation status rejected');
+    $published = tncp_test_request('apply', array('revision' => $published['revision'], 'selected' => array($custom['id'])), 'tncp_public_test')->get_data();
+    $published_id = $published['plan']['rows'][0]['post_id'];
+    tncp_test('publish' === get_post_status($published_id), 'New posts default to published');
+    wp_delete_post($published_id, true);
+    delete_option('tncp_plan_tncp_public_test');
     delete_option('tncp_plan_page');
     $root = tncp_test_row($run . '-root', '<i class="fa-solid fa-house" aria-hidden="true"></i> Home');
     $child = tncp_test_row($run . '-child', 'Child', 'row:' . $root['id']);
@@ -59,7 +67,7 @@ try {
     tncp_test(409 === $bad->get_status(), 'Reject stale plan revision');
     $bad = tncp_test_request('apply', array('revision' => $plan['revision'], 'selected' => array($child['id'])));
     tncp_test(400 === $bad->get_status(), 'Require selected new parent');
-    $result = tncp_test_request('apply', array('revision' => $plan['revision'], 'selected' => array($child['id'], $root['id'])))->get_data();
+    $result = tncp_test_request('apply', array('revision' => $plan['revision'], 'selected' => array($child['id'], $root['id']), 'creation_status' => 'draft'))->get_data();
     tncp_test(isset($result['plan']), 'Apply succeeded: ' . wp_json_encode($result));
     $plan = $result['plan'];
     $created = array_column($plan['rows'], 'post_id');
@@ -184,5 +192,6 @@ try {
     if (null === $original) { delete_option('tncp_plan_page'); } else { update_option('tncp_plan_page', $original, false); }
     tncp_clear_update_cache();
     delete_option('tncp_plan_tncp_hidden_test');
+    delete_option('tncp_plan_tncp_public_test');
     foreach (array('tncp_public_test', 'tncp_hidden_test', 'tncp_private_test', 'tncp_cap_test') as $fixture) { unregister_post_type($fixture); }
 }
