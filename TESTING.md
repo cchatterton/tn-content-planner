@@ -2,6 +2,8 @@
 
 ## 0.3.1
 
+Release/tag match `863c4b7`. Remote and local ZIP SHA-256: `82ee0e81670f67e4b1962c44b317f932aa5296d528df7609e657a5470534cdae`. Native WordPress upgrade from 0.3.0 to 0.3.1 passed, retained the plan, and reported the installed version current afterward.
+
 - 63 existing integration checks and 32 scan/pattern checks pass, including public/queryable/search-exclusion combinations, runtime settings changes, built-in Pages retention, REST denial and XP Pattern filtering.
 - Browser regression and desktop/mobile Axe checks pass. The inline parent control has the same height as its dropdown; its icon opens the editor in a new tab. The control screenshot was visually inspected.
 - PHP/JavaScript syntax and package/version checks pass.
