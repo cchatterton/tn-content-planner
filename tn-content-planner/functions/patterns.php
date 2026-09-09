@@ -3,6 +3,27 @@ if (!defined('ABSPATH')) { exit; }
 
 function tncp_patterns_permission() { return current_user_can('manage_options'); }
 
+/** Count unique saved patterns across all eligible types, independent of the Mine filter. */
+function tncp_pattern_counts() {
+    $saved = get_option('tncp_patterns', array('entries' => array()));
+    $keys = array(); $done = 0;
+    foreach (tncp_types() as $type) {
+        $plan = tncp_plan($type->name);
+        foreach ($plan['rows'] as $row) {
+            $level = tncp_ancestry($row, $plan['rows'], $type->name);
+            if (is_wp_error($level)) { return null; }
+            $key = $type->name . '-' . $level . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
+            if (isset($keys[$key])) { continue; }
+            $keys[$key] = true;
+            $entry = $saved['entries'][$key] ?? array();
+            if ('done' !== ($entry['status'] ?? '') || empty($entry['post_id'])) { continue; }
+            $post = get_post($entry['post_id']);
+            if ($post && $post->post_type === $type->name && in_array($post->post_status, array('publish', 'draft', 'pending', 'private', 'future'), true) && current_user_can('edit_post', $post->ID)) { ++$done; }
+        }
+    }
+    return array('done' => $done, 'total' => count($keys));
+}
+
 function tncp_patterns_data() {
     $saved = get_option('tncp_patterns', array('revision' => 0, 'entries' => array()));
     $patterns = array(); $catalog = array();
@@ -23,7 +44,7 @@ function tncp_patterns_data() {
         }
     }
     ksort($patterns, SORT_NATURAL);
-    return array('revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog, 'current_user_id' => get_current_user_id(), 'users' => array_map(static fn($user) => array('id' => (int) $user->ID, 'name' => $user->display_name), get_users(array('blog_id' => get_current_blog_id(), 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID', 'display_name')))));
+    return array('pattern_counts' => tncp_pattern_counts(), 'revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog, 'current_user_id' => get_current_user_id(), 'users' => array_map(static fn($user) => array('id' => (int) $user->ID, 'name' => $user->display_name), get_users(array('blog_id' => get_current_blog_id(), 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID', 'display_name')))));
 }
 
 function tncp_patterns_save($request) {

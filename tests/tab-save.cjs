@@ -6,7 +6,7 @@ const {chromium}=require('playwright');
  await page.evaluate(password=>{document.getElementById('user_login').value='tncp_admin';document.getElementById('user_pass').value=password;},process.env.TNCP_TEST_PASSWORD);await page.locator('#wp-submit').click();await page.waitForURL('**/wp-admin/');
  await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();await page.locator('tbody tr').first().waitFor();
  const assert=require('node:assert/strict');
- const pages=page.getByRole('tab',{name:/^Pages,/}), xp=page.getByRole('tab',{name:'XP Patterns',exact:true});
+ const pages=page.getByRole('tab',{name:/^Pages,/}), xp=page.getByRole('tab',{name:/^XP Patterns,/});
  async function ready(){await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');}
  await xp.click();await ready();
  const description=page.locator('[data-pattern]').first().getByRole('textbox'), original=await description.inputValue();

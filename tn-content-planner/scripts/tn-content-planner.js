@@ -7,6 +7,7 @@
     const app = document.getElementById('tncp-app');
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [], typeSettings = {};
+    let patternCounts = TNCP.pattern_counts || { done: 0, total: 0 };
     let patternsMine = false;
     let patternsPlan = { revision: 0, rows: [], catalog: {} };
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
@@ -40,6 +41,15 @@
         ]);
         return el('span', { class: 'tncp-post-reference' }, [postLink(id), dots]);
     }
+    function indicatorKey() {
+        const entry = (upper, label) => el('span', { class: 'tncp-indicator-key-item' }, [
+            el('span', { class: 'tncp-post-indicators', 'aria-hidden': 'true' }, [
+                el('span', { class: 'tncp-post-dot' + (upper ? ' is-present' : '') }),
+                el('span', { class: 'tncp-post-dot' + (upper ? '' : ' is-present') })
+            ]), document.createTextNode(label)
+        ]);
+        return el('span', { class: 'tncp-indicator-key' }, [el('strong', { text: __('Key:') }), entry(true, __('Has content')), entry(false, __('Has featured image'))]);
+    }
     function announce(message, error = false) {
         const notice = document.getElementById('tncp-notice');
         notice.hidden = !message;
@@ -54,6 +64,7 @@
         let result;
         try { result = await response.json(); } catch { throw new Error(__('The server returned an unreadable response. Your edits are still here; try again.')); }
         if (!response.ok) throw new Error(result.message || __('The request failed. Try again.'));
+        if ('pattern_counts' in result) patternCounts = result.pattern_counts;
         return result;
     }
     async function work(task) {
@@ -369,7 +380,7 @@
         const tabs = el('div', { class: 'tncp-tabs', role: 'tablist', 'aria-label': __('Post types') });
         const tabTypes = [...TNCP.types, { name: 'xp-patterns', label: __('XP Patterns') }];
         tabTypes.forEach(item => tabs.append(el('button', {
-            type: 'button', role: 'tab', id: `tncp-tab-${item.name}`, 'aria-selected': String(type === item.name), 'aria-controls': 'tncp-panel', tabindex: type === item.name ? '0' : '-1', text: item.name === 'xp-patterns' ? item.label : `${item.label} ${item.counts?.mapped || 0}/${item.counts?.planned || 0}`, 'aria-label': item.name === 'xp-patterns' ? item.label : `${item.label}, ${item.counts?.mapped || 0} ${__('of')} ${item.counts?.planned || 0} ${__('mapped')}`, title: __('Mapped items / total plan items'),
+            type: 'button', role: 'tab', id: `tncp-tab-${item.name}`, 'aria-selected': String(type === item.name), 'aria-controls': 'tncp-panel', tabindex: type === item.name ? '0' : '-1', text: item.name === 'xp-patterns' ? `${item.label} ${patternCounts?.done ?? '–'}/${patternCounts?.total ?? '–'}` : `${item.label} ${item.counts?.mapped || 0}/${item.counts?.planned || 0}`, 'aria-label': item.name === 'xp-patterns' ? `${item.label}, ${patternCounts?.done ?? '–'} ${__('of')} ${patternCounts?.total ?? '–'} ${__('done with examples')}` : `${item.label}, ${item.counts?.mapped || 0} ${__('of')} ${item.counts?.planned || 0} ${__('mapped')}`, title: item.name === 'xp-patterns' ? __('Done patterns with available examples / total patterns') : __('Mapped items / total plan items'),
             onkeydown: event => {
                 if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
                 event.preventDefault(); const index = tabTypes.findIndex(entry => entry.name === item.name);
@@ -438,7 +449,7 @@
             button(__('Save plan'), save, true),
             button(__('Map Selected'), startReview, false, dirty || !selected.size),
             button(__('Send selected to bin'), binSelected, false, dirty || !plan.rows.some(row => selected.has(row.id) && row.post_id)),
-            el('span', { text: `${plan.rows.length} ${__('rows')} · ${selected.size} ${__('selected')} · ${dirty ? __('Unsaved changes') : __('Saved plan')}`, role: 'status' })
+            el('span', { text: `${plan.rows.length} ${__('rows')} · ${selected.size} ${__('selected')} · ${dirty ? __('Unsaved changes') : __('Saved plan')}`, role: 'status' }), indicatorKey()
         ]));
         if (focusRow && focusLabel) {
             const control = app.querySelector(`[data-row="${CSS.escape(focusRow)}"] [aria-label="${CSS.escape(focusLabel)}"]`);
@@ -493,7 +504,13 @@
         table.append(el('thead', {}, [el('tr', {}, [__('Pattern'), __('Content items'), __('Short description'), __('Status'), __('Assigned to'), __('Example post')].map(text => el('th', { scope: 'col', text })))]));
         const body = el('tbody');
         patternsPlan.rows.forEach(row => {
-            const update = () => { dirty = true; document.getElementById('tncp-pattern-save-state').textContent = __('Unsaved changes'); };
+            const update = () => {
+                dirty = true; document.getElementById('tncp-pattern-save-state').textContent = __('Unsaved changes');
+                patternCounts = { total: patternsPlan.rows.length, done: patternsPlan.rows.filter(item => item.status === 'done' && (patternsPlan.catalog[item.type] || []).some(post => post.id === item.post_id)).length };
+                const tab = document.getElementById('tncp-tab-xp-patterns');
+                tab.textContent = `${__('XP Patterns')} ${patternCounts.done}/${patternCounts.total}`;
+                tab.setAttribute('aria-label', `${__('XP Patterns')}, ${patternCounts.done} ${__('of')} ${patternCounts.total} ${__('done with examples')}`);
+            };
             const description = el('input', { type: 'text', value: row.description, maxlength: '240', 'aria-label': `${__('Description')} ${row.key}`, oninput: event => { row.description = event.target.value; update(); } });
             const status = el('select', { 'aria-label': `${__('Status')} ${row.key}`, onchange: event => { row.status = event.target.value; update(); } }, ['todo', 'in-progress', 'done'].map(value => el('option', { value, text: value })));
             status.value = row.status;

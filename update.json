@@ -1,4 +1,4 @@
 {
-  "version": "0.3.16",
-  "body": "## 0.3.16 - 2026-09-09\n\n- Lead the settings bar with Native: or Custom:, including a colour-matched colon.\n- Keep Native navy and Custom orange.\n"
+  "version": "0.3.17",
+  "body": "## 0.3.17 - 2026-09-09\n\n- Show done-with-example / total pattern counts on the XP Patterns tab, including before opening it.\n- Update counts as patterns and plans change; Show Mine does not change the overall totals.\n- Add a bottom-right key for upper content and lower featured-image dots.\n- Use orange dots consistently in mapped records and the key.\n"
 }

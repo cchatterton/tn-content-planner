@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.16
+Stable tag: 0.3.17
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.17 =
+* Add done-with-example / total counts to the XP Patterns tab.
+* Add a bottom-right content/image key and orange record indicators.
+
 
 = 0.3.16 =
 * Move Native: or Custom: to the start of the settings bar, with matching colon colour.

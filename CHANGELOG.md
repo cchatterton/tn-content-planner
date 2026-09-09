@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.17 - 2026-09-09
+
+- Show done-with-example / total pattern counts on the XP Patterns tab, including before opening it.
+- Update counts as patterns and plans change; Show Mine does not change the overall totals.
+- Add a bottom-right key for upper content and lower featured-image dots.
+- Use orange dots consistently in mapped records and the key.
+
 ## 0.3.16 - 2026-09-09
 
 - Lead the settings bar with Native: or Custom:, including a colour-matched colon.

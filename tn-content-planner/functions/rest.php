@@ -16,7 +16,7 @@ function tncp_permissions($request) {
 function tncp_plan_request($request) {
     $catalog = tncp_catalog($request['type']);
     if (is_wp_error($catalog)) { return $catalog; }
-    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog, 'settings' => tncp_type_settings($request['type']));
+    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog, 'settings' => tncp_type_settings($request['type']), 'pattern_counts' => tncp_pattern_counts());
 }
 /** Serialise mutations across browsers. Expired locks recover after an interrupted PHP request. */
 function tncp_mutate($request, $action) {
@@ -36,7 +36,9 @@ function tncp_mutate($request, $action) {
         if (!is_numeric($request['revision']) || (int) $request['revision'] !== $plan['revision']) {
             return tncp_error(__('This plan was saved in another window. Reload it before making changes.', 'tn-content-planner'), 409);
         }
-        return call_user_func($action, $request, $plan);
+        $result = call_user_func($action, $request, $plan);
+        if (is_array($result)) { $result['pattern_counts'] = tncp_pattern_counts(); }
+        return $result;
     } finally {
         delete_option($lock);
     }

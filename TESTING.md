@@ -1,5 +1,13 @@
 # Validation
 
+## 0.3.17
+
+- 54 scan/pattern and 63 integration checks pass, including unique totals, done-without-example, valid examples, trashed and deleted examples.
+- Browser checks verify live status/example counters and unchanged totals under Show Mine, plus existing review and pattern regressions.
+- Key/record dots share orange; upper/lower key slots and right alignment pass desktop/mobile checks and Axe.
+- PHP lint, JavaScript syntax and diff whitespace checks pass.
+
+
 ## 0.3.16
 
 - Declaration moved before the other settings; the colon inherits the existing native/custom colour. JavaScript syntax, PHP lint and whitespace checks pass.

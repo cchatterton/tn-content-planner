@@ -109,7 +109,7 @@
 .tncp-wrap .tncp-post-reference { display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap; }
 .tncp-wrap .tncp-post-indicators { display: inline-flex; flex-direction: column; gap: .1875rem; }
 .tncp-wrap .tncp-post-dot { visibility: hidden; width: .375rem; height: .375rem; border: .0625rem solid #607585; border-radius: 50%; box-sizing: border-box; }
-.tncp-wrap .tncp-post-dot.is-present { visibility: visible; background: #16703c; border-color: #16703c; }
+.tncp-wrap .tncp-post-dot.is-present { visibility: visible; background: #d95b00; border-color: #d95b00; }
 
 .tncp-wrap .tncp-version { position: absolute; top: var(--tncp-hero-y); right: var(--tncp-hero-x); color: rgba(255,255,255,.75); font-size: .75rem; line-height: 1.25; font-weight: 400; font-variant-numeric: tabular-nums; }
 
@@ -142,3 +142,6 @@
 .tncp-wrap .tncp-type-custom { color: #b94700; }
 
 .tncp-wrap .tncp-bin-list { max-height: 16rem; overflow-y: auto; padding-left: 1.25rem; list-style: disc; }
+
+.tncp-wrap .tncp-indicator-key { margin-inline-start: auto; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; }
+.tncp-wrap .tncp-indicator-key-item { display: inline-flex; align-items: center; gap: .4rem; }

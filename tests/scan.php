@@ -81,6 +81,18 @@ try {
  scan_assert(200===$saved_patterns->get_status(),'Save XP pattern metadata');
  $entries=array_column($saved_patterns->get_data()['rows'],null,'key');$stored=$entries[$entry['key']];
  scan_assert('Layout example'===$stored['description'] && 'in-progress'===$stored['status'] && $ids[1]===$stored['post_id'],'Description, status and example persist');
+ $counts=tncp_pattern_counts();
+ scan_assert($counts['total']===count($saved_patterns->get_data()['rows']),'Counter counts unique patterns rather than content items');
+ $saved_counts_option=get_option('tncp_patterns');$count_option=$saved_counts_option;
+ $count_option['entries'][$entry['key']]['status']='done';$count_option['entries'][$entry['key']]['post_id']=0;update_option('tncp_patterns',$count_option,false);
+ scan_assert($counts['done']===tncp_pattern_counts()['done'],'Done without an example is not complete');
+ $count_option['entries'][$entry['key']]['post_id']=$ids[1];update_option('tncp_patterns',$count_option,false);
+ scan_assert($counts['done']+1===tncp_pattern_counts()['done'],'Done with an available example is complete');
+ $count_option['entries'][$entry['key']]['post_id']=$ids[3];update_option('tncp_patterns',$count_option,false);
+ scan_assert($counts['done']===tncp_pattern_counts()['done'],'Trashed example does not count as complete');
+ $count_option['entries'][$entry['key']]['post_id']=999999999;update_option('tncp_patterns',$count_option,false);
+ scan_assert($counts['done']===tncp_pattern_counts()['done'],'Deleted example does not count as complete');
+ update_option('tncp_patterns',$saved_counts_option,false);
  scan_assert(409===rest_do_request($request)->get_status(),'Pattern stale revision rejected');
  scan_assert(1===$stored['user_id'],'Assigned user persists');
  scan_assert(in_array(1,array_column($saved_patterns->get_data()['users'],'id'),true),'Site user picklist supplied');
