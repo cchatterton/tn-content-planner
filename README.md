@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.21 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.22 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -9,6 +9,8 @@ A WordPress content planning wizard: plan a WBS by post type, review and create 
 Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New → Upload Plugin. Activate it, then open **Content Planner**. GitHub release updates appear in the native Plugins screen.
 
 ## Scope and decisions
+
+- The settings-bar padlock locks editing in this planner per post type. It saves pending edits first, persists across reloads and blocks planner writes and automatic scans until unlocked. Other post-type tabs remain usable. It does not lock the native WordPress editor.
 
 - Each XP Pattern row shows mapped / total content items. Example choices are limited to available mapped items with that pattern. Descriptions receive the widest column. Pattern keys in content tables link to the matching example editor in a new tab.
 - The XP Patterns tab shows done-with-available-example / total unique patterns across eligible types. Counts update during edits and after saves; unavailable examples do not count as complete. XP Patterns has Show Mine / Show All controls beside its heading. The toggle only hides loaded rows in JavaScript, keeps unsaved edits intact and defaults to Show All. Show Mine uses the logged-in user’s assignment.

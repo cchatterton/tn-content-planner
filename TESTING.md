@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.22
+
+- Browser lock regression verifies save-before-lock, failed-save preservation, disabled controls, all planner mutation routes rejected while locked, per-type scope, reload persistence, keyboard unlock and Axe WCAG A/AA.
+- Locked-page screenshot inspected; existing 65 integration checks, PHP lint, JavaScript syntax and whitespace checks pass.
+
 ## 0.3.21
 
 Release/tag match `150e92b`; remote/local ZIP SHA-256: `f41bfb5daf1bb9e2ed98d8f841e43cd9f7d814f650ff9bcb5fcb37b93585461f`. Published ZIP installation through the WordPress installer passed and reports 0.3.21.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.22 - 2026-09-09
+
+- Add a right-aligned grey open padlock to each post-type settings bar; locked state uses an orange closed padlock.
+- Save pending edits before locking and persist the lock per post type across reloads.
+- Disable editing and action controls while locked; preserve tab navigation and unlocking.
+- Reject planner mutations on the server while locked and skip automatic scans until unlocked.
+
 ## 0.3.21 - 2026-09-09
 
 - Remove the two introductory and match-ranking instruction paragraphs from review.

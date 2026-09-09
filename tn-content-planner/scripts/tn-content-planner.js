@@ -169,7 +169,7 @@
     async function load() {
         await work(async () => {
             const saved = await api('plan');
-            await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
+            if (!saved.settings?.locked) await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
             const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; dirty = false; selected.clear(); step = 1; render();
         });
     }
@@ -389,6 +389,21 @@
     function scheduleTableHeaders() { if (!headerFrame) headerFrame = requestAnimationFrame(positionTableHeaders); }
     window.addEventListener('scroll', scheduleTableHeaders, { passive: true });
     window.addEventListener('resize', scheduleTableHeaders, { passive: true });
+    function applyTypeLock(panel) {
+        if (!typeSettings.locked) return;
+        panel.querySelectorAll('button:not(.tncp-lock), input, select, textarea').forEach(control => { control.disabled = true; });
+    }
+    async function toggleTypeLock() {
+        if (busy) return;
+        if (dirty) { await save(); if (dirty) return; }
+        await work(async () => {
+            const result = await api('lock', { revision: plan.revision, locked: !typeSettings.locked });
+            typeSettings.locked = result.locked;
+            render();
+            announce(result.locked ? __('Post type locked.') : __('Post type unlocked.'));
+        });
+        app.querySelector('.tncp-lock')?.focus();
+    }
     function render() {
         scheduleTableHeaders();
         const active = document.activeElement;
@@ -417,7 +432,7 @@
                 await work(async () => { try {
                     if (type === 'xp-patterns') { patternsPlan = await api('patterns'); dirty = false; step = 1; render(); return; }
                     const saved = await api('plan');
-                    await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
+                    if (!saved.settings?.locked) await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
                     const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
                 } catch (error) { type = prior; throw error; } });
                 document.getElementById(`tncp-tab-${type}`)?.focus();
@@ -439,8 +454,14 @@
             ]) : el('dd', { text: value === undefined ? __('Unavailable') : JSON.stringify(value) });
             settings.append(el('div', {}, [el('dt', { text: label }), display]));
         });
+        settings.append(el('div', { class: 'tncp-lock-setting' }, [
+            el('dt', { class: 'screen-reader-text', text: __('Editing lock') }),
+            el('dd', {}, [el('button', { type: 'button', class: 'tncp-lock' + (typeSettings.locked ? ' is-locked' : ''), 'aria-label': typeSettings.locked ? __('Unlock post type') : __('Lock post type'), 'aria-pressed': String(Boolean(typeSettings.locked)), title: typeSettings.locked ? __('Unlock post type') : __('Lock post type'), onclick: toggleTypeLock }, [
+                el('span', { class: 'dashicons ' + (typeSettings.locked ? 'dashicons-lock' : 'dashicons-unlock'), 'aria-hidden': 'true' })
+            ])])
+        ]));
         panel.append(settings);
-        if (step === 2) { renderReview(panel); return; }
+        if (step === 2) { renderReview(panel); applyTypeLock(panel); return; }
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });
         panel.append(el('div', { class: 'tncp-actions' }, [
             button(__('Import CSV'), () => file.click()), file, button(__('Download CSV template'), downloadTemplate),
@@ -467,6 +488,7 @@
             button(__('Send selected to bin'), binSelected, false, dirty || !plan.rows.some(row => selected.has(row.id) && row.post_id)),
             el('span', { text: `${plan.rows.length} ${__('rows')} · ${selected.size} ${__('selected')} · ${dirty ? __('Unsaved changes') : __('Saved plan')}`, role: 'status' }), indicatorKey()
         ]));
+        applyTypeLock(panel);
         if (focusRow && focusLabel) {
             const control = app.querySelector(`[data-row="${CSS.escape(focusRow)}"] [aria-label="${CSS.escape(focusLabel)}"]`);
             if (control) {
@@ -682,10 +704,12 @@
         const link = el('a', { href: url, download: `tn-content-planner-${type}-template.csv` }); link.click(); URL.revokeObjectURL(url);
     }
     async function importCSV(file) {
-        if (!file) return;
+        if (!file || typeSettings.locked || busy) return;
+        const importingType = type;
         try {
             if (file.size > 1024 * 1024) throw new Error(__('Use a CSV smaller than 1 MB.'));
             const records = parseCSV(await file.text());
+            if (type !== importingType || typeSettings.locked || busy) return;
             const headers = records.shift()?.map(value => value.trim().toLowerCase());
             if (!headers || headers.length !== columns.length || headers.some((value, index) => value !== columns[index])) throw new Error(__('Use the column order in the downloadable CSV template.'));
             if (records.length + plan.rows.length > 2000) throw new Error(__('Use no more than 2,000 plan rows per post type.'));

@@ -1,4 +1,4 @@
 {
-  "version": "0.3.21",
-  "body": "## 0.3.21 - 2026-09-09\n\n- Remove the two introductory and match-ranking instruction paragraphs from review.\n- Show the source/destination comparison only when an existing match is selected or already linked.\n"
+  "version": "0.3.22",
+  "body": "## 0.3.22 - 2026-09-09\n\n- Add a right-aligned grey open padlock to each post-type settings bar; locked state uses an orange closed padlock.\n- Save pending edits before locking and persist the lock per post type across reloads.\n- Disable editing and action controls while locked; preserve tab navigation and unlocking.\n- Reject planner mutations on the server while locked and skip automatic scans until unlocked.\n"
 }

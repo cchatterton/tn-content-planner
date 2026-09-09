@@ -6,7 +6,7 @@ function tncp_register_routes() {
         array('methods' => 'GET', 'callback' => 'tncp_patterns_data', 'permission_callback' => 'tncp_patterns_permission'),
         array('methods' => 'POST', 'callback' => 'tncp_patterns_save', 'permission_callback' => 'tncp_patterns_permission'),
     ));
-    foreach (array('plan' => 'GET', 'save' => 'POST', 'apply' => 'POST', 'refresh' => 'POST', 'resolve' => 'POST', 'bin' => 'POST', 'change' => 'POST') as $action => $method) {
+    foreach (array('plan' => 'GET', 'save' => 'POST', 'apply' => 'POST', 'refresh' => 'POST', 'resolve' => 'POST', 'bin' => 'POST', 'change' => 'POST', 'lock' => 'POST') as $action => $method) {
         register_rest_route('tncp/v1', '/' . $action . '/(?P<type>[a-z0-9_-]+)', array('methods' => $method, 'callback' => 'tncp_' . $action . '_request', 'permission_callback' => 'tncp_permissions'));
     }
 }
@@ -36,6 +36,7 @@ function tncp_mutate($request, $action) {
         if (!is_numeric($request['revision']) || (int) $request['revision'] !== $plan['revision']) {
             return tncp_error(__('This plan was saved in another window. Reload it before making changes.', 'tn-content-planner'), 409);
         }
+        if ('tncp_set_lock' !== $action && get_option('tncp_locked_' . $type, false)) { return tncp_error(__('This post type is locked. Unlock it before making changes.', 'tn-content-planner'), 423); }
         $result = call_user_func($action, $request, $plan);
         if (is_array($result)) { $result['pattern_counts'] = tncp_pattern_counts(); $result['pattern_examples'] = tncp_pattern_examples(); }
         return $result;
@@ -289,4 +290,14 @@ function tncp_bin_linked_post($request, $plan) {
     $stored = tncp_store($request['type'], $plan);
     if (is_wp_error($stored)) { return tncp_error(__('The post was moved to the bin, but the plan could not be saved. Reload the plan and remove the row, or restore the post from the WordPress bin.', 'tn-content-planner'), 500); }
     return $stored;
+}
+
+/** Use the same per-type mutation lock so locking cannot race a save or post change. */
+function tncp_lock_request($request) { return tncp_mutate($request, 'tncp_set_lock'); }
+function tncp_set_lock($request, $plan) {
+    if (!is_bool($request['locked'])) { return tncp_error(__('Choose a valid lock state.', 'tn-content-planner')); }
+    $key = 'tncp_locked_' . $request['type'];
+    update_option($key, $request['locked'], false);
+    if ((bool) get_option($key, false) !== $request['locked']) { return tncp_error(__('The lock could not be saved. Please retry.', 'tn-content-planner'), 500); }
+    return array('locked' => $request['locked']);
 }

@@ -18,7 +18,7 @@ function tncp_types() {
 function tncp_type_settings($name) {
     $type = get_post_type_object($name);
     if (!$type) { return array(); }
-    return array('name' => $type->name, 'public' => $type->public, 'publicly_queryable' => $type->publicly_queryable,
+    return array('locked' => (bool) get_option('tncp_locked_' . $name, false), 'name' => $type->name, 'public' => $type->public, 'publicly_queryable' => $type->publicly_queryable,
         'exclude_from_search' => $type->exclude_from_search, 'hierarchical' => $type->hierarchical, '_builtin' => $type->_builtin);
 }
 
