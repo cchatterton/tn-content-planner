@@ -1,4 +1,4 @@
 {
-  "version": "0.3.1",
-  "body": "## 0.3.1 - 2026-09-09\n\n- Derive planner eligibility from each site's registered post-type settings: public, front-end viewable, and not excluded from search. Custom types must also be publicly queryable. No site-specific post-type names are used.\n- Apply eligibility consistently to tabs, scans, REST permissions, examples and XP Patterns.\n- Place parent editor links beside their dropdowns as compact icons, keeping row heights consistent.\n"
+  "version": "0.3.2",
+  "body": "## 0.3.2 - 2026-09-09\n\n- Use each custom post type's registered Publicly Queryable setting as the sole front-end eligibility switch.\n- Stop filtering custom types by Public or Exclude From Search. Keep WordPress's native Posts/Pages visibility handling, edit-permission checks and media exclusion.\n- Use the same runtime rule for tabs, scans, REST access, examples and XP Patterns; no site-specific names are used.\n"
 }

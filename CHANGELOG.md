@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 0.3.2 - 2026-09-09
+
+- Use each custom post type's registered Publicly Queryable setting as the sole front-end eligibility switch.
+- Stop filtering custom types by Public or Exclude From Search. Keep WordPress's native Posts/Pages visibility handling, edit-permission checks and media exclusion.
+- Use the same runtime rule for tabs, scans, REST access, examples and XP Patterns; no site-specific names are used.
+
 ## 0.3.1 - 2026-09-09
 
 - Derive planner eligibility from each site's registered post-type settings: public, front-end viewable, and not excluded from search. Custom types must also be publicly queryable. No site-specific post-type names are used.

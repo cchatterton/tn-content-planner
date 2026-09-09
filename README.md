@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.1 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.2 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, then review and create selected posts or apply confirmed changes to linked posts.
 
@@ -14,7 +14,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 
 - Unapplied linked-post title, slug, parent, template and relationship-flag changes are marked red with a Pending change label. Saving preserves these indicators; applying the changes clears them.
 
-- Tabs include editable post types with `public = true`, `exclude_from_search = false`, and WordPress front-end visibility enabled (`is_post_type_viewable`). Custom types must also have `publicly_queryable = true`; WordPress handles native Posts/Pages visibility separately. These runtime settings drive tabs, scans, REST access and XP Patterns on every site. Attachments are excluded. There is no site-specific type-name list.
+- Custom post-type eligibility reads `publicly_queryable` from the site's registered type object. Public and Exclude From Search do not affect this decision. Native Posts/Pages use WordPress visibility handling. Edit permission is still required and media attachments are excluded. This same rule drives tabs, scans, REST access, examples and XP Patterns; there is no site-specific name list.
 
 - Initial load and tab clicks scan existing editable published, draft, pending, private and scheduled posts into the plan, including title, slug, parent and planning metadata. Trashed posts and auto-drafts are excluded. Existing links are retained; a unique existing slug maps a matching unlinked row. Pending edits are preserved.
 - Tabs show mapped/planned counts. Click a tab to refresh linked data; the loading spinner remains visible until completion. The table header checkbox selects or clears all rows and shows partial selection.

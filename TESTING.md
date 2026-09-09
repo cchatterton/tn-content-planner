@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.2
+
+- 46 scan/pattern checks pass, including all eight combinations of Public, Publicly Queryable and Exclude From Search. Custom-type visibility and REST access follow only Publicly Queryable. Runtime changes, native Posts/Pages and XP Pattern filtering are covered.
+- 63 existing WordPress integration checks pass. PHP lint and package/version checks pass.
+
+
 ## 0.3.1
 
 Release/tag match `863c4b7`. Remote and local ZIP SHA-256: `82ee0e81670f67e4b1962c44b317f932aa5296d528df7609e657a5470534cdae`. Native WordPress upgrade from 0.3.0 to 0.3.1 passed, retained the plan, and reported the installed version current afterward.

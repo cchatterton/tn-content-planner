@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ Plan a content WBS by post type, import CSV, arrange parents and create selected
 
 == Description ==
 
-Scans add existing editable posts to complete linked plans on initial load and tab clicks, preserving pending changes. Eligible types must be public, front-end-viewable and not excluded from search; custom types must also be publicly queryable. The filter reads each site's registered settings, without a site-specific name list. Drafts remain included for eligible types; trashed posts and auto-drafts are excluded. Removing only a row means the next scan will add its existing post again.
+Scans add existing editable posts to complete linked plans on initial load and tab clicks, preserving pending changes. Custom types are eligible when their registered Publicly Queryable setting is enabled, regardless of Public or Exclude From Search. Native Posts/Pages retain WordPress visibility handling. Edit permission is required and media attachments are excluded. The filter uses no site-specific name list. Drafts remain included for eligible types; trashed posts and auto-drafts are excluded. Removing only a row means the next scan will add its existing post again.
 
 XP Patterns groups saved content items by pattern key with counts, a short description, todo/in-progress/done status and an example post. Pattern details are saved separately. Editor links open post references in a new tab. Two stacked dots beside mapped Post IDs show stored content (top) and featured image (bottom), filled when present.
 
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.2 =
+* Use each custom post type's registered Publicly Queryable setting as the sole front-end eligibility switch.
+* Stop filtering custom types by Public or Exclude From Search. Keep WordPress's native Posts/Pages visibility handling, edit-permission checks and media exclusion.
+* Use the same runtime rule for tabs, scans, REST access, examples and XP Patterns; no site-specific names are used.
 
 = 0.3.1 =
 * Derive planner eligibility from each site's registered post-type settings: public, front-end viewable, and not excluded from search. Custom types must also be publicly queryable. No site-specific post-type names are used.
