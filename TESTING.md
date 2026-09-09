@@ -2,6 +2,8 @@
 
 ## 0.3.11
 
+Release/tag match `85253dd`. Remote/local ZIP SHA-256: `cfcfef9d0f40a3c65dd6ad018296b938182e1f918781c415d8a6c94d681ba45f`. The published package installed successfully through the WordPress installer on the disposable site and reports 0.3.11.
+
 - Browser verification confirms the grey query marker appears for native Pages and not for custom types, and Custom has its own colour class.
 - Custom-bar contrast and desktop/mobile/narrow Axe checks pass, alongside existing header alignment, keyboard traversal and selection alignment checks.
 - JavaScript syntax, PHP lint and diff whitespace checks pass.
