@@ -19,7 +19,7 @@
 .tncp-wrap .tncp-hero p { margin: .5rem 0 0; font-size: .9375rem; }
 .tncp-wrap .tncp-eyebrow { color: #ff6b00; font-size: .75rem; letter-spacing: .0625rem; font-weight: 600; }
 .tncp-wrap .tncp-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
-.tncp-wrap .tncp-tabs { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: .375rem; }
+.tncp-wrap .tncp-tabs { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.05rem; }
 .tncp-wrap .tncp-tabs button { cursor: pointer; border: .0625rem solid var(--tncp-border); border-bottom: 0; padding: .75rem 1.25rem; background: #f2f6f8; color: var(--tncp-navy); border-radius: .4rem .4rem 0 0; font: inherit; }
 .tncp-wrap .tncp-tabs [aria-selected="true"] { background: #fff; font-weight: 600; box-shadow: inset 0 .1875rem #d95b00; position: relative; top: .0625rem; }
 .tncp-wrap .tncp-panel { padding: 1.5rem; background: #fff; border: .0625rem solid var(--tncp-border); border-radius: 0 .75rem .75rem .75rem; box-shadow: 0 .2rem .8rem rgba(0,40,64,.07); }
@@ -101,10 +101,5 @@
 
 .tncp-wrap .tncp-post-reference { display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap; }
 .tncp-wrap .tncp-post-indicators { display: inline-flex; flex-direction: column; gap: .1875rem; }
-.tncp-wrap .tncp-post-dot { width: .375rem; height: .375rem; border: .0625rem solid #607585; border-radius: 50%; box-sizing: border-box; }
-.tncp-wrap .tncp-post-dot.is-present { background: #16703c; border-color: #16703c; }
-
-.tncp-wrap .tncp-parent-control { display: flex; align-items: center; gap: .375rem; }
-.tncp-wrap .tncp-parent-control select { flex: 1; }
-.tncp-wrap .tncp-parent-editor { display: inline-flex; flex: 0 0 1.25rem; align-items: center; justify-content: center; text-decoration: none; }
-.tncp-wrap .tncp-parent-editor .dashicons { width: 1rem; height: 1rem; font-size: 1rem; }
+.tncp-wrap .tncp-post-dot { visibility: hidden; width: .375rem; height: .375rem; border: .0625rem solid #607585; border-radius: 50%; box-sizing: border-box; }
+.tncp-wrap .tncp-post-dot.is-present { visibility: visible; background: #16703c; border-color: #16703c; }

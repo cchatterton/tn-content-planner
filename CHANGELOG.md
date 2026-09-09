@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 0.3.3 - 2026-09-09
+
+- Completely hide missing content and featured-image dots, retaining their top/bottom positions.
+- Remove parent editor links from dropdowns and review comparisons. Open the parent through its own mapped Post ID instead.
+- Reduce tab spacing to 0.05rem.
+- Includes 0.3.2's Publicly Queryable-driven custom post-type eligibility.
+
 ## 0.3.2 - 2026-09-09
 
 - Use each custom post type's registered Publicly Queryable setting as the sole front-end eligibility switch.

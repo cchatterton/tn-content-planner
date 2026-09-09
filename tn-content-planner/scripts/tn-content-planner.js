@@ -29,13 +29,6 @@
     function postLink(id, label = `#${id}`) {
         return el('a', { href: `${TNCP.editor}?post=${Number(id)}&action=edit`, target: '_blank', rel: 'noopener noreferrer', text: label, title: __('Open in WordPress editor (new tab)'), onclick: event => event.stopPropagation() });
     }
-    function parentEditorLink(id) {
-        const link = postLink(id, '');
-        link.className = 'tncp-parent-editor';
-        link.setAttribute('aria-label', `${__('Edit parent post')} #${id} ${__('(new tab)')}`);
-        link.append(el('span', { class: 'dashicons dashicons-external', 'aria-hidden': 'true' }));
-        return link;
-    }
     function mappedPost(id) {
         const post = catalog.find(item => item.id === id);
         const content = post?.has_content ? __('Has content') : __('No content');
@@ -46,7 +39,6 @@
         ]);
         return el('span', { class: 'tncp-post-reference' }, [postLink(id), dots]);
     }
-    function parentPostId(value) { return value.startsWith('post:') ? Number(value.slice(5)) : plan.rows.find(row => `row:${row.id}` === value)?.post_id || 0; }
     function announce(message, error = false) {
         const notice = document.getElementById('tncp-notice');
         notice.hidden = !message;
@@ -267,7 +259,7 @@
         template.value = row.template;
         tr.append(el('td', {}, [check]), title,
             el('td', {}, [el('input', { type: 'text', value: row.slug, required: '', maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
-            el('td', {}, [el('span', { class: 'tncp-parent-control' }, [parent, ...(parentPostId(row.parent) ? [parentEditorLink(parentPostId(row.parent))] : [])])]), el('td', {}, [template]));
+            el('td', {}, [parent]), el('td', {}, [template]));
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => { row.flags[flag] = event.target.checked; markDirty(); render(); } })])));
         tr.append(el('td', { class: 'tncp-pattern', text: pattern(row) }), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
@@ -462,10 +454,7 @@
             if (label === __('Title') || label === __('Slug')) {
                 if (row.post_id) sourceCell.replaceChildren(postLink(row.post_id, source));
                 if (target) destinationCell.replaceChildren(postLink(target.id, destination));
-            } else if (label === __('Parent')) {
-                const sourceParent = parentPostId(row.parent);
-                if (sourceParent) sourceCell.replaceChildren(postLink(sourceParent, source));
-                if (target?.parent) destinationCell.replaceChildren(postLink(target.parent, destination));
+
             }
             body.append(el('tr', { class: target && source !== destination ? 'tncp-difference' : '' }, [el('th', { scope: 'row', text: label }), sourceCell, destinationCell]));
         });

@@ -1,4 +1,4 @@
 {
-  "version": "0.3.2",
-  "body": "## 0.3.2 - 2026-09-09\n\n- Use each custom post type's registered Publicly Queryable setting as the sole front-end eligibility switch.\n- Stop filtering custom types by Public or Exclude From Search. Keep WordPress's native Posts/Pages visibility handling, edit-permission checks and media exclusion.\n- Use the same runtime rule for tabs, scans, REST access, examples and XP Patterns; no site-specific names are used.\n"
+  "version": "0.3.3",
+  "body": "## 0.3.3 - 2026-09-09\n\n- Completely hide missing content and featured-image dots, retaining their top/bottom positions.\n- Remove parent editor links from dropdowns and review comparisons. Open the parent through its own mapped Post ID instead.\n- Reduce tab spacing to 0.05rem.\n- Includes 0.3.2's Publicly Queryable-driven custom post-type eligibility.\n"
 }

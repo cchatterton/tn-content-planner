@@ -1,5 +1,11 @@
 # Validation
 
+## 0.3.3
+
+- Browser regression verifies present dots remain visible, missing dots are hidden (including both absent), and parent cells contain no editor link. Existing review, pattern editing and desktop/mobile Axe checks pass.
+- JavaScript syntax and ZIP/version checks pass. Includes the 0.3.2 eligibility regression coverage.
+
+
 ## 0.3.2
 
 - 46 scan/pattern checks pass, including all eight combinations of Public, Publicly Queryable and Exclude From Search. Custom-type visibility and REST access follow only Publicly Queryable. Runtime changes, native Posts/Pages and XP Pattern filtering are covered.

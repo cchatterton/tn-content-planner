@@ -11,11 +11,7 @@ let lastPage;
  await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();
  async function checkCounts(){await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');const current=await page.evaluate(async()=>await(await fetch(TNCP.api+'plan/page',{headers:{'X-WP-Nonce':TNCP.nonce}})).json());const mapped=current.plan.rows.filter(r=>current.catalog.some(p=>p.id===r.post_id)).length;await page.getByRole('tab',{name:`Pages, ${mapped} of ${current.plan.rows.length} mapped`,exact:true}).waitFor();}
  await checkCounts();
- const parentControl=page.locator('.tncp-parent-control').filter({has:page.locator('.tncp-parent-editor')}).first();
- const parentBox=await parentControl.boundingBox();const selectBox=await parentControl.locator('select').boundingBox();
- assert.equal(parentBox.height,selectBox.height);
- assert.equal(await parentControl.locator('a').getAttribute('target'),'_blank');
- await parentControl.screenshot({path:'tests/artifacts/parent-inline.png'});
+ assert.equal(await page.locator('tbody td:nth-child(4) a').count(),0);
  assert.equal(await page.getByRole('button',{name:'1. Plan your WBS',exact:true}).count(),0);
  assert.equal(await page.getByRole('button',{name:'2. Review & create',exact:true}).count(),0);
  const selectAll=page.getByRole('checkbox',{name:'Select all rows',exact:true});
@@ -68,6 +64,9 @@ let lastPage;
  const mappedDots=page.locator('[data-row="review-three"] .tncp-post-indicators');
  assert.equal(await mappedDots.getAttribute('aria-label'),'Has content; No featured image');
  assert.equal(await mappedDots.locator('.is-present').count(),1);
+ assert.deepEqual(await mappedDots.locator('.tncp-post-dot').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).visibility)),['visible','hidden']);
+ const emptyDots=page.locator('tbody tr').filter({has:page.getByRole('button',{name:'Edit title: Entirely New Article',exact:true})}).locator('.tncp-post-dot');
+ assert.deepEqual(await emptyDots.evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).visibility)),['hidden','hidden']);
  await page.locator('.tncp-scroll').evaluate(node=>{node.scrollLeft=node.scrollWidth});
  await page.screenshot({path:'tests/artifacts/post-indicators.png',fullPage:true});
  // Skip leaves the current item selected and unchanged.
