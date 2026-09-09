@@ -103,3 +103,8 @@
 .tncp-wrap .tncp-post-indicators { display: inline-flex; flex-direction: column; gap: .1875rem; }
 .tncp-wrap .tncp-post-dot { width: .375rem; height: .375rem; border: .0625rem solid #607585; border-radius: 50%; box-sizing: border-box; }
 .tncp-wrap .tncp-post-dot.is-present { background: #16703c; border-color: #16703c; }
+
+.tncp-wrap .tncp-parent-control { display: flex; align-items: center; gap: .375rem; }
+.tncp-wrap .tncp-parent-control select { flex: 1; }
+.tncp-wrap .tncp-parent-editor { display: inline-flex; flex: 0 0 1.25rem; align-items: center; justify-content: center; text-decoration: none; }
+.tncp-wrap .tncp-parent-editor .dashicons { width: 1rem; height: 1rem; font-size: 1rem; }

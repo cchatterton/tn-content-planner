@@ -11,6 +11,11 @@ let lastPage;
  await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();
  async function checkCounts(){await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');const current=await page.evaluate(async()=>await(await fetch(TNCP.api+'plan/page',{headers:{'X-WP-Nonce':TNCP.nonce}})).json());const mapped=current.plan.rows.filter(r=>current.catalog.some(p=>p.id===r.post_id)).length;await page.getByRole('tab',{name:`Pages, ${mapped} of ${current.plan.rows.length} mapped`,exact:true}).waitFor();}
  await checkCounts();
+ const parentControl=page.locator('.tncp-parent-control').filter({has:page.locator('.tncp-parent-editor')}).first();
+ const parentBox=await parentControl.boundingBox();const selectBox=await parentControl.locator('select').boundingBox();
+ assert.equal(parentBox.height,selectBox.height);
+ assert.equal(await parentControl.locator('a').getAttribute('target'),'_blank');
+ await parentControl.screenshot({path:'tests/artifacts/parent-inline.png'});
  assert.equal(await page.getByRole('button',{name:'1. Plan your WBS',exact:true}).count(),0);
  assert.equal(await page.getByRole('button',{name:'2. Review & create',exact:true}).count(),0);
  const selectAll=page.getByRole('checkbox',{name:'Select all rows',exact:true});

@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 0.3.1 - 2026-09-09
+
+- Derive planner eligibility from each site's registered post-type settings: public, front-end viewable, and not excluded from search. Custom types must also be publicly queryable. No site-specific post-type names are used.
+- Apply eligibility consistently to tabs, scans, REST permissions, examples and XP Patterns.
+- Place parent editor links beside their dropdowns as compact icons, keeping row heights consistent.
+
 ## 0.3.0 - 2026-09-09
 
 - Scan existing posts into complete linked plans on initial load and tab clicks, preserving pending changes and avoiding duplicate rows.

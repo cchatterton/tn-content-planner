@@ -1,4 +1,4 @@
 {
-  "version": "0.3.0",
-  "body": "## 0.3.0 - 2026-09-09\n\n- Scan existing posts into complete linked plans on initial load and tab clicks, preserving pending changes and avoiding duplicate rows.\n- Restrict post-type tabs and REST access to WordPress front-end-viewable types.\n- Keep scanned posts available as review matches; absorb untouched scan rows when linking a planned item.\n- Add XP Patterns with saved-plan counts, short descriptions, todo/in-progress/done status and example-post selection.\n- Open mapped posts, parents, review references and pattern examples in a new editor tab.\n- Add stacked content and featured-image indicators beside mapped Post IDs.\n- Move the Ajax spinner to a fixed bottom-right position without shifting the page.\n- Support up to 2,000 plan rows, including existing untitled drafts and legitimate shared slugs.\n"
+  "version": "0.3.1",
+  "body": "## 0.3.1 - 2026-09-09\n\n- Derive planner eligibility from each site's registered post-type settings: public, front-end viewable, and not excluded from search. Custom types must also be publicly queryable. No site-specific post-type names are used.\n- Apply eligibility consistently to tabs, scans, REST permissions, examples and XP Patterns.\n- Place parent editor links beside their dropdowns as compact icons, keeping row heights consistent.\n"
 }

@@ -8,7 +8,7 @@ function tncp_error($message, $status = 400) {
 function tncp_types() {
     $types = get_post_types(array(), 'objects');
     foreach ($types as $name => $type) {
-        if ('attachment' === $name || !is_post_type_viewable($type) || !current_user_can($type->cap->edit_posts)) { unset($types[$name]); }
+        if ('attachment' === $name || !$type->public || $type->exclude_from_search || (!$type->_builtin && !$type->publicly_queryable) || !is_post_type_viewable($type) || !current_user_can($type->cap->edit_posts)) { unset($types[$name]); }
     }
     return $types;
 }

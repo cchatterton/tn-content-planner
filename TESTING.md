@@ -1,5 +1,12 @@
 # Validation
 
+## 0.3.1
+
+- 63 existing integration checks and 32 scan/pattern checks pass, including public/queryable/search-exclusion combinations, runtime settings changes, built-in Pages retention, REST denial and XP Pattern filtering.
+- Browser regression and desktop/mobile Axe checks pass. The inline parent control has the same height as its dropdown; its icon opens the editor in a new tab. The control screenshot was visually inspected.
+- PHP/JavaScript syntax and package/version checks pass.
+
+
 ## 0.3.0
 
 Release and tag match source commit `264590b`. Remote and local ZIP SHA-256: `ab4d1c729f927741b00c962a76f628b76c96eb95d1d911101935a73c2f540b3f`. WordPress detected and installed 0.3.0 from 0.2.0 through the native plugin screen, retained the plan, and then reported the installed version current.

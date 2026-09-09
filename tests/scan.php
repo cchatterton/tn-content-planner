@@ -7,12 +7,19 @@ function scan_assert($ok,$message){global $checks;if(!$ok){throw new RuntimeExce
 function scan_call($route,$data=array(),$type='tncp_scan_test'){$r=new WP_REST_Request('POST','/tncp/v1/'.$route.'/'.$type);foreach($data as $k=>$v){$r->set_param($k,$v);}return rest_do_request($r);}
 register_post_type('tncp_scan_test',array('public'=>true,'hierarchical'=>true));
 register_post_type('tncp_admin_test',array('public'=>true,'publicly_queryable'=>false));
+register_post_type('tncp_search_test',array('public'=>true,'publicly_queryable'=>true,'exclude_from_search'=>true));
 register_post_type('tncp_front_test',array('public'=>false,'publicly_queryable'=>true));
 $old=get_option('tncp_plan_tncp_scan_test',null);$old_patterns=get_option('tncp_patterns',null);
 try {
  delete_option('tncp_plan_tncp_scan_test');
+ scan_assert(!isset(tncp_types()['tncp_search_test']),'Search-excluded public type is excluded');
+ scan_assert(403===scan_call('refresh',array('revision'=>0,'scan'=>true),'tncp_search_test')->get_status(),'Search-excluded type REST rejected');
+ get_post_type_object('tncp_search_test')->exclude_from_search=false;
+ scan_assert(isset(tncp_types()['tncp_search_test']),'Same type becomes eligible when its data changes');
+ get_post_type_object('tncp_search_test')->exclude_from_search=true;
  scan_assert(!isset(tncp_types()['tncp_admin_test']),'Public but not front-end queryable is excluded');
- scan_assert(isset(tncp_types()['tncp_front_test']),'Explicit front-end queryable type is included');
+ scan_assert(!isset(tncp_types()['tncp_front_test']),'Non-public type stays excluded even when queryable');
+ scan_assert(403===scan_call('refresh',array('revision'=>0,'scan'=>true),'tncp_front_test')->get_status(),'Non-public queryable type REST rejected');
  scan_assert(isset(tncp_types()['post'],tncp_types()['page']),'Built-in front-end post types remain');
  scan_assert(403===scan_call('refresh',array('revision'=>0,'scan'=>true),'tncp_admin_test')->get_status(),'Hidden type REST rejected');
  foreach(array(array('Parent','parent',0,'publish'),array('Child','child',0,'publish'),array('','',0,'draft'),array('Gone','gone',0,'trash')) as $v){$ids[]=wp_insert_post(array('post_type'=>'tncp_scan_test','post_title'=>$v[0],'post_name'=>$v[1],'post_parent'=>$v[2],'post_status'=>$v[3]));}
@@ -54,6 +61,9 @@ try {
  $result=scan_call('resolve',array('revision'=>$plan['revision'],'row_id'=>'proposal','decision'=>'destination','target_id'=>$ids[1],'target_snapshot'=>array_intersect_key($target,array_flip(array('title','slug','parent','planning')))));
  scan_assert(200===$result->get_status(),'Scan preserves reconciliation with existing candidates');$plan=$result->get_data()['plan'];
  scan_assert(4===count($plan['rows']) && 1===count(array_filter($plan['rows'],fn($r)=>$r['post_id']===$ids[1])),'Reconciliation keeps only one linked row');
+ get_post_type_object('tncp_scan_test')->exclude_from_search=true;
+ scan_assert(!array_filter(tncp_patterns_data()['rows'],fn($r)=>$r['type']==='tncp_scan_test'),'Pattern aggregation follows visibility settings');
+ get_post_type_object('tncp_scan_test')->exclude_from_search=false;
  $patterns=tncp_patterns_data();
  $own=array_values(array_filter($patterns['rows'],fn($r)=>$r['type']==='tncp_scan_test'));
  scan_assert(4===array_sum(array_column($own,'count')),'Patterns count each saved content item once');
