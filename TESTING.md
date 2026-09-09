@@ -2,6 +2,8 @@
 
 ## 0.3.0
 
+Release and tag match source commit `264590b`. Remote and local ZIP SHA-256: `ab4d1c729f927741b00c962a76f628b76c96eb95d1d911101935a73c2f540b3f`. WordPress detected and installed 0.3.0 from 0.2.0 through the native plugin screen, retained the plan, and then reported the installed version current.
+
 - 63 existing integration checks, 31 reconciliation checks and 27 scan, front-end visibility, pattern metadata and content/image indicator checks pass.
 - Browser coverage includes complete scans, scanned-match reconciliation, pattern metadata persistence, editor-link targets, indicator labels, and unchanged table coordinates during the fixed spinner.
 - Desktop/mobile pattern and review layouts pass Axe WCAG A/AA audits.
