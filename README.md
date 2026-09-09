@@ -1,0 +1,62 @@
+# TN Content Planner
+
+Author: Techn · Version: 0.1.0 · Branding mode: Author Branded
+
+A WordPress content planning wizard: plan a WBS by post type, then review and create selected drafts or apply confirmed changes to linked posts.
+
+## Install
+
+Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New → Upload Plugin. Activate it, then open **Content Planner**. GitHub release updates appear in the native Plugins screen.
+
+## Scope and decisions
+
+- Step 1 implements the specified WBS. Step 2 is the review/apply stage; no unspecified content-writing steps are added.
+- Plan save is separate from post creation and mutation. Modal choices stage title, slug and parent changes for review and apply.
+- “Create new plan item” keeps the original mapped item and gives the copy a unique slug, adding a suffix if necessary.
+- Parent references can target planned rows or existing posts. Root depth is 0. The display moves and indents descendants immediately.
+- XP pattern is `posttype-level-template-flagcount`, e.g. `page-1-single-3`. It identifies a pattern combination, not an individual row. Identical combinations intentionally share a key; rows have independent UUIDs.
+- Single / Archive / Custom and the five flags are planning metadata, not theme-template generation or automatic related-content queries.
+- New posts are drafts; updates retain existing content and publication status.
+- Slug mapping uses the current post type. Ambiguous existing slugs require an explicit CSV Post ID. Duplicate planned slugs are rejected, including an attempted rename onto another post's slug.
+- Font Awesome Free is bundled for admin preview. Safe HTML allowlist: `i`, `span`, `strong`, `em`, `b`, `br`; `class` and `aria-hidden` on `i`/`span`. Frontend icon loading belongs to the active theme.
+- Limits: 500 rows / 2,000 catalog posts per type; 1 MB CSV; 50 selected rows per batch; 100 hierarchy levels. Post types with no native hierarchy still store `post_parent`, without changing their permalink rules.
+
+## CSV
+
+Use the per-tab **Download CSV template** button. The blank CSV contains:
+
+```csv
+title,slug,parent,template,local,related,children,siblings,parents,post_id
+```
+
+Parent is a planned slug, an unambiguous existing slug, or `post:123`. Template is Single, Archive or Custom. Flags use `1`/`0` (also accepts true/false and yes/no). Post ID is optional; XP pattern is computed. Imports append, never replace, and invalid imports leave the plan unchanged.
+
+## Data and recovery
+
+Each site's `tncp_plan_{post_type}` option stores a revision and rows, including stable row IDs, post links, snapshots and confirmed pending changes. Options do not autoload. Generated posts use `_tncp_row_id` as a durable recovery marker, plus `_tncp_template`, `_tncp_flags` and `_tncp_pattern` metadata. `tncp_lock_{post_type}` serialises writes; an interrupted request's lock expires after ten minutes.
+
+A stale plan revision or linked title/slug/parent stops the operation. **Refresh linked posts** discards pending linked edits and reloads current WordPress values; unsaved local edits are also discarded. A trashed/deleted mapped post must be restored before refresh. Removing a plan row keeps the linked post. Deactivation/uninstall intentionally retains plans and content.
+
+Apply batches are not transactional. Each success is saved before the next row. Failures stop the batch and report completed rows; retry remaining rows. Do not run batch application concurrently with another bulk post migration. Third-party WordPress save filters may adjust submitted fields; the plugin records actual values and stops for review.
+
+## Development and release
+
+Source is in `tn-content-planner/`; repository tooling is outside the distributable.
+
+```sh
+find tn-content-planner -name '*.php' -exec php -l {} \;
+node --check tn-content-planner/scripts/tn-content-planner.js
+wp eval-file tests/integration.php --path=/path/to/disposable/wordpress
+TNCP_TEST_PASSWORD=your-local-password node tests/browser.cjs
+scripts/build-plugin-zip.sh
+```
+
+The browser suite requires Playwright and Chrome, and uses a disposable WordPress site at `127.0.0.1:8765`, with test administrator `tncp_admin`. It appends test posts and rows; use only a disposable database and reset the page plan between runs. PHP integration tests clean up their own generated posts and restore the original page plan.
+
+Follow [codex-standards](https://github.com/cchatterton/codex-standards): general development, WordPress plugin, branding/UX and GitHub update standards. Release versions must match in the header, constant, readme Stable tag, update manifest and changelog. Build and commit the root ZIP, push, publish a matching `vX.Y.Z` release with that exact ZIP, then verify native WordPress update delivery.
+
+The manifest-first updater falls back to the public latest-release redirect and only then GitHub's API. Successful release cache and failure backoff are separate. Manual checks are capability-gated and nonce-protected. No plan data is sent to GitHub.
+
+## Licences
+
+Plugin: GPL v2 or later. Font Awesome Free 6.7.2: CSS code MIT, fonts SIL OFL 1.1, icons CC BY 4.0. The upstream licence is included under `tn-content-planner/assets/fontawesome/LICENSE.txt`.

@@ -1,0 +1,60 @@
+.tncp-wrap {
+    --tncp-navy: #002840;
+    --tncp-border: #d5dfe5;
+    --tncp-muted: #5c6d79;
+    color: #0a263b;
+}
+.tncp-wrap .tncp-hero {
+    margin-top: 1.25rem;
+    padding: 1.5rem 2rem;
+    border-radius: .875rem;
+    color: #fff;
+    background: radial-gradient(circle at 88% 10%, rgba(18,92,138,.58), transparent 24rem), linear-gradient(125deg,#001d31,#063b5d);
+}
+.tncp-wrap .tncp-hero h2 { color: #fff; font-size: 1.75rem; margin: .5rem 0; line-height: 1.25; }
+.tncp-wrap .tncp-hero p { margin: .5rem 0 0; font-size: .9375rem; }
+.tncp-wrap .tncp-eyebrow { color: #ff6b00; font-size: .75rem; letter-spacing: .0625rem; font-weight: 600; }
+.tncp-wrap .tncp-steps, .tncp-wrap .tncp-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.tncp-wrap .tncp-steps { margin: 1.5rem 0; }
+.tncp-wrap .tncp-steps [aria-current] { border-bottom: .1875rem solid #d95b00; font-weight: 600; }
+.tncp-wrap .tncp-tabs { display: flex; flex-wrap: wrap; gap: .375rem; }
+.tncp-wrap .tncp-tabs button { cursor: pointer; border: .0625rem solid var(--tncp-border); border-bottom: 0; padding: .75rem 1.25rem; background: #f2f6f8; color: var(--tncp-navy); border-radius: .4rem .4rem 0 0; font: inherit; }
+.tncp-wrap .tncp-tabs [aria-selected="true"] { background: #fff; font-weight: 600; box-shadow: inset 0 .1875rem #d95b00; }
+.tncp-wrap .tncp-panel { padding: 1.5rem; background: #fff; border: .0625rem solid var(--tncp-border); border-radius: 0 .75rem .75rem .75rem; box-shadow: 0 .2rem .8rem rgba(0,40,64,.07); }
+.tncp-wrap .tncp-panel h2 { margin-top: 0; }
+.tncp-wrap .tncp-actions { margin: 1rem 0; }
+.tncp-wrap .button:not(.button-primary) { color: var(--tncp-navy); border-color: var(--tncp-border); background: #fff; }
+.tncp-wrap .button:not(.button-primary):hover { border-color: var(--tncp-navy); }
+.tncp-wrap .button-primary { background: var(--tncp-navy); border-color: var(--tncp-navy); color: #fff; }
+.tncp-wrap .button-primary:hover { background: #063b5d; border-color: #063b5d; }
+.tncp-wrap .tncp-scroll { overflow-x: auto; margin-top: 1rem; }
+.tncp-wrap .tncp-table { min-width: 95rem; table-layout: fixed; }
+.tncp-wrap .tncp-table th, .tncp-wrap .tncp-table td { vertical-align: middle; padding: .5rem; }
+.tncp-wrap .tncp-table th:first-child { width: 3rem; }
+.tncp-wrap .tncp-table th:nth-child(2) { width: 18rem; }
+.tncp-wrap .tncp-table th:nth-child(3) { width: 12rem; }
+.tncp-wrap .tncp-table th:nth-child(4) { width: 12rem; }
+.tncp-wrap .tncp-table th:nth-child(5) { width: 6rem; }
+.tncp-wrap .tncp-table th:nth-child(n+6):nth-child(-n+10) { width: 4rem; }
+.tncp-wrap .tncp-table th:nth-child(11) { width: 12rem; }
+.tncp-wrap .tncp-table th:nth-child(12) { width: 4rem; }
+.tncp-wrap .tncp-table th:last-child { width: 7rem; }
+.tncp-wrap .tncp-table input[type="text"], .tncp-wrap .tncp-table select { width: 100%; min-width: 0; }
+.tncp-wrap .tncp-title { display: block; border: .0625rem solid transparent; background: transparent; text-align: start; width: 100%; padding: .375rem; cursor: text; font: inherit; color: #0a263b; overflow-wrap: anywhere; }
+.tncp-wrap .tncp-title:hover { border-color: var(--tncp-border); }
+.tncp-wrap .tncp-pattern { font-family: monospace; overflow-wrap: anywhere; font-size: .75rem; }
+.tncp-wrap .tncp-flag { text-align: center; }
+.tncp-wrap .tncp-empty { padding: 2.5rem 1rem; text-align: center; background: #f2f6f8; border: .0625rem dashed var(--tncp-border); margin-top: 1rem; }
+.tncp-wrap .tncp-footer { border-top: .0625rem solid var(--tncp-border); padding-top: 1.25rem; margin-bottom: 0; }
+.tncp-wrap .tncp-review { margin: 1rem 0; }
+.tncp-wrap .tncp-review li { border-bottom: .0625rem solid var(--tncp-border); padding: 1rem 0; overflow-wrap: anywhere; }
+.tncp-wrap .tncp-dialog { max-width: 34rem; width: calc(100% - 4rem); padding: 1.5rem; border: .0625rem solid var(--tncp-border); border-radius: .75rem; color: #0a263b; }
+.tncp-wrap .tncp-dialog::backdrop { background: rgba(0,29,49,.55); }
+.tncp-wrap :is(button,input,select,a,[tabindex]):focus-visible { outline: .1875rem solid #125c8a; outline-offset: .125rem; }
+.tncp-wrap [aria-busy="true"] { cursor: progress; }
+@media (max-width: 48rem) {
+    .tncp-wrap .tncp-hero { padding: 1.25rem; }
+    .tncp-wrap .tncp-panel { padding: 1rem; }
+    .tncp-wrap .tncp-actions { gap: .5rem; }
+    .tncp-wrap .tncp-dialog { width: calc(100% - 3rem); padding: 1rem; }
+}
