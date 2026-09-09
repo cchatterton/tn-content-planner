@@ -2,11 +2,15 @@
 
 ## 0.3.4
 
+Release/tag match `685bcc8`. Remote/local ZIP SHA-256: `3a9e94fd7bc0d567873fa32352049906ba5351c401e2737cf6535414f6503ced`. Native update to 0.3.4 succeeded on the disposable WordPress site and retained the saved plan. The following check reported the installed version current.
+
 - Header watermark is sourced from the installed PHP version constant. Responsive bounds and Axe checks cover desktop, narrow and mobile widths.
 - PHP template lint and package/version checks pass.
 
 
 ## 0.3.3
+
+The first native update check immediately after publication still advertised 0.3.2 and installed that version. The later 0.3.4 check discovered and installed the current package successfully. This is not verification of the user site’s reported updater issue.
 
 - Browser regression verifies present dots remain visible, missing dots are hidden (including both absent), and parent cells contain no editor link. Existing review, pattern editing and desktop/mobile Axe checks pass.
 - JavaScript syntax and ZIP/version checks pass. Includes the 0.3.2 eligibility regression coverage.
