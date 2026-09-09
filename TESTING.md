@@ -2,6 +2,8 @@
 
 ## 0.3.8 — corrected release numbering
 
+Published/tagged source `55cd4ae`. GitHub latest resolves to v0.3.8; mistakenly numbered releases were returned to draft. Remote/local ZIP SHA-256: `c47beb1768db9de39b1fe74f801507f31a4701e31e034ac72d81206692465a86`. WordPress installer replacement of the disposable 0.6.1 installation with the public 0.3.8 ZIP succeeded and reports version 0.3.8.
+
 Identical plugin behavior to the verified 0.6.1 build; only version and release documentation changed. The earlier verification records below retain their original version labels for accuracy.
 
 
