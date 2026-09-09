@@ -1,4 +1,4 @@
 {
-  "version": "0.3.22",
-  "body": "## 0.3.22 - 2026-09-09\n\n- Add a right-aligned grey open padlock to each post-type settings bar; locked state uses an orange closed padlock.\n- Save pending edits before locking and persist the lock per post type across reloads.\n- Disable editing and action controls while locked; preserve tab navigation and unlocking.\n- Reject planner mutations on the server while locked and skip automatic scans until unlocked.\n"
+  "version": "0.3.23",
+  "body": "## 0.3.23 - 2026-09-09\n\n- Add a text-height status dot after XP Pattern keys in post-type tables: red for todo, amber for in progress and green for done.\n- Add matching status dots to the key and accessible status labels to each record.\n- Refresh indicators from saved pattern statuses during tab changes and saves.\n"
 }

@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.22
+Stable tag: 0.3.23
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.23 =
+- Add a text-height status dot after XP Pattern keys in post-type tables: red for todo, amber for in progress and green for done.
+- Add matching status dots to the key and accessible status labels to each record.
+- Refresh indicators from saved pattern statuses during tab changes and saves.
+
 
 = 0.3.22 =
 - Add a right-aligned grey open padlock to each post-type settings bar; locked state uses an orange closed padlock.

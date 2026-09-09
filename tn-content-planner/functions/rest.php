@@ -16,7 +16,7 @@ function tncp_permissions($request) {
 function tncp_plan_request($request) {
     $catalog = tncp_catalog($request['type']);
     if (is_wp_error($catalog)) { return $catalog; }
-    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog, 'settings' => tncp_type_settings($request['type']), 'pattern_examples' => tncp_pattern_examples(), 'pattern_counts' => tncp_pattern_counts());
+    return array('plan' => tncp_plan($request['type']), 'catalog' => $catalog, 'settings' => tncp_type_settings($request['type']), 'pattern_statuses' => tncp_pattern_statuses(), 'pattern_examples' => tncp_pattern_examples(), 'pattern_counts' => tncp_pattern_counts());
 }
 /** Serialise mutations across browsers. Expired locks recover after an interrupted PHP request. */
 function tncp_mutate($request, $action) {
@@ -38,7 +38,7 @@ function tncp_mutate($request, $action) {
         }
         if ('tncp_set_lock' !== $action && get_option('tncp_locked_' . $type, false)) { return tncp_error(__('This post type is locked. Unlock it before making changes.', 'tn-content-planner'), 423); }
         $result = call_user_func($action, $request, $plan);
-        if (is_array($result)) { $result['pattern_counts'] = tncp_pattern_counts(); $result['pattern_examples'] = tncp_pattern_examples(); }
+        if (is_array($result)) { $result['pattern_counts'] = tncp_pattern_counts(); $result['pattern_examples'] = tncp_pattern_examples(); $result['pattern_statuses'] = tncp_pattern_statuses(); }
         return $result;
     } finally {
         delete_option($lock);

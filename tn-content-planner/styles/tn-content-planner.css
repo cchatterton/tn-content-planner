@@ -158,3 +158,9 @@
 .tncp-wrap .tncp-lock { display: inline-flex; align-items: center; justify-content: center; padding: .125rem; min-width: 1.75rem; min-height: 1.75rem; border: 0; background: transparent; color: #667580; cursor: pointer; }
 .tncp-wrap .tncp-lock.is-locked { color: #d95b00; }
 .tncp-wrap .tncp-lock:focus-visible { outline: .125rem solid var(--tncp-navy); outline-offset: .125rem; }
+
+.tncp-wrap .tncp-pattern-reference { display: inline-flex; align-items: center; gap: .35rem; }
+.tncp-wrap .tncp-pattern-status { display: inline-block; flex: 0 0 .75rem; width: .75rem; height: .75rem; border-radius: 50%; vertical-align: middle; }
+.tncp-wrap .tncp-pattern-status.is-todo { background: #c62828; }
+.tncp-wrap .tncp-pattern-status.is-in-progress { background: #b77900; }
+.tncp-wrap .tncp-pattern-status.is-done { background: #21843b; }

@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.23
+
+- Browser regression cycles all three saved statuses and verifies record/key colours, placement after the pattern, font-height sizing and accessible labels. Desktop/mobile Axe checks pass.
+- Existing 54 scan/pattern checks, PHP lint, JavaScript syntax and whitespace checks pass.
+
 ## 0.3.22
 
 Release/tag match `db093c6`; remote/local ZIP SHA-256: `fc3d3aaa8bd1c4f4c6da3c9781078d6412ec46b5c787c364c6f67242e3629e64`. Published ZIP installation through the WordPress installer passed and reports 0.3.22.

@@ -8,6 +8,7 @@
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [], typeSettings = {};
     let patternCounts = TNCP.pattern_counts || { done: 0, total: 0 };
+    let patternStatuses = TNCP.pattern_statuses || {};
     let patternExamples = TNCP.pattern_examples || {};
     let patternsMine = false;
     let patternsPlan = { revision: 0, rows: [], catalog: {} };
@@ -42,6 +43,10 @@
         ]);
         return el('span', { class: 'tncp-post-reference' }, [postLink(id), dots]);
     }
+    function patternStatusDot(status = 'todo', decorative = false) {
+        const label = { todo: __('Todo'), 'in-progress': __('In progress'), done: __('Done') }[status] || __('Todo');
+        return el('span', { class: `tncp-pattern-status is-${status}`, title: `${__('XP Pattern')}: ${label}`, ...(decorative ? { 'aria-hidden': 'true' } : { role: 'img', 'aria-label': `${__('XP Pattern')}: ${label}` }) });
+    }
     function indicatorKey() {
         const entry = (upper, label) => el('span', { class: 'tncp-indicator-key-item' }, [
             el('span', { class: 'tncp-post-indicators', 'aria-hidden': 'true' }, [
@@ -49,7 +54,7 @@
                 el('span', { class: 'tncp-post-dot' + (upper ? '' : ' is-present') })
             ]), document.createTextNode(label)
         ]);
-        return el('span', { class: 'tncp-indicator-key' }, [el('strong', { text: __('Key:') }), entry(true, __('Has content')), entry(false, __('Has featured image'))]);
+        return el('span', { class: 'tncp-indicator-key' }, [el('strong', { text: __('Key:') }), entry(true, __('Has content')), entry(false, __('Has featured image')), ...[['todo', __('Todo')], ['in-progress', __('In progress')], ['done', __('Done')]].map(([status, label]) => el('span', { class: 'tncp-indicator-key-item' }, [patternStatusDot(status, true), document.createTextNode(label)]))]);
     }
     function announce(message, error = false) {
         const notice = document.getElementById('tncp-notice');
@@ -65,6 +70,7 @@
         let result;
         try { result = await response.json(); } catch { throw new Error(__('The server returned an unreadable response. Your edits are still here; try again.')); }
         if (!response.ok) throw new Error(result.message || __('The request failed. Try again.'));
+        if ('pattern_statuses' in result) patternStatuses = result.pattern_statuses;
         if ('pattern_examples' in result) patternExamples = result.pattern_examples;
         if ('pattern_counts' in result) patternCounts = result.pattern_counts;
         return result;
@@ -316,7 +322,7 @@
             el('td', {}, [el('input', { type: 'text', value: row.slug, maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
             el('td', {}, [parent]), el('td', {}, [template]));
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => change(row, flag, event.target.checked) })])));
-        tr.append(el('td', { class: 'tncp-pattern' }, [patternExamples[pattern(row)] ? postLink(patternExamples[pattern(row)], pattern(row)) : document.createTextNode(pattern(row))]), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
+        tr.append(el('td', { class: 'tncp-pattern' }, [el('span', { class: 'tncp-pattern-reference' }, [patternExamples[pattern(row)] ? postLink(patternExamples[pattern(row)], pattern(row)) : el('span', { text: pattern(row) }), patternStatusDot(patternStatuses[pattern(row)] || 'todo')])]), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
             const post = catalog.find(item => item.id === row.post_id);
             const choices = [['remove', row.post_id ? __('Remove row only') : __('Remove row')]];

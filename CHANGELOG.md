@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.23 - 2026-09-09
+
+- Add a text-height status dot after XP Pattern keys in post-type tables: red for todo, amber for in progress and green for done.
+- Add matching status dots to the key and accessible status labels to each record.
+- Refresh indicators from saved pattern statuses during tab changes and saves.
+
 ## 0.3.22 - 2026-09-09
 
 - Add a right-aligned grey open padlock to each post-type settings bar; locked state uses an orange closed padlock.
