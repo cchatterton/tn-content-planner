@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 - 2026-09-09
+
+- Add Show Mine / Show All beside the XP Patterns heading, using JavaScript row visibility without requests or rebuilding controls.
+- Keep table column headings visible below the WordPress admin bar during page scrolling.
+- Move Add row below the content table and remove the Build your content structure heading.
+
 ## 0.5.0 - 2026-09-09
 
 - Add an Assigned to user picklist for each XP Pattern, persisted with its description, status and example.

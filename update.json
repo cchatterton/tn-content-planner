@@ -1,4 +1,4 @@
 {
-  "version": "0.5.0",
-  "body": "## 0.5.0 - 2026-09-09\n\n- Add an Assigned to user picklist for each XP Pattern, persisted with its description, status and example.\n- Populate assignees from this site's WordPress users, with an Unassigned option.\n- Make XP Pattern dropdown widths consistent within each column.\n"
+  "version": "0.6.0",
+  "body": "## 0.6.0 - 2026-09-09\n\n- Add Show Mine / Show All beside the XP Patterns heading, using JavaScript row visibility without requests or rebuilding controls.\n- Keep table column headings visible below the WordPress admin bar during page scrolling.\n- Move Add row below the content table and remove the Build your content structure heading.\n"
 }

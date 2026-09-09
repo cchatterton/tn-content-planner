@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.5.0 · Branding mode: Author Branded
+Author: Techn · Version: 0.6.0 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -10,6 +10,8 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 
 ## Scope and decisions
 
+- XP Patterns has Show Mine / Show All controls beside its heading. The toggle only hides loaded rows in JavaScript, keeps unsaved edits intact and defaults to Show All. Show Mine uses the logged-in user’s assignment.
+- Table headings remain visible below the WordPress admin bar while scrolling, including horizontal alignment. Add row is below the content table.
 - The header displays the installed plugin version in its top-right corner.
 - The task header reads Content Planner, with the eyebrow Plan. Organise. Publish. and three feature tags: Visual hierarchy, CSV import, Publish or draft. Plugin metadata retains TN Content Planner / Techn authorship.
 

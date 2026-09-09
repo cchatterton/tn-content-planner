@@ -12,6 +12,13 @@ let lastPage;
  async function checkCounts(){await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');const current=await page.evaluate(async()=>await(await fetch(TNCP.api+'plan/page',{headers:{'X-WP-Nonce':TNCP.nonce}})).json());const mapped=current.plan.rows.filter(r=>current.catalog.some(p=>p.id===r.post_id)).length;await page.getByRole('tab',{name:`Pages, ${mapped} of ${current.plan.rows.length} mapped`,exact:true}).waitFor();}
  await checkCounts();
  assert.match(await page.locator('.tncp-type-settings').innerText(),/Publicly Queryable/);
+ assert.equal(await page.getByRole('heading',{name:'Build your content structure',exact:true}).count(),0);
+ const tableTop=await page.locator('.tncp-table').evaluate(node=>node.getBoundingClientRect().top+window.scrollY);
+ await page.evaluate(top=>window.scrollTo(0,top+120),tableTop);
+ await page.waitForFunction(()=>Math.abs(document.querySelector('.tncp-table thead').getBoundingClientRect().top-document.getElementById('wpadminbar').getBoundingClientRect().bottom)<2);
+ const addBox=await page.getByRole('button',{name:'Add row',exact:true}).boundingBox(), tableBox=await page.locator('.tncp-table').boundingBox();assert.ok(addBox.y>=tableBox.y+tableBox.height);
+ await page.evaluate(()=>window.scrollTo(0,0));
+
  assert.equal(await page.getByText('This post type is non-hierarchical.',{exact:false}).count(),0);
  assert.equal(await page.locator('tbody td:nth-child(4) a').count(),0);
  assert.equal(await page.getByRole('button',{name:'1. Plan your WBS',exact:true}).count(),0);
@@ -119,8 +126,9 @@ let lastPage;
  const patternRow=page.locator('[data-pattern]').first();
  await patternRow.getByRole('textbox').fill('Reusable content layout');
  await patternRow.getByRole('combobox',{name:/^Status/}).selectOption('in-progress');
+ const currentUser=await page.evaluate(async()=> (await (await fetch(TNCP.api+'patterns',{headers:{'X-WP-Nonce':TNCP.nonce}})).json()).current_user_id);
  const assignee=patternRow.getByRole('combobox',{name:/^Assigned to/});
- const assignedId=await assignee.locator('option').nth(1).getAttribute('value');await assignee.selectOption(assignedId);
+ const assignedId=String(currentUser);await assignee.selectOption(assignedId);
  const example=patternRow.getByRole('combobox',{name:/^Example post/});
  const exampleId=await example.locator('option').nth(1).getAttribute('value');await example.selectOption(exampleId);
  const editorLink=patternRow.locator('a');assert.equal(await editorLink.getAttribute('target'),'_blank');
@@ -132,6 +140,17 @@ let lastPage;
  const widths=await page.getByRole('combobox',{name:/^Example post/}).evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().width));assert.ok(widths.every(width=>Math.abs(width-widths[0])<1));
  assert.equal(await patternRow.getByRole('combobox',{name:/^Status/}).inputValue(),'in-progress');
  assert.equal(await patternRow.getByRole('combobox',{name:/^Example post/}).inputValue(),exampleId);
+ const allRows=await page.locator('[data-pattern]').count();
+ const firstPatternHandle=await page.locator('[data-pattern]').first().elementHandle();
+ let filterRequests=0;const countFilterRequest=()=>filterRequests++;page.on('request',countFilterRequest);
+ await page.getByRole('button',{name:'Show Mine',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Show Mine',exact:true}).getAttribute('aria-pressed'),'true');
+ const visibleAssignees=await page.getByRole('combobox',{name:/^Assigned to/}).evaluateAll(nodes=>nodes.map(node=>node.value));
+ assert.ok(visibleAssignees.length>0 && visibleAssignees.every(value=>value===assignedId));
+ await page.getByRole('button',{name:'Show All',exact:true}).click();
+ page.off('request',countFilterRequest);assert.equal(filterRequests,0);assert.equal(await page.locator('[data-pattern]').count(),allRows);
+ assert.equal(await firstPatternHandle.evaluate(node=>node===document.querySelector('[data-pattern]')),true);
+ assert.equal(await patternRow.getByRole('combobox',{name:/^Assigned to/}).inputValue(),assignedId);
  await page.screenshot({path:'tests/artifacts/patterns-desktop.png',fullPage:true});
  if(process.env.TNCP_AXE_PATH){for(const viewport of [{width:1600,height:1100},{width:390,height:844}]){await page.setViewportSize(viewport);const audit=await page.evaluate(async()=>await axe.run('.tncp-wrap',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));assert.deepEqual(audit.violations.map(item=>item.id),[]);}}
  // Approved linked edits persist without Save or Review, and survive reload.

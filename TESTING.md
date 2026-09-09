@@ -1,5 +1,12 @@
 # Validation
 
+## 0.6.0
+
+- Browser tests verify the original pattern rows remain mounted while Show Mine / Show All filters without network requests, and visible assignments match the logged-in user.
+- Sticky heading position below the admin bar, bottom Add row placement and heading removal pass browser assertions. Existing assignment, equal-width dropdown, immediate-edit, reconciliation and Axe desktop/mobile checks pass.
+- JavaScript syntax and PHP lint pass.
+
+
 ## 0.5.0
 
 - 49 scan/pattern checks pass, including assigned-user persistence, site user listing and rejection of unknown assignments.

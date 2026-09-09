@@ -113,3 +113,12 @@
 .tncp-wrap .tncp-type-settings dd { margin: 0; }
 
 .tncp-wrap .tncp-patterns-table select { width: 100%; max-width: none; }
+
+.tncp-wrap .tncp-pattern-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
+.tncp-wrap .tncp-pattern-heading h2 { margin: 0; }
+.tncp-wrap .tncp-pattern-filters { display: flex; gap: .25rem; margin-left: auto; }
+
+/* Move the original headings within the horizontal scroll region so controls stay live. */
+.tncp-wrap .tncp-scroll thead { position: relative; z-index: 2; }
+.tncp-wrap .tncp-scroll thead th { background: #fff; }
+.tncp-wrap .tncp-scroll .tncp-header-pinned { box-shadow: 0 2px 3px rgba(0,40,64,.15); }

@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.6.0 =
+* Add client-side Show Mine / Show All filtering to XP Patterns.
+* Keep table headings visible while scrolling.
+* Move Add row below the table and remove the redundant heading.
+
 
 = 0.5.0 =
 * Add a saved Assigned to user picklist for each XP Pattern.

@@ -7,6 +7,7 @@
     const app = document.getElementById('tncp-app');
     const dialog = document.getElementById('tncp-dialog');
     let type = TNCP.types[0]?.name, plan = { revision: 0, rows: [] }, catalog = [], typeSettings = {};
+    let patternsMine = false;
     let patternsPlan = { revision: 0, rows: [], catalog: {} };
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
     let reviewQueue = [], reviewIndex = 0, reviewTarget = 0, reviewDecision = '', reviewNewSlug = '', reviewApplied = 0, reviewSkipped = 0;
@@ -309,7 +310,25 @@
         markPendingFields(tr, row);
         return tr;
     }
+    let headerFrame = 0;
+    function positionTableHeaders() {
+        headerFrame = 0;
+        const admin = document.getElementById('wpadminbar');
+        const top = Math.max(0, admin?.getBoundingClientRect().bottom || 0);
+        app.querySelectorAll('.tncp-scroll table').forEach(table => {
+            const head = table.tHead;
+            if (!head || !table.getClientRects().length) return;
+            const bounds = table.getBoundingClientRect();
+            const offset = Math.min(Math.max(0, top - bounds.top), Math.max(0, bounds.height - head.offsetHeight));
+            head.style.transform = `translateY(${offset}px)`;
+            head.classList.toggle('tncp-header-pinned', offset > 0);
+        });
+    }
+    function scheduleTableHeaders() { if (!headerFrame) headerFrame = requestAnimationFrame(positionTableHeaders); }
+    window.addEventListener('scroll', scheduleTableHeaders, { passive: true });
+    window.addEventListener('resize', scheduleTableHeaders, { passive: true });
     function render() {
+        scheduleTableHeaders();
         const active = document.activeElement;
         const focusRow = active?.closest('[data-row]')?.dataset.row;
         const focusLabel = active?.getAttribute('aria-label');
@@ -351,10 +370,8 @@
         });
         panel.append(settings);
         if (step === 2) { renderReview(panel); return; }
-        panel.append(el('h2', { text: __('Build your content structure') }));
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });
         panel.append(el('div', { class: 'tncp-actions' }, [
-            button(__('Add row'), () => { const row = newRow(); plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
             button(__('Import CSV'), () => file.click()), file, button(__('Download CSV template'), downloadTemplate),
 
         ]));
@@ -372,7 +389,9 @@
             table.append(el('thead', {}, [head]), el('tbody', {}, orderedRows().map(rowView)));
             panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table]));
         }
-        panel.append(el('div', { class: 'tncp-actions tncp-footer' }, [button(__('Save plan'), save, true),
+        panel.append(el('div', { class: 'tncp-actions tncp-footer' }, [
+            button(__('Add row'), () => { const row = newRow(); plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
+            button(__('Save plan'), save, true),
             button(__('Review & create selected'), startReview, false, dirty || !selected.size),
             el('span', { text: `${plan.rows.length} ${__('rows')} · ${selected.size} ${__('selected')} · ${dirty ? __('Unsaved changes') : __('Saved plan')}`, role: 'status' })
         ]));
@@ -396,8 +415,28 @@
         const base = reviewNewSlug; let suffix = 2;
         while (catalog.some(post => post.slug === reviewNewSlug) || plan.rows.some(item => item.id !== row?.id && item.slug === reviewNewSlug)) reviewNewSlug = `${base}-${suffix++}`;
     }
+    function filterPatterns() {
+        let visible = 0;
+        app.querySelectorAll('[data-pattern]').forEach(element => {
+            const row = patternsPlan.rows.find(item => item.key === element.dataset.pattern);
+            element.hidden = patternsMine && row?.user_id !== patternsPlan.current_user_id;
+            if (!element.hidden) visible++;
+        });
+        app.querySelectorAll('.tncp-pattern-filters button').forEach(control => {
+            const active = (control.dataset.mine === 'true') === patternsMine;
+            control.setAttribute('aria-pressed', String(active)); control.classList.toggle('button-primary', active);
+        });
+        const empty = document.getElementById('tncp-pattern-empty'); if (empty) empty.hidden = visible > 0;
+        scheduleTableHeaders();
+        const scroll = app.querySelector('.tncp-pattern-scroll'); if (scroll) scroll.hidden = visible === 0;
+    }
     function renderPatterns(panel) {
-        panel.append(el('h2', { text: __('XP Patterns') }));
+        const filters = el('div', { class: 'tncp-pattern-filters', role: 'group', 'aria-label': __('Filter XP Patterns') });
+        [[true, __('Show Mine')], [false, __('Show All')]].forEach(([mine, label]) => filters.append(el('button', {
+            type: 'button', class: 'button' + (patternsMine === mine ? ' button-primary' : ''), 'aria-pressed': String(patternsMine === mine), 'data-mine': String(mine), text: label,
+            onclick: () => { patternsMine = mine; filterPatterns(); }
+        })));
+        panel.append(el('div', { class: 'tncp-pattern-heading' }, [el('h2', { text: __('XP Patterns') }), filters]));
         if (!patternsPlan.rows.length) { panel.append(el('p', { text: __('No patterns yet. Scan a post type or save a content plan to get started.') })); return; }
         const table = el('table', { class: 'widefat striped tncp-patterns-table' });
         table.append(el('thead', {}, [el('tr', {}, [__('Pattern'), __('Content items'), __('Short description'), __('Status'), __('Assigned to'), __('Example post')].map(text => el('th', { scope: 'col', text })))]));
@@ -407,7 +446,7 @@
             const description = el('input', { type: 'text', value: row.description, maxlength: '240', 'aria-label': `${__('Description')} ${row.key}`, oninput: event => { row.description = event.target.value; update(); } });
             const status = el('select', { 'aria-label': `${__('Status')} ${row.key}`, onchange: event => { row.status = event.target.value; update(); } }, ['todo', 'in-progress', 'done'].map(value => el('option', { value, text: value })));
             status.value = row.status;
-            const assignee = el('select', { 'aria-label': `${__('Assigned to')} ${row.key}`, onchange: event => { row.user_id = Number(event.target.value); update(); } });
+            const assignee = el('select', { 'aria-label': `${__('Assigned to')} ${row.key}`, onchange: event => { row.user_id = Number(event.target.value); update(); filterPatterns(); } });
             assignee.append(el('option', { value: '0', text: __('— Unassigned —') }));
             const users = patternsPlan.users || [];
             users.forEach(user => assignee.append(el('option', { value: String(user.id), text: user.name })));
@@ -422,8 +461,10 @@
             const link = el('span', { class: 'tncp-example-link' }, row.post_id && posts.some(post => post.id === row.post_id) ? [postLink(row.post_id)] : []);
             body.append(el('tr', { 'data-pattern': row.key }, [el('th', { scope: 'row', text: row.key }), el('td', { text: String(row.count) }), el('td', {}, [description]), el('td', {}, [status]), el('td', {}, [assignee]), el('td', {}, [example, link])]));
         });
-        table.append(body); panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('XP pattern table') }, [table]));
+        panel.append(el('p', { id: 'tncp-pattern-empty', hidden: true, text: __('No XP Patterns are assigned to you.') }));
+        table.append(body); panel.append(el('div', { class: 'tncp-scroll tncp-pattern-scroll', tabindex: '0', role: 'region', 'aria-label': __('XP pattern table') }, [table]));
         panel.append(el('div', { class: 'tncp-actions' }, [button(__('Save patterns'), async () => { await work(async () => { patternsPlan = await api('patterns', { revision: patternsPlan.revision, rows: patternsPlan.rows }); dirty = false; render(); announce(__('Patterns saved.')); }); }, true), el('span', { id: 'tncp-pattern-save-state', role: 'status', text: dirty ? __('Unsaved changes') : __('Saved patterns') })]));
+        filterPatterns();
     }
     function matchText(value) {
         let decoded = value;

@@ -23,7 +23,7 @@ function tncp_patterns_data() {
         }
     }
     ksort($patterns, SORT_NATURAL);
-    return array('revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog, 'users' => array_map(static fn($user) => array('id' => (int) $user->ID, 'name' => $user->display_name), get_users(array('blog_id' => get_current_blog_id(), 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID', 'display_name')))));
+    return array('revision' => $saved['revision'], 'rows' => array_values($patterns), 'catalog' => $catalog, 'current_user_id' => get_current_user_id(), 'users' => array_map(static fn($user) => array('id' => (int) $user->ID, 'name' => $user->display_name), get_users(array('blog_id' => get_current_blog_id(), 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID', 'display_name')))));
 }
 
 function tncp_patterns_save($request) {
