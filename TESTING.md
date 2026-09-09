@@ -2,6 +2,8 @@
 
 ## 0.3.18
 
+Release/tag match `6618ba8`; remote/local ZIP SHA-256: `a225d0e385c02fed747444941a5fc45ec7fd328eb4658684cb9729cd6bc2d656`. Published ZIP installation through the WordPress installer passed and reports 0.3.18.
+
 - 23 new WordPress checks cover parent-scoped slugs, creation, scanning, immediate edits, collisions, blank-slug mapping rejection, pattern membership and example validity.
 - Existing integration (63), scan (54), immediate-change (42) and reconciliation (31) checks pass.
 - Browser tests cover mapping review, pattern counts/examples, description widths, editor links, blank-slug selection, automatic tab saving and failed-save preservation.
