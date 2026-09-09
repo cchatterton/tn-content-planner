@@ -2,6 +2,8 @@
 
 ## 0.3.19
 
+Release/tag match `e1995f9`; remote/local ZIP SHA-256: `1c9bfc31f3dafa85f1c6c5296a9fcf1262518ad79b6670044fe0e9ef0bca9fa0`. Published ZIP installation through the WordPress installer passed and reports 0.3.19.
+
 - Browser regression verifies binning is enabled with unsaved edits, Cancel preserves the post, a failed save prevents binning, and retry saves edits before removing the row and trashing the post.
 - JavaScript syntax and diff whitespace checks pass.
 
