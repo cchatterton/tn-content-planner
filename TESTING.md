@@ -2,6 +2,8 @@
 
 ## 0.1.2
 
+The published `v0.1.2` release ZIP was verified against the local package (SHA-256 `607ea4652e45e007f8417ecb9ab411656bd362e9197b2c50f3e86ed329b60139`). WordPress discovered and installed the update from 0.1.1 through the native plugin screen, preserved the saved plan and then reported the version current.
+
 - 63 WordPress integration checks pass, including Published as the default for new content, explicit Draft creation, publishing permission enforcement and rejection of unsupported statuses.
 - Browser regression verifies that pending title, slug, parent, template and relationship-flag indicators appear, survive save/reload and clear after application. The review selector defaults to Published and switches to Draft. The simplified header, eyebrow and all three feature tags are verified.
 - Desktop pending-change states pass Axe WCAG A/AA checks. Desktop, mobile and narrow-width checks, keyboard navigation and modal accessibility also pass. Screenshots of the red pending states, feature tags and status selector were visually reviewed.
