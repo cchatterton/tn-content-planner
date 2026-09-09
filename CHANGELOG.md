@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.15 - 2026-09-09
+
+- Add Send selected to bin below the content table, with a confirmation listing the linked posts.
+- Bin selected children before parents; protect unselected child rows and leave uncreated rows in the plan.
+- Stop on failure and keep remaining rows selected for retry.
+- Rename Review & create selected to Map Selected.
+
 ## 0.3.14 - 2026-09-09
 
 - Display Publicly Queryable as a navy tick for native post types and remove the grey dot.

@@ -140,3 +140,5 @@
 }
 
 .tncp-wrap .tncp-type-custom { color: #b94700; }
+
+.tncp-wrap .tncp-bin-list { max-height: 16rem; overflow-y: auto; padding-left: 1.25rem; list-style: disc; }

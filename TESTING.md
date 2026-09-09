@@ -1,5 +1,12 @@
 # Validation
 
+## 0.3.15
+
+- Bulk-bin browser tests cover confirmation/cancel, child protection and ordering, mixed unlinked rows, partial failure, retry, persisted removals and remaining selection.
+- The confirmation modal passes Axe WCAG A/AA; Map Selected is present. Existing 31 reconciliation integration checks pass.
+- JavaScript syntax, PHP lint and whitespace checks pass.
+
+
 ## 0.3.14
 
 - Native Publicly Queryable presentation now uses the existing affirmative tick; no backend registration or eligibility code changed. JavaScript syntax, PHP lint and whitespace checks pass.

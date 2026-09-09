@@ -232,7 +232,7 @@
         if (busy) return;
         if (!await confirmPending()) { render(); return; }
         await work(async () => {
-            plan = await api('save', { revision: plan.revision, rows: plan.rows }); dirty = false; render(); announce(__('Plan saved. Select rows, then review and create.'));
+            plan = await api('save', { revision: plan.revision, rows: plan.rows }); dirty = false; render(); announce(__('Plan saved. Select rows, then choose Map Selected.'));
         });
     }
     function titleControl(row) {
@@ -310,6 +310,36 @@
         } }, [el('span', { class: 'dashicons dashicons-trash', 'aria-hidden': 'true' })])]));
         markPendingFields(tr, row);
         return tr;
+    }
+    async function binSelected() {
+        if (busy || dirty) return;
+        const rows = orderedRows().filter(row => selected.has(row.id) && row.post_id).reverse();
+        if (!rows.length) return;
+        const removing = new Set(rows.map(row => row.id));
+        for (const row of rows) {
+            if (!catalog.find(post => post.id === row.post_id)?.can_trash) { announce(__('A selected post cannot be moved to the bin. Check permissions and whether the WordPress bin is enabled.'), true); return; }
+            if (plan.rows.some(child => parentKey(child) === `row:${row.id}` && !removing.has(child.id))) {
+                announce(__('Select the linked child rows too, or move the remaining child rows before binning their parent.'), true); return;
+            }
+        }
+        const unlinked = plan.rows.filter(row => selected.has(row.id) && !row.post_id).length;
+        const description = el('div', {}, [el('p', { text: `${rows.length} ${__('linked posts will move to the WordPress bin and their plan rows will be removed. You can restore the posts from the WordPress bin.')}` }),
+            el('ul', { class: 'tncp-bin-list' }, rows.map(row => el('li', {}, [document.createTextNode(`${plain(row.title) || row.slug} `), postLink(row.post_id)])))]);
+        if (unlinked) description.append(el('p', { text: `${unlinked} ${__('selected rows have no linked post and will remain in the plan.')}` }));
+        if (await ask(__('Send selected to bin?'), description, [['bin', __('Send selected to bin')]]) !== 'bin') return;
+        await work(async () => {
+            let completed = 0;
+            for (const row of rows) {
+                try {
+                    plan = await api('bin', { revision: plan.revision, row_id: row.id, confirmed: true });
+                    selected.delete(row.id); catalog = catalog.filter(post => post.id !== row.post_id); completed++;
+                    render();
+                } catch (error) {
+                    render(); announce(`${completed} ${__('of')} ${rows.length} ${__('posts moved to the bin. Remaining rows are still selected.')} ${error.message}`, true); return;
+                }
+            }
+            render(); announce(`${completed} ${__('posts moved to the bin.')} ${unlinked ? __('Unlinked rows remain in the plan.') : ''}`);
+        });
     }
     let headerFrame = 0;
     function positionTableHeaders() {
@@ -406,7 +436,8 @@
         panel.append(el('div', { class: 'tncp-actions tncp-footer' }, [
             button(__('Add row'), () => { const row = newRow(); plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
             button(__('Save plan'), save, true),
-            button(__('Review & create selected'), startReview, false, dirty || !selected.size),
+            button(__('Map Selected'), startReview, false, dirty || !selected.size),
+            button(__('Send selected to bin'), binSelected, false, dirty || !plan.rows.some(row => selected.has(row.id) && row.post_id)),
             el('span', { text: `${plan.rows.length} ${__('rows')} · ${selected.size} ${__('selected')} · ${dirty ? __('Unsaved changes') : __('Saved plan')}`, role: 'status' })
         ]));
         if (focusRow && focusLabel) {
