@@ -541,6 +541,8 @@
             const active = (control.dataset.mine === 'true') === patternsMine;
             control.setAttribute('aria-pressed', String(active)); control.classList.toggle('button-primary', active);
         });
+        const heading = document.getElementById('tncp-pattern-heading');
+        if (heading) heading.textContent = `${visible} ${__('XP Patterns')}`;
         const empty = document.getElementById('tncp-pattern-empty'); if (empty) empty.hidden = visible > 0;
         scheduleTableHeaders();
         const scroll = app.querySelector('.tncp-pattern-scroll'); if (scroll) scroll.hidden = visible === 0;
@@ -557,7 +559,7 @@
             type: 'button', class: 'button' + (patternsMine === mine ? ' button-primary' : ''), 'aria-pressed': String(patternsMine === mine), 'data-mine': String(mine), text: label,
             onclick: () => { patternsMine = mine; filterPatterns(); }
         })));
-        panel.append(el('div', { class: 'tncp-pattern-heading' }, [el('h2', { text: __('XP Patterns') }), filters]));
+        panel.append(el('div', { class: 'tncp-pattern-heading' }, [el('h2', { id: 'tncp-pattern-heading', text: `${patternsPlan.rows.length} ${__('XP Patterns')}` }), filters]));
         if (!patternsPlan.rows.length) { panel.append(el('p', { text: __('No patterns yet. Scan a post type or save a content plan to get started.') })); return; }
         const table = el('table', { class: 'widefat striped tncp-patterns-table' });
         table.append(el('thead', {}, [el('tr', {}, [__('Pattern'), __('Content items'), __('Short description'), __('Status'), __('Assigned to'), __('Example post')].map(text => el('th', { scope: 'col', text })))]));

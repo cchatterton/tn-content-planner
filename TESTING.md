@@ -1,5 +1,9 @@
 # Validation
 
+## 0.3.27
+
+- Browser check verifies the heading equals the visible pattern count under Show All and Show Mine. JavaScript syntax and diff whitespace checks pass.
+
 ## 0.3.26
 
 Release/tag match `c96efb3`; remote/local ZIP SHA-256: `3daf3593186727a52cbc921f83a2654ac708cfc0114c664893af929dd9d7a8d4`. Published ZIP installation through the WordPress installer passed and reports 0.3.26.

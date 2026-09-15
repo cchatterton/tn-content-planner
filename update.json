@@ -1,4 +1,4 @@
 {
-  "version": "0.3.26",
-  "body": "## 0.3.26 - 2026-09-15\n\n- Add Redirect after Single, Archive and Custom in the Template dropdown.\n- Support Redirect throughout plan validation, linked-post metadata, scanning and XP Pattern keys.\n"
+  "version": "0.3.27",
+  "body": "## 0.3.27 - 2026-09-15\n\n- Show the visible pattern count in the heading as N XP Patterns.\n- Update the heading when switching between Show Mine and Show All, including zero matches.\n"
 }

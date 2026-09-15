@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.26
+Stable tag: 0.3.27
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.27 =
+- Show the visible pattern count in the heading as N XP Patterns.
+- Update the heading when switching between Show Mine and Show All, including zero matches.
+
 
 = 0.3.26 =
 - Add Redirect after Single, Archive and Custom in the Template dropdown.

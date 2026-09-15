@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.27 - 2026-09-15
+
+- Show the visible pattern count in the heading as N XP Patterns.
+- Update the heading when switching between Show Mine and Show All, including zero matches.
+
 ## 0.3.26 - 2026-09-15
 
 - Add Redirect after Single, Archive and Custom in the Template dropdown.
