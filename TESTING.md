@@ -2,6 +2,8 @@
 
 ## 0.3.31
 
+Release/tag match `c36d085`; remote/local ZIP SHA-256: `1dd756025e1795a0aeb7d322d7a3c974c91b993f3c94f73d0205bb4f365714ce`. Published ZIP installation through WordPress passed and reports 0.3.31.
+
 - Browser geometry check confirms dots precede labels, the header spacer has the same width and a transparent background, and header/row text aligns. JavaScript syntax and whitespace checks pass.
 
 ## 0.3.30
