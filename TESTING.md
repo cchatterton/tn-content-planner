@@ -2,6 +2,8 @@
 
 ## 0.3.25
 
+Release/tag match `9875963`; remote/local ZIP SHA-256: `a0340b6bff51420a528bf6212e69e60accb7715ba5f1c8c944e92bfbd5fa4868`. Published ZIP installation through the WordPress installer passed and reports 0.3.25.
+
 - 10 WordPress regression checks cover external trash/deletion, continued refresh, retained child rows, no unintended post changes, repeat refresh and restored posts returning through scans.
 - Existing 54 scan and 42 immediate-change checks pass. PHP lint and whitespace checks pass.
 
