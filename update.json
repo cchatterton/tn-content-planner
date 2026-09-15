@@ -1,4 +1,4 @@
 {
-  "version": "0.3.28",
-  "body": "## 0.3.28 - 2026-09-15\n\n- Rename Assigned to to XP Owner.\n- Add Backlog before Todo as the default for new patterns, with a grey dot in records and the key.\n- Capitalise status labels; preserve previously saved statuses.\n"
+  "version": "0.3.29",
+  "body": "## 0.3.29 - 2026-09-15\n\n- Use very light grey (#e5e7eb) for Backlog dots in records and the key.\n"
 }

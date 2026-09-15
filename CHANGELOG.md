@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.29 - 2026-09-15
+
+- Use very light grey (#e5e7eb) for Backlog dots in records and the key.
+
 ## 0.3.28 - 2026-09-15
 
 - Rename Assigned to to XP Owner.

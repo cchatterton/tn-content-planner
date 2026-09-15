@@ -17,7 +17,7 @@ const {chromium}=require('playwright');
   assert.equal(await page.getByRole('columnheader',{name:'XP Owner',exact:true}).count(),1);
   assert.deepEqual(await page.locator('[data-pattern]').first().getByRole('combobox',{name:/^Status/}).locator('option').allTextContents(),['Backlog','Todo','In-progress','Done']);
   await page.getByRole('tab',{name:/^Pages,/}).click();await ready();
-  for(const [status,color] of [['backlog','rgb(118, 118, 118)'],['todo','rgb(198, 40, 40)'],['in-progress','rgb(183, 121, 0)'],['done','rgb(33, 132, 59)']]){
+  for(const [status,color] of [['backlog','rgb(229, 231, 235)'],['todo','rgb(198, 40, 40)'],['in-progress','rgb(183, 121, 0)'],['done','rgb(33, 132, 59)']]){
    await page.getByRole('tab',{name:/^XP Patterns,/}).click();await ready();
    await page.locator(`[data-pattern="${original.key}"]`).getByRole('combobox',{name:/^Status/}).selectOption(status);
    await page.getByRole('tab',{name:/^Pages,/}).click();await ready();

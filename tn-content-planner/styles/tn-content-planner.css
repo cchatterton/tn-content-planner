@@ -168,4 +168,4 @@
 .tncp-wrap .tncp-filter-control { margin-inline-start: auto; max-width: 100%; }
 .tncp-wrap .tncp-filter-control select { min-width: 13rem; max-width: 100%; }
 
-.tncp-wrap .tncp-pattern-status.is-backlog { background: #767676; }
+.tncp-wrap .tncp-pattern-status.is-backlog { background: #e5e7eb; }
