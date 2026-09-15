@@ -30,7 +30,7 @@ function tncp_pattern_examples() { return tncp_pattern_summary()['examples']; }
 
 function tncp_pattern_statuses() {
     $saved = get_option('tncp_patterns', array('entries' => array()));
-    return array_map(static fn($entry) => in_array($entry['status'] ?? '', array('todo', 'in-progress', 'done'), true) ? $entry['status'] : 'todo', $saved['entries']);
+    return array_map(static fn($entry) => in_array($entry['status'] ?? '', array('backlog', 'todo', 'in-progress', 'done'), true) ? $entry['status'] : 'backlog', $saved['entries']);
 }
 
 function tncp_patterns_data() {
@@ -48,7 +48,7 @@ function tncp_patterns_data() {
             $key = $type->name . '-' . $level . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
             if (!isset($patterns[$key])) {
                 $entry = $saved['entries'][$key] ?? array();
-                $patterns[$key] = array('key' => $key, 'type' => $type->name, 'count' => 0, 'mapped_count' => 0, 'example_ids' => array(), 'description' => $entry['description'] ?? '', 'status' => $entry['status'] ?? 'todo', 'post_id' => $entry['post_id'] ?? 0, 'user_id' => (int) ($entry['user_id'] ?? 0));
+                $patterns[$key] = array('key' => $key, 'type' => $type->name, 'count' => 0, 'mapped_count' => 0, 'example_ids' => array(), 'description' => $entry['description'] ?? '', 'status' => $entry['status'] ?? 'backlog', 'post_id' => $entry['post_id'] ?? 0, 'user_id' => (int) ($entry['user_id'] ?? 0));
             }
             ++$patterns[$key]['count'];
             if ($row['post_id'] && isset($available[$row['post_id']])) {
@@ -84,13 +84,13 @@ function tncp_patterns_save($request) {
             if (!is_array($row) || !isset($row['key']) || !is_string($row['key']) || !isset($patterns[$row['key']]) || isset($seen[$row['key']])) { return tncp_error(__('The pattern list changed. Reload before saving.', 'tn-content-planner'), 409); }
             $key = $row['key']; $seen[$key] = true;
             if (isset($row['description']) && is_string($row['description'])) { $row['description'] = tncp_trim($row['description']); }
-            if (!isset($row['description']) || !is_string($row['description']) || mb_strlen($row['description']) > 240 || !in_array($row['status'] ?? null, array('todo', 'in-progress', 'done'), true)) { return tncp_error(__('Use a description up to 240 characters and a valid status.', 'tn-content-planner')); }
+            if (!isset($row['description']) || !is_string($row['description']) || mb_strlen($row['description']) > 240 || !in_array($row['status'] ?? null, array('backlog', 'todo', 'in-progress', 'done'), true)) { return tncp_error(__('Use a description up to 240 characters and a valid status.', 'tn-content-planner')); }
             if (!isset($row['post_id']) || !is_scalar($row['post_id']) || !ctype_digit((string) $row['post_id'])) { return tncp_error(__('Choose a valid example post.', 'tn-content-planner')); }
             $post_id = (int) $row['post_id'];
             $eligible = $patterns[$key]['example_ids'];
             if ($post_id && !in_array($post_id, $eligible, true)) { return tncp_error(__('Choose an available mapped post with this XP Pattern.', 'tn-content-planner')); }
             $user_id = $row['user_id'] ?? ($saved['entries'][$key]['user_id'] ?? 0);
-            if (!is_scalar($user_id) || !ctype_digit((string) $user_id)) { return tncp_error(__('Choose a valid assigned user.', 'tn-content-planner')); }
+            if (!is_scalar($user_id) || !ctype_digit((string) $user_id)) { return tncp_error(__('Choose a valid XP Owner.', 'tn-content-planner')); }
             $user_id = (int) $user_id;
             $previous_user = (int) ($saved['entries'][$key]['user_id'] ?? 0);
             if ($user_id && $user_id !== $previous_user && !in_array($user_id, array_column($data['users'], 'id'), true)) { return tncp_error(__('Choose a user from this site.', 'tn-content-planner')); }

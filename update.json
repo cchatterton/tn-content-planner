@@ -1,4 +1,4 @@
 {
-  "version": "0.3.27",
-  "body": "## 0.3.27 - 2026-09-15\n\n- Show the visible pattern count in the heading as N XP Patterns.\n- Update the heading when switching between Show Mine and Show All, including zero matches.\n"
+  "version": "0.3.28",
+  "body": "## 0.3.28 - 2026-09-15\n\n- Rename Assigned to to XP Owner.\n- Add Backlog before Todo as the default for new patterns, with a grey dot in records and the key.\n- Capitalise status labels; preserve previously saved statuses.\n"
 }

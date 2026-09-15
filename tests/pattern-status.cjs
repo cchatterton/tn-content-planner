@@ -13,7 +13,11 @@ const {chromium}=require('playwright');
  try {
   await ready();const patterns=await api('patterns');original=patterns.rows.find(row=>row.type==='page'&&row.mapped_count);
   assert.ok(original);
-  for(const [status,color] of [['todo','rgb(198, 40, 40)'],['in-progress','rgb(183, 121, 0)'],['done','rgb(33, 132, 59)']]){
+  await page.getByRole('tab',{name:/^XP Patterns,/}).click();await ready();
+  assert.equal(await page.getByRole('columnheader',{name:'XP Owner',exact:true}).count(),1);
+  assert.deepEqual(await page.locator('[data-pattern]').first().getByRole('combobox',{name:/^Status/}).locator('option').allTextContents(),['Backlog','Todo','In-progress','Done']);
+  await page.getByRole('tab',{name:/^Pages,/}).click();await ready();
+  for(const [status,color] of [['backlog','rgb(118, 118, 118)'],['todo','rgb(198, 40, 40)'],['in-progress','rgb(183, 121, 0)'],['done','rgb(33, 132, 59)']]){
    await page.getByRole('tab',{name:/^XP Patterns,/}).click();await ready();
    await page.locator(`[data-pattern="${original.key}"]`).getByRole('combobox',{name:/^Status/}).selectOption(status);
    await page.getByRole('tab',{name:/^Pages,/}).click();await ready();
@@ -23,12 +27,12 @@ const {chromium}=require('playwright');
    assert.ok(await dot.getAttribute('aria-label'));
    const geometry=await cell.evaluate(node=>{const dot=node.querySelector('.tncp-pattern-status').getBoundingClientRect();const text=node.querySelector('.tncp-pattern-reference').firstElementChild.getBoundingClientRect();return {size:dot.height,font:parseFloat(getComputedStyle(node).fontSize),after:dot.x>=text.right};});
    assert.equal(geometry.size,geometry.font);assert.ok(geometry.after);
-   assert.equal(await page.locator('.tncp-indicator-key .tncp-pattern-status').count(),3);
+   assert.equal(await page.locator('.tncp-indicator-key .tncp-pattern-status').count(),4);
    const key=page.locator('.tncp-indicator-key .tncp-pattern-status.is-'+status);assert.equal(await key.evaluate(node=>getComputedStyle(node).backgroundColor),color);
    assert.equal((await api('plan/page')).pattern_statuses[original.key],status);
   }
   if(process.env.TNCP_AXE_PATH){await page.addScriptTag({path:process.env.TNCP_AXE_PATH});for(const viewport of [{width:1600,height:1050},{width:390,height:844}]){await page.setViewportSize(viewport);const audit=await page.evaluate(async()=>await axe.run('.tncp-wrap',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));assert.deepEqual(audit.violations.map(v=>v.id),[]);}}
-  console.log('PASS: three status colours follow saved XP status, dots follow pattern text at font height, matching key dots, accessible labels and desktop/mobile Axe.');
+  console.log('PASS: four status colours follow saved XP status, dots follow pattern text at font height, matching key dots, accessible labels and desktop/mobile Axe.');
  } finally {
   if(original){const data=await api('patterns');await api('patterns','POST',{revision:data.revision,rows:[original]});}
   await browser.close();

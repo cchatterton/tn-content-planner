@@ -73,7 +73,7 @@ try {
  $own=array_values(array_filter($patterns['rows'],fn($r)=>$r['type']==='tncp_scan_test'));
  scan_assert(4===array_sum(array_column($own,'count')),'Patterns count each saved content item once');
  $entry=array_values(array_filter($own,fn($r)=>$r['key']==='tncp_scan_test-1-custom-1'))[0];
- scan_assert(1===$entry['count'] && 'todo'===$entry['status'],'Pattern key and default status');
+ scan_assert(1===$entry['count'] && 'backlog'===$entry['status'],'Pattern key and default status');
  $entry['user_id']=1;
  $entry['description']="\u{00A0}  Layout <b>example</b>  \u{00A0}";$entry['status']='in-progress';$entry['post_id']=$ids[1];
  $request=new WP_REST_Request('POST','/tncp/v1/patterns');$request->set_param('revision',$patterns['revision']);$request->set_param('rows',array($entry));

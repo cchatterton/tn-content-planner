@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.27
+Stable tag: 0.3.28
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -14,7 +14,7 @@ Plan a content WBS by post type, import CSV, arrange parents and create selected
 
 Scans add existing editable posts to complete linked plans on initial load and tab clicks, preserving pending changes. Custom types are eligible when their registered Publicly Queryable setting is enabled, regardless of Public or Exclude From Search. Native Posts/Pages retain WordPress visibility handling. Edit permission is required and media attachments are excluded. The filter uses no site-specific name list. Drafts remain included for eligible types; trashed posts and auto-drafts are excluded. Removing only a row means the next scan will add its existing post again.
 
-XP Patterns groups saved content items by pattern key with mapped / total item counts, a short description, todo/in-progress/done status an assigned site user and an example post. The description is the widest column. Examples are restricted to mapped items with the same pattern; content-table pattern keys open the example editor in a new tab. Pattern details are saved separately. Mapped Post IDs, review matches and pattern examples open the editor in a new tab. Parent selectors have no extra editor link. Two stacked dots beside mapped Post IDs show stored content (top) and featured image (bottom), visible only when present, with missing indicators completely hidden.
+XP Patterns groups saved content items by pattern key with mapped / total item counts, a short description, Backlog/Todo/In-progress/Done status, an XP Owner and an example post. The description is the widest column. Examples are restricted to mapped items with the same pattern; content-table pattern keys open the example editor in a new tab. Pattern details are saved separately. Mapped Post IDs, review matches and pattern examples open the editor in a new tab. Parent selectors have no extra editor link. Two stacked dots beside mapped Post IDs show stored content (top) and featured image (bottom), visible only when present, with missing indicators completely hidden.
 
 
 TN Content Planner by Techn provides a two-step content planning workflow in WordPress admin.
@@ -70,6 +70,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.28 =
+- Rename Assigned to to XP Owner.
+- Add Backlog before Todo as the default for new patterns, with a grey dot in records and the key.
+- Capitalise status labels; preserve previously saved statuses.
+
 
 = 0.3.27 =
 - Show the visible pattern count in the heading as N XP Patterns.

@@ -44,8 +44,8 @@
         ]);
         return el('span', { class: 'tncp-post-reference' }, [postLink(id), dots]);
     }
-    function patternStatusDot(status = 'todo', decorative = false) {
-        const label = { todo: __('Todo'), 'in-progress': __('In progress'), done: __('Done') }[status] || __('Todo');
+    function patternStatusDot(status = 'backlog', decorative = false) {
+        const label = { backlog: __('Backlog'), todo: __('Todo'), 'in-progress': __('In progress'), done: __('Done') }[status] || __('Backlog');
         return el('span', { class: `tncp-pattern-status is-${status}`, title: `${__('XP Pattern')}: ${label}`, ...(decorative ? { 'aria-hidden': 'true' } : { role: 'img', 'aria-label': `${__('XP Pattern')}: ${label}` }) });
     }
     function indicatorKey() {
@@ -55,7 +55,7 @@
                 el('span', { class: 'tncp-post-dot' + (upper ? '' : ' is-present') })
             ]), document.createTextNode(label)
         ]);
-        return el('span', { class: 'tncp-indicator-key' }, [el('strong', { text: __('Key:') }), entry(true, __('Has content')), entry(false, __('Has featured image')), ...[['todo', __('Todo')], ['in-progress', __('In progress')], ['done', __('Done')]].map(([status, label]) => el('span', { class: 'tncp-indicator-key-item' }, [patternStatusDot(status, true), document.createTextNode(label)]))]);
+        return el('span', { class: 'tncp-indicator-key' }, [el('strong', { text: __('Key:') }), entry(true, __('Has content')), entry(false, __('Has featured image')), ...[['backlog', __('Backlog')], ['todo', __('Todo')], ['in-progress', __('In progress')], ['done', __('Done')]].map(([status, label]) => el('span', { class: 'tncp-indicator-key-item' }, [patternStatusDot(status, true), document.createTextNode(label)]))]);
     }
     function announce(message, error = false) {
         const notice = document.getElementById('tncp-notice');
@@ -323,7 +323,7 @@
             el('td', {}, [el('input', { type: 'text', value: row.slug, maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
             el('td', {}, [parent]), el('td', {}, [template]));
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => change(row, flag, event.target.checked) })])));
-        tr.append(el('td', { class: 'tncp-pattern' }, [el('span', { class: 'tncp-pattern-reference' }, [patternExamples[pattern(row)] ? postLink(patternExamples[pattern(row)], pattern(row)) : el('span', { text: pattern(row) }), patternStatusDot(patternStatuses[pattern(row)] || 'todo')])]), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
+        tr.append(el('td', { class: 'tncp-pattern' }, [el('span', { class: 'tncp-pattern-reference' }, [patternExamples[pattern(row)] ? postLink(patternExamples[pattern(row)], pattern(row)) : el('span', { text: pattern(row) }), patternStatusDot(patternStatuses[pattern(row)] || 'backlog')])]), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
             const post = catalog.find(item => item.id === row.post_id);
             const choices = [['remove', row.post_id ? __('Remove row only') : __('Remove row')]];
@@ -562,7 +562,7 @@
         panel.append(el('div', { class: 'tncp-pattern-heading' }, [el('h2', { id: 'tncp-pattern-heading', text: `${patternsPlan.rows.length} ${__('XP Patterns')}` }), filters]));
         if (!patternsPlan.rows.length) { panel.append(el('p', { text: __('No patterns yet. Scan a post type or save a content plan to get started.') })); return; }
         const table = el('table', { class: 'widefat striped tncp-patterns-table' });
-        table.append(el('thead', {}, [el('tr', {}, [__('Pattern'), __('Content items'), __('Short description'), __('Status'), __('Assigned to'), __('Example post')].map(text => el('th', { scope: 'col', text })))]));
+        table.append(el('thead', {}, [el('tr', {}, [__('Pattern'), __('Content items'), __('Short description'), __('Status'), __('XP Owner'), __('Example post')].map(text => el('th', { scope: 'col', text })))]));
         const body = el('tbody');
         patternsPlan.rows.forEach(row => {
             const update = () => {
@@ -573,9 +573,9 @@
                 tab.setAttribute('aria-label', `${__('XP Patterns')}, ${patternCounts.done} ${__('of')} ${patternCounts.total} ${__('done with examples')}`);
             };
             const description = el('input', { type: 'text', value: row.description, maxlength: '240', 'aria-label': `${__('Description')} ${row.key}`, oninput: event => { row.description = event.target.value; update(); } });
-            const status = el('select', { 'aria-label': `${__('Status')} ${row.key}`, onchange: event => { row.status = event.target.value; update(); } }, ['todo', 'in-progress', 'done'].map(value => el('option', { value, text: value })));
+            const status = el('select', { 'aria-label': `${__('Status')} ${row.key}`, onchange: event => { row.status = event.target.value; update(); } }, ['backlog', 'todo', 'in-progress', 'done'].map(value => el('option', { value, text: __(value[0].toUpperCase() + value.slice(1)) })));
             status.value = row.status;
-            const assignee = el('select', { 'aria-label': `${__('Assigned to')} ${row.key}`, onchange: event => { row.user_id = Number(event.target.value); update(); filterPatterns(); } });
+            const assignee = el('select', { 'aria-label': `${__('XP Owner')} ${row.key}`, onchange: event => { row.user_id = Number(event.target.value); update(); filterPatterns(); } });
             assignee.append(el('option', { value: '0', text: __('— Unassigned —') }));
             const users = patternsPlan.users || [];
             users.forEach(user => assignee.append(el('option', { value: String(user.id), text: user.name })));

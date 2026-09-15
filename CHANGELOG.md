@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.28 - 2026-09-15
+
+- Rename Assigned to to XP Owner.
+- Add Backlog before Todo as the default for new patterns, with a grey dot in records and the key.
+- Capitalise status labels; preserve previously saved statuses.
+
 ## 0.3.27 - 2026-09-15
 
 - Show the visible pattern count in the heading as N XP Patterns.
