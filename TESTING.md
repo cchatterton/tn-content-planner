@@ -2,6 +2,8 @@
 
 ## 0.3.27
 
+Release/tag match `b105e0f`; remote/local ZIP SHA-256: `64012ad3d37f6ae13d93b6a74c134f753d2c13e163c06b1105398fa106c21c35`. Published ZIP installation through the WordPress installer passed and reports 0.3.27.
+
 - Browser check verifies the heading equals the visible pattern count under Show All and Show Mine. JavaScript syntax and diff whitespace checks pass.
 
 ## 0.3.26
