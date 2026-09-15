@@ -44,7 +44,7 @@ function tncp_post_planning($post_id) {
     $flags = array();
     foreach (array('local', 'related', 'children', 'siblings', 'parents') as $flag) { $flags[$flag] = !empty($stored_flags[$flag]); }
     $template = get_post_meta($post_id, '_tncp_template', true);
-    return array('template' => in_array($template, array('single', 'archive', 'custom'), true) ? $template : 'single', 'flags' => $flags);
+    return array('template' => in_array($template, array('single', 'archive', 'custom', 'redirect'), true) ? $template : 'single', 'flags' => $flags);
 }
 
 function tncp_catalog($type) {
@@ -146,7 +146,7 @@ function tncp_validate_rows($input, $type, $old, $confirmation_ids = null) {
         $title = $native_title ? $raw['title'] : tncp_title($raw['title']);
         $slug = sanitize_title(tncp_trim($raw['slug']));
         if ((!$native_title && (strlen($title) > 4000 || '' === trim(wp_strip_all_tags($title)))) || (!$native_slug && strlen($slug) > 200)) { return tncp_error(__('Every row needs a text title (up to 4,000 bytes). Optional slugs must be at most 200 characters.', 'tn-content-planner')); }
-        if (!in_array($raw['template'], array('single', 'archive', 'custom'), true)) { return tncp_error(__('Choose Single, Archive or Custom.', 'tn-content-planner')); }
+        if (!in_array($raw['template'], array('single', 'archive', 'custom', 'redirect'), true)) { return tncp_error(__('Choose Single, Archive, Custom or Redirect.', 'tn-content-planner')); }
         if ($raw['parent'] && !preg_match('/^(row:[a-zA-Z0-9_-]{1,80}|post:[1-9][0-9]*)$/', $raw['parent'])) { return tncp_error(__('Invalid parent reference.', 'tn-content-planner')); }
         if (isset($raw['post_id']) && (!is_scalar($raw['post_id']) || !preg_match('/^[0-9]+$/', (string) $raw['post_id']))) { return tncp_error(__('Post ID must be a non-negative integer.', 'tn-content-planner')); }
         $post_id = absint($raw['post_id'] ?? 0);

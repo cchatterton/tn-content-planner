@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.26 - 2026-09-15
+
+- Add Redirect after Single, Archive and Custom in the Template dropdown.
+- Support Redirect throughout plan validation, linked-post metadata, scanning and XP Pattern keys.
+
 ## 0.3.25 - 2026-09-15
 
 - Continue refreshing when linked posts have been trashed or permanently deleted in WordPress.

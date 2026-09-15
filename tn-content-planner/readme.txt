@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.25
+Stable tag: 0.3.26
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -40,7 +40,7 @@ Access requires manage_options and the relevant post-type editing capabilities. 
 == Frequently Asked Questions ==
 
 = What does Template do? =
-Single, Archive and Custom are planning classifications saved as post metadata. They do not create PHP template files or assign theme templates.
+Single, Archive, Custom and Redirect are planning classifications saved as post metadata. They do not create PHP template files or assign theme templates.
 
 = What is the XP pattern? =
 posttype-level-template-count, for example page-1-single-3. Root level is 0 and the count includes only Local, Related, Children, Siblings and Parents. Rows sharing those values share the same pattern key. Each plan row separately has a unique internal ID.
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.26 =
+- Add Redirect after Single, Archive and Custom in the Template dropdown.
+- Support Redirect throughout plan validation, linked-post metadata, scanning and XP Pattern keys.
+
 
 = 0.3.25 =
 - Continue refreshing when linked posts have been trashed or permanently deleted in WordPress.

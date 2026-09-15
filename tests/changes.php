@@ -26,6 +26,8 @@ try {
         change_assert($row['baseline']===tncp_snapshot(get_post($id)), $field.' baseline refreshed');
     }
     change_assert('page-1-archive-5'===get_post_meta($id,'_tncp_pattern',true),'Pattern metadata reflects hierarchy/template/flags');
+    change_assert(200===$call('template','redirect')->get_status(),'Redirect applies immediately');
+    change_assert('redirect'===tncp_post_planning($id)['template'] && 'page-1-redirect-5'===get_post_meta($id,'_tncp_pattern',true),'Redirect metadata and XP key persist');
     change_assert('Preserve body'===get_post($id)->post_content && 'draft'===get_post_status($id),'Body and publication status preserved');
     change_assert(''===get_post_meta($id,'_wp_page_template',true),'Theme template untouched');
     change_assert(409===$call('title','Stale',array('baseline'=>array()))->get_status(),'Reject stale linked post');

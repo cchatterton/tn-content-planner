@@ -20,7 +20,7 @@ function tncp_change_field($request, $plan) {
     if ($metadata && (!is_array($request['planning']) || $request['planning'] != $planning)) { return tncp_error(__('The post planning metadata changed elsewhere. Reload before changing it.', 'tn-content-planner'), 409); }
     if ($metadata) {
         if ('template' === $field) {
-            if (!in_array($value, array('single', 'archive', 'custom'), true)) { return tncp_error(__('Choose Single, Archive or Custom.', 'tn-content-planner')); }
+            if (!in_array($value, array('single', 'archive', 'custom', 'redirect'), true)) { return tncp_error(__('Choose Single, Archive, Custom or Redirect.', 'tn-content-planner')); }
             $planning['template'] = $value;
         } else {
             if (!is_bool($value)) { return tncp_error(__('Choose a checked or unchecked relationship.', 'tn-content-planner')); }

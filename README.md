@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.25 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.26 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -35,7 +35,7 @@ Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New �
 - “Create new plan item” keeps the original mapped item and gives the copy a unique slug, adding a suffix if necessary.
 - Parent references can target planned rows or existing posts. Root depth is 0. The display moves and indents descendants immediately.
 - XP pattern is `posttype-level-template-flagcount`, e.g. `page-1-single-3`. It identifies a pattern combination, not an individual row. Identical combinations intentionally share a key; rows have independent UUIDs.
-- Single / Archive / Custom and the five flags are planning metadata, not theme-template generation or automatic related-content queries.
+- Single / Archive / Custom / Redirect and the five flags are planning metadata, not theme-template generation or automatic related-content queries.
 - New posts default to Published, with a Draft option in the review step; updates retain existing content and publication status. Publishing requires the post type’s publish capability; users without it can create drafts.
 - Slug mapping uses the current post type and, for hierarchical types, the parent. Different parents can share a slug; sibling duplicates are rejected. Non-hierarchical types retain WordPress’s global slug uniqueness. Slugs are optional for saved plans and CSV imports, but rows without slugs cannot be selected or mapped.
 - Font Awesome Free is bundled for admin preview. Safe HTML allowlist: `i`, `span`, `strong`, `em`, `b`, `br`; `class` and `aria-hidden` on `i`/`span`. Frontend icon loading belongs to the active theme.

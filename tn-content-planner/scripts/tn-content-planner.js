@@ -317,7 +317,7 @@
         const group = el('optgroup', { label: __('Existing posts') });
         catalog.filter(post => post.id !== row.post_id).forEach(post => group.append(el('option', { value: `post:${post.id}`, text: `${plain(post.title)} (#${post.id})` })));
         parent.append(group); parent.value = row.parent;
-        const template = el('select', { 'aria-label': __('Template'), onchange: event => change(row, 'template', event.target.value) }, ['single', 'archive', 'custom'].map(value => el('option', { value, text: __(value[0].toUpperCase() + value.slice(1)) })));
+        const template = el('select', { 'aria-label': __('Template'), onchange: event => change(row, 'template', event.target.value) }, ['single', 'archive', 'custom', 'redirect'].map(value => el('option', { value, text: __(value[0].toUpperCase() + value.slice(1)) })));
         template.value = row.template;
         tr.append(el('td', {}, [check]), title,
             el('td', {}, [el('input', { type: 'text', value: row.slug, maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),

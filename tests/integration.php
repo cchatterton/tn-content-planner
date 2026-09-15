@@ -41,12 +41,14 @@ try {
     tncp_test(403 === tncp_test_request('plan', array(), 'tncp_private_test', 'GET')->get_status(), 'REST rejects non-public type');
     tncp_test(403 === tncp_test_request('plan', array(), 'tncp_cap_test', 'GET')->get_status(), 'REST rejects public type without capability');
     $custom = tncp_test_row($run . '-custom', 'Public custom content');
+    $custom['template'] = 'redirect';
     $saved_custom = tncp_test_request('save', array('revision' => 0, 'rows' => array($custom)), 'tncp_hidden_test')->get_data();
     tncp_test(isset($saved_custom['revision']), 'Public custom type plan saves');
     tncp_test(403 === tncp_test_request('apply', array('revision' => $saved_custom['revision'], 'selected' => array($custom['id'])), 'tncp_hidden_test')->get_status(), 'Default publishing requires publish capability');
     $applied_custom = tncp_test_request('apply', array('revision' => $saved_custom['revision'], 'selected' => array($custom['id']), 'creation_status' => 'draft'), 'tncp_hidden_test')->get_data();
     tncp_test(isset($applied_custom['plan']), 'Public custom type creates draft');
     $custom_id = $applied_custom['plan']['rows'][0]['post_id'];
+    tncp_test('redirect' === tncp_post_planning($custom_id)['template'], 'Redirect survives saved plan and post creation');
     tncp_test('tncp_hidden_test' === get_post_type($custom_id) && 'draft' === get_post_status($custom_id), 'Created draft belongs to public custom type');
     wp_delete_post($custom_id, true);
     delete_option('tncp_plan_tncp_hidden_test');

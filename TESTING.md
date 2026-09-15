@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.26
+
+- 66 integration and 44 immediate-change checks pass, including Redirect plan saving, creation, metadata readback and XP key generation.
+- JavaScript syntax, PHP lint and diff whitespace checks pass.
+
 ## 0.3.25
 
 Release/tag match `9875963`; remote/local ZIP SHA-256: `a0340b6bff51420a528bf6212e69e60accb7715ba5f1c8c944e92bfbd5fa4868`. Published ZIP installation through the WordPress installer passed and reports 0.3.25.

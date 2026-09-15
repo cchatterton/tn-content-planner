@@ -1,4 +1,4 @@
 {
-  "version": "0.3.25",
-  "body": "## 0.3.25 - 2026-09-15\n\n- Continue refreshing when linked posts have been trashed or permanently deleted in WordPress.\n- Remove their obsolete plan rows without restoring or recreating posts.\n- Preserve child plan rows under the nearest surviving planned ancestor; do not move surviving WordPress posts automatically.\n"
+  "version": "0.3.26",
+  "body": "## 0.3.26 - 2026-09-15\n\n- Add Redirect after Single, Archive and Custom in the Template dropdown.\n- Support Redirect throughout plan validation, linked-post metadata, scanning and XP Pattern keys.\n"
 }
