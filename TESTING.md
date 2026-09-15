@@ -2,6 +2,8 @@
 
 ## 0.3.29
 
+Release/tag match `802b85e`; remote/local ZIP SHA-256: `d50696810746ee4605d50f17a787690f1a8216893b7a52133e7e0fda2fc88557`. Published ZIP installation through the WordPress installer passed and reports 0.3.29.
+
 - Browser status check confirms Backlog records and key use rgb(229, 231, 235), with other status colours unchanged. Whitespace check passes.
 
 ## 0.3.28
