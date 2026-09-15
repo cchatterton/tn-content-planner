@@ -2,6 +2,8 @@
 
 ## 0.3.24
 
+Release/tag match `467719a`; remote/local ZIP SHA-256: `1b8e523c4e20a1c3e755614aead1145538f3068923ae117cfedb2a572fdffc08`. Published ZIP installation through the WordPress installer passed and reports 0.3.24.
+
 - Browser filter regression verifies CSV-left/filter-right alignment, unique pattern options, preset navigation, autosave and failed-save preservation, visible-only selection, All XP Patterns and filtering while locked. Screenshot inspected.
 - Full review browser suite and lock regression pass, including desktop/mobile Axe, keyboard navigation and server-side locks. JavaScript syntax and diff whitespace checks pass.
 
