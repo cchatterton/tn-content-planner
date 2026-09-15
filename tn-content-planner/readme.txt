@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.30
+Stable tag: 0.3.31
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,11 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.31 =
+* Move XP status dots before the pattern labels on post-type tabs.
+* Add an equally sized transparent spacer before the XP pattern column heading to align its text.
+
 
 = 0.3.30 =
 * Add per-post-type Level 1, Level 2 and Level 3 defaults beneath the content table, with aligned relationship checkboxes.

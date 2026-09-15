@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.31 - 2026-09-15
+
+- Move XP status dots before the pattern labels on post-type tabs.
+- Add an equally sized transparent spacer before the XP pattern column heading to align its text.
+
 ## 0.3.30 - 2026-09-15
 
 - Add per-post-type Level 1, Level 2 and Level 3 defaults beneath the content table, with aligned relationship checkboxes.

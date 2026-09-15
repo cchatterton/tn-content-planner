@@ -1,5 +1,9 @@
 # Validation
 
+## 0.3.31
+
+- Browser geometry check confirms dots precede labels, the header spacer has the same width and a transparent background, and header/row text aligns. JavaScript syntax and whitespace checks pass.
+
 ## 0.3.30
 
 Release/tag match `ebfea7f`; remote/local ZIP SHA-256: `b43ab02fc1fc83230b9cbdc8b0dc98ed76d917ba876aa960265c8eef6c3b8e56`. Published ZIP installation through the WordPress installer passed and reports 0.3.30.

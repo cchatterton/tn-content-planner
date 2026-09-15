@@ -355,7 +355,7 @@
             el('td', {}, [el('input', { type: 'text', value: row.slug, maxlength: '200', 'aria-label': __('Content slug'), onchange: event => change(row, 'slug', event.target.value) })]),
             el('td', {}, [parent]), el('td', {}, [template]));
         flags.forEach(flag => tr.append(el('td', { class: 'tncp-flag' }, [el('input', { type: 'checkbox', checked: row.flags[flag], 'aria-label': __(flag[0].toUpperCase() + flag.slice(1)), onchange: event => change(row, flag, event.target.checked) })])));
-        tr.append(el('td', { class: 'tncp-pattern' }, [el('span', { class: 'tncp-pattern-reference' }, [patternExamples[pattern(row)] ? postLink(patternExamples[pattern(row)], pattern(row)) : el('span', { text: pattern(row) }), patternStatusDot(patternStatuses[pattern(row)] || 'backlog')])]), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
+        tr.append(el('td', { class: 'tncp-pattern' }, [el('span', { class: 'tncp-pattern-reference' }, [patternStatusDot(patternStatuses[pattern(row)] || 'backlog'), patternExamples[pattern(row)] ? postLink(patternExamples[pattern(row)], pattern(row)) : el('span', { text: pattern(row) })])]), el('td', {}, [row.post_id ? mappedPost(row.post_id) : document.createTextNode('—')]), el('td', {}, [el('button', { type: 'button', class: 'tncp-remove', title: __('Remove row'), 'aria-label': __('Remove row') + ': ' + (plain(row.title) || __('Untitled plan row')), onclick: async () => {
             if (plan.rows.some(item => parentKey(item) === `row:${row.id}`)) { announce(__('Move the child rows before removing their parent.'), true); return; }
             const post = catalog.find(item => item.id === row.post_id);
             const choices = [['remove', row.post_id ? __('Remove row only') : __('Remove row')]];
@@ -530,7 +530,7 @@
             } });
             selectAll.indeterminate = shown.some(row => selected.has(row.id)) && !selectAll.checked;
             head.append(el('th', { scope: 'col' }, [selectAll]));
-            [__('Title *'), __('Content slug'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
+            [__('Title *'), __('Content slug'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach((text, index) => head.append(index === 9 ? el('th', { scope: 'col' }, [el('span', { class: 'tncp-pattern-reference' }, [el('span', { class: 'tncp-pattern-status', 'aria-hidden': 'true' }), el('span', { text })])]) : el('th', { scope: 'col', text })));
             table.append(el('thead', {}, [head]), el('tbody', {}, shown.map(rowView)));
             panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table, defaultsTable()]));
         }
