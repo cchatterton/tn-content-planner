@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.24 - 2026-09-15
+
+- Add a right-aligned XP Pattern filter alongside the CSV controls on post-type tabs.
+- Link XP Pattern names to their post-type tab with the matching filter selected, saving pending edits first.
+- Limit Select all to filtered rows and clear selection when changing filters. Filtering remains available while editing is locked.
+
 ## 0.3.23 - 2026-09-09
 
 - Add a text-height status dot after XP Pattern keys in post-type tables: red for todo, amber for in progress and green for done.

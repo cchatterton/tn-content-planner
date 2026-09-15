@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.23
+Stable tag: 0.3.24
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.24 =
+- Add a right-aligned XP Pattern filter alongside the CSV controls on post-type tabs.
+- Link XP Pattern names to their post-type tab with the matching filter selected, saving pending edits first.
+- Limit Select all to filtered rows and clear selection when changing filters. Filtering remains available while editing is locked.
+
 
 = 0.3.23 =
 - Add a text-height status dot after XP Pattern keys in post-type tables: red for todo, amber for in progress and green for done.

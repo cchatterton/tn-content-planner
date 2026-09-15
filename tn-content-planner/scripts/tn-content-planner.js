@@ -10,6 +10,7 @@
     let patternCounts = TNCP.pattern_counts || { done: 0, total: 0 };
     let patternStatuses = TNCP.pattern_statuses || {};
     let patternExamples = TNCP.pattern_examples || {};
+    const patternFilters = {};
     let patternsMine = false;
     let patternsPlan = { revision: 0, rows: [], catalog: {} };
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
@@ -397,7 +398,7 @@
     window.addEventListener('resize', scheduleTableHeaders, { passive: true });
     function applyTypeLock(panel) {
         if (!typeSettings.locked) return;
-        panel.querySelectorAll('button:not(.tncp-lock), input, select, textarea').forEach(control => { control.disabled = true; });
+        panel.querySelectorAll('button:not(.tncp-lock), input, select:not(#tncp-pattern-filter), textarea').forEach(control => { control.disabled = true; });
     }
     async function toggleTypeLock() {
         if (busy) return;
@@ -410,6 +411,24 @@
         });
         app.querySelector('.tncp-lock')?.focus();
     }
+    async function navigateType(destination, preset) {
+        if (busy) return;
+        if (dirty) {
+            if (type === 'xp-patterns') await savePatterns(); else await save();
+            if (dirty) return;
+        }
+        const prior = type; type = destination;
+        const priorFilter = patternFilters[type];
+        if (preset !== undefined) patternFilters[type] = preset;
+        await work(async () => { try {
+            if (type === 'xp-patterns') { patternsPlan = await api('patterns'); dirty = false; step = 1; render(); return; }
+            const saved = await api('plan');
+            if (!saved.settings?.locked) await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
+            const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; selected.clear(); dirty = false; step = 1; creationStatus = TNCP.types.find(item => item.name === type)?.can_publish ? 'publish' : 'draft'; render();
+        } catch (error) { patternFilters[type] = priorFilter; type = prior; throw error; } });
+        document.getElementById(`tncp-tab-${type}`)?.focus();
+    }
+    function visibleRows() { return orderedRows().filter(row => !patternFilters[type] || pattern(row) === patternFilters[type]); }
     function render() {
         scheduleTableHeaders();
         const active = document.activeElement;
@@ -428,21 +447,7 @@
                 const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabTypes.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabTypes.length) % tabTypes.length;
                 tabs.children[next].focus(); tabs.children[next].click();
             },
-            onclick: async () => {
-                if (busy) return;
-                if (dirty) {
-                    if (type === 'xp-patterns') await savePatterns(); else await save();
-                    if (dirty) return;
-                }
-                const prior = type; type = item.name;
-                await work(async () => { try {
-                    if (type === 'xp-patterns') { patternsPlan = await api('patterns'); dirty = false; step = 1; render(); return; }
-                    const saved = await api('plan');
-                    if (!saved.settings?.locked) await api('refresh', { revision: saved.plan.revision, preserve_pending: true, scan: true, apply_approved: true });
-                    const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; selected.clear(); dirty = false; step = 1; creationStatus = item.can_publish ? 'publish' : 'draft'; render();
-                } catch (error) { type = prior; throw error; } });
-                document.getElementById(`tncp-tab-${type}`)?.focus();
-            }
+            onclick: () => navigateType(item.name)
         })));
         const panel = el('section', { id: 'tncp-panel', class: 'tncp-panel', role: 'tabpanel', 'aria-labelledby': `tncp-tab-${type}` });
         app.replaceChildren(tabs, panel);
@@ -469,26 +474,36 @@
         panel.append(settings);
         if (step === 2) { renderReview(panel); applyTypeLock(panel); return; }
         const file = el('input', { type: 'file', accept: '.csv,text/csv', class: 'screen-reader-text', id: 'tncp-csv', 'aria-label': __('Import CSV file'), onchange: event => importCSV(event.target.files[0]) });
-        panel.append(el('div', { class: 'tncp-actions' }, [
+        const filter = el('select', { id: 'tncp-pattern-filter', 'aria-label': __('Filter by XP Pattern'), onchange: event => {
+            patternFilters[type] = event.target.value; selected.clear(); render(); document.getElementById('tncp-pattern-filter')?.focus();
+        } });
+        filter.append(el('option', { value: '', text: __('All XP Patterns') }));
+        const keys = [...new Set(plan.rows.map(pattern))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+        if (patternFilters[type] && !keys.includes(patternFilters[type])) keys.push(patternFilters[type]);
+        keys.forEach(key => filter.append(el('option', { value: key, text: key })));
+        filter.value = patternFilters[type] || '';
+        const shown = visibleRows();
+        selected = new Set([...selected].filter(id => shown.some(row => row.id === id)));
+        panel.append(el('div', { class: 'tncp-actions tncp-plan-tools' }, [
             button(__('Import CSV'), () => file.click()), file, button(__('Download CSV template'), downloadTemplate),
-
+            el('div', { class: 'tncp-filter-control' }, [filter]),
         ]));
         if (!plan.rows.length) panel.append(el('div', { class: 'tncp-empty' }, [el('h3', { text: __('Start with the content you need') }), el('p', { text: __('Add your first row or import a CSV to build your work breakdown structure.') })]));
         else {
             const table = el('table', { class: 'widefat striped tncp-table' });
             const head = el('tr');
-            const selectAll = el('input', { type: 'checkbox', id: 'tncp-select-all', 'aria-label': __('Select all rows'), disabled: !plan.rows.some(row => row.slug), checked: plan.rows.some(row => row.slug) && plan.rows.filter(row => row.slug).every(row => selected.has(row.id)), onchange: event => {
-                selected = event.target.checked ? new Set(plan.rows.filter(row => row.slug).map(row => row.id)) : new Set(); render();
+            const selectAll = el('input', { type: 'checkbox', id: 'tncp-select-all', 'aria-label': __('Select all rows'), disabled: !shown.some(row => row.slug), checked: shown.some(row => row.slug) && shown.filter(row => row.slug).every(row => selected.has(row.id)), onchange: event => {
+                selected = event.target.checked ? new Set(shown.filter(row => row.slug).map(row => row.id)) : new Set(); render();
                 document.getElementById('tncp-select-all')?.focus();
             } });
-            selectAll.indeterminate = plan.rows.some(row => selected.has(row.id)) && !selectAll.checked;
+            selectAll.indeterminate = shown.some(row => selected.has(row.id)) && !selectAll.checked;
             head.append(el('th', { scope: 'col' }, [selectAll]));
             [__('Title *'), __('Content slug'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
-            table.append(el('thead', {}, [head]), el('tbody', {}, orderedRows().map(rowView)));
+            table.append(el('thead', {}, [head]), el('tbody', {}, shown.map(rowView)));
             panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table]));
         }
         panel.append(el('div', { class: 'tncp-actions tncp-footer' }, [
-            button(__('Add row'), () => { const row = newRow(); plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
+            button(__('Add row'), () => { const row = newRow(); patternFilters[type] = ''; plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
             button(__('Save plan'), save, true),
             button(__('Map Selected'), startReview, false, dirty || !selected.size),
             button(__('Send selected to bin'), binSelected, false, dirty || !plan.rows.some(row => selected.has(row.id) && row.post_id)),
@@ -571,7 +586,7 @@
             if (row.post_id && !posts.some(post => post.id === row.post_id)) example.append(el('option', { value: String(row.post_id), text: __('Example unavailable — choose another') }));
             example.value = String(row.post_id);
             const link = el('span', { class: 'tncp-example-link' }, row.post_id && posts.some(post => post.id === row.post_id) ? [postLink(row.post_id)] : []);
-            body.append(el('tr', { 'data-pattern': row.key }, [el('th', { scope: 'row', text: row.key }), el('td', { text: `${row.mapped_count}/${row.count}`, title: __('Mapped items / total items') }), el('td', {}, [description]), el('td', {}, [status]), el('td', {}, [assignee]), el('td', {}, [el('div', { class: 'tncp-example-control' }, [example, link])])]));
+            body.append(el('tr', { 'data-pattern': row.key }, [el('th', { scope: 'row' }, [el('a', { href: `#tncp-tab-${row.type}`, text: row.key, title: __('Show content using this pattern'), onclick: event => { event.preventDefault(); navigateType(row.type, row.key); } })]), el('td', { text: `${row.mapped_count}/${row.count}`, title: __('Mapped items / total items') }), el('td', {}, [description]), el('td', {}, [status]), el('td', {}, [assignee]), el('td', {}, [el('div', { class: 'tncp-example-control' }, [example, link])])]));
         });
         panel.append(el('p', { id: 'tncp-pattern-empty', hidden: true, text: __('No XP Patterns are assigned to you.') }));
         table.append(body); panel.append(el('div', { class: 'tncp-scroll tncp-pattern-scroll', tabindex: '0', role: 'region', 'aria-label': __('XP pattern table') }, [table]));
@@ -728,7 +743,7 @@
             });
             const combined = [...plan.rows, ...imported];
             if (new Set(combined.filter(row => row.slug).map(row => `${slugScope(row)}|${row.slug}`)).size !== combined.filter(row => row.slug).length) throw new Error(__('Duplicate slugs found. CSV imports append rows; they do not replace existing plan rows.'));
-            plan.rows = combined;
+            patternFilters[type] = ''; plan.rows = combined;
             markDirty(); render(); announce(`${imported.length} ${__('rows imported. Review and save the plan. The import has not changed any posts.')}`);
         } catch (error) { announce(error.message, true); }
     }

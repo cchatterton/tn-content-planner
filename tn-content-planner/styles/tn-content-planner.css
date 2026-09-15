@@ -164,3 +164,6 @@
 .tncp-wrap .tncp-pattern-status.is-todo { background: #c62828; }
 .tncp-wrap .tncp-pattern-status.is-in-progress { background: #b77900; }
 .tncp-wrap .tncp-pattern-status.is-done { background: #21843b; }
+
+.tncp-wrap .tncp-filter-control { margin-inline-start: auto; max-width: 100%; }
+.tncp-wrap .tncp-filter-control select { min-width: 13rem; max-width: 100%; }

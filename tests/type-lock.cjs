@@ -23,7 +23,7 @@ const {chromium}=require('playwright');
   await page.unroute('**/tncp/v1/save/page',fail);
   await lock.click();await page.getByText('Post type locked.',{exact:true}).waitFor();await ready();
   const data=await api('plan/page');assert.equal(data.settings.locked,true);assert.ok(data.plan.rows.some(row=>row.id===addedId));
-  assert.equal(await page.locator('#tncp-panel button:not(.tncp-lock):enabled, #tncp-panel input:enabled, #tncp-panel select:enabled').count(),0);
+  assert.equal(await page.locator('#tncp-panel button:not(.tncp-lock):enabled, #tncp-panel input:enabled, #tncp-panel select:enabled:not(#tncp-pattern-filter)').count(),0);
   const unlock=page.getByRole('button',{name:'Unlock post type',exact:true});assert.equal(await unlock.getAttribute('aria-pressed'),'true');
   assert.equal(await unlock.evaluate(n=>getComputedStyle(n).color),'rgb(217, 91, 0)');
   const codes=await page.evaluate(async revision=>Promise.all(['save','change','bin','apply','resolve','refresh'].map(async action=>(await fetch(TNCP.api+action+'/page',{method:'POST',headers:{'X-WP-Nonce':TNCP.nonce,'Content-Type':'application/json'},body:JSON.stringify({revision})})).status)),data.plan.revision);

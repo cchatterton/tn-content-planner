@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.24
+
+- Browser filter regression verifies CSV-left/filter-right alignment, unique pattern options, preset navigation, autosave and failed-save preservation, visible-only selection, All XP Patterns and filtering while locked. Screenshot inspected.
+- Full review browser suite and lock regression pass, including desktop/mobile Axe, keyboard navigation and server-side locks. JavaScript syntax and diff whitespace checks pass.
+
 ## 0.3.23
 
 Release/tag match `ac687c7`; remote/local ZIP SHA-256: `4bf3603fb3d70bacf11746cdf51133da6cf872936d89abada67f0f532bda62f1`. Published ZIP installation through the WordPress installer passed and reports 0.3.23.

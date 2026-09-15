@@ -140,7 +140,7 @@ let lastPage;
  await example.selectOption('0');assert.equal(await xp.innerText(),`XP Patterns ${baseCounts[0]}/${baseCounts[1]}`);
  await example.selectOption(exampleId);assert.equal(await xp.innerText(),`XP Patterns ${baseCounts[0]+1}/${baseCounts[1]}`);
  await patternRow.getByRole('combobox',{name:/^Status/}).selectOption('in-progress');
- const editorLink=patternRow.locator('a');assert.equal(await editorLink.getAttribute('target'),'_blank');
+ const editorLink=patternRow.locator('.tncp-example-link a');assert.equal(await editorLink.getAttribute('target'),'_blank');
  assert.match(await editorLink.getAttribute('href'),new RegExp('post='+exampleId+'&action=edit'));
  await page.getByRole('button',{name:'Save patterns',exact:true}).click();await page.getByText('Patterns saved.',{exact:true}).waitFor();
  await xp.click();await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');
