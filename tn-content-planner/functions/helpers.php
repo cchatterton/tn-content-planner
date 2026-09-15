@@ -248,3 +248,36 @@ function tncp_scan_rows($plan, $type) {
     if (count($plan['rows']) > 2000) { return tncp_error(__('The complete scan exceeds the 2,000-row plan limit. No scan changes were saved.', 'tn-content-planner')); }
     return $plan;
 }
+
+/** Honour WordPress deletions without recreating posts or deleting their planned children. */
+function tncp_prune_removed_posts($plan) {
+    $removed = array();
+    foreach ($plan['rows'] as $row) {
+        if (!$row['post_id']) { continue; }
+        $post = get_post($row['post_id']);
+        if (!$post || 'trash' === $post->post_status) {
+            $removed['row:' . $row['id']] = $row['parent'];
+            $removed['post:' . $row['post_id']] = $row['parent'];
+        }
+    }
+    $plan['rows'] = array_values(array_filter($plan['rows'], static fn($row) => !array_key_exists('row:' . $row['id'], $removed)));
+    foreach ($plan['rows'] as &$row) {
+        $parent = $row['parent']; $seen = array();
+        while ($parent && !isset($seen[$parent])) {
+            $seen[$parent] = true;
+            if (array_key_exists($parent, $removed)) { $parent = $removed[$parent]; continue; }
+            if (str_starts_with($parent, 'post:')) {
+                $post = get_post((int) substr($parent, 5));
+                if (!$post || 'trash' === $post->post_status) { $parent = $post && $post->post_parent ? 'post:' . $post->post_parent : ''; continue; }
+            }
+            break;
+        }
+        if ($parent !== $row['parent']) {
+            $row['parent'] = $parent;
+            // This is a plan repair, not permission to move a surviving WordPress post.
+            $row['confirmed']['parent'] = false;
+        }
+    }
+    unset($row);
+    return $plan;
+}

@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.24 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.25 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -55,7 +55,7 @@ Only `title` and `slug` are accepted, in that order. Imported rows start with no
 
 Each site's `tncp_plan_{post_type}` option stores a revision and rows, including stable row IDs, post links, snapshots and confirmed pending changes. Options do not autoload. Generated posts use `_tncp_row_id` as a durable recovery marker, plus `_tncp_template`, `_tncp_flags` and `_tncp_pattern` metadata. `tncp_patterns` stores revisioned descriptions, statuses and example IDs by pattern key; counts are calculated from saved plans. Metadata for unused keys is retained so it returns if the pattern is needed again. `tncp_lock_patterns` serialises pattern saves. `tncp_lock_{post_type}` serialises writes; an interrupted request's lock expires after ten minutes.
 
-A stale plan revision or linked title/slug/parent stops mutation. Clicking a post-type tab reloads linked values for unchanged rows and preserves saved pending edits. Clicking any tab automatically saves the active content plan or XP Patterns before switching; failure keeps the current tab and edits. Manual Save remains available. A trashed/deleted mapped post must be restored or its row removed. For a pending row with an external conflict, review the current destination before choosing which values to accept.
+A stale plan revision or linked title/slug/parent stops mutation. Clicking a post-type tab reloads linked values for unchanged rows and preserves saved pending edits. Clicking any tab automatically saves the active content plan or XP Patterns before switching; failure keeps the current tab and edits. Manual Save remains available. Refresh removes plan rows for trashed/deleted posts and continues. Child plan rows are kept under the nearest remaining ancestor; surviving WordPress posts are not moved automatically. For a pending row with an external conflict, review the current destination before choosing which values to accept.
 
 **Send selected to bin** is available below the content table after saving and selecting linked rows. Confirmation lists the posts; selected children are processed before parents. Unselected child rows block parent removal. Uncreated rows stay in the plan. Each successful bin action persists; a failure stops processing and keeps remaining rows selected for retry.
 

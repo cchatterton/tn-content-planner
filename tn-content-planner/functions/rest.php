@@ -58,6 +58,7 @@ function tncp_save_plan($request, $plan) {
 }
 function tncp_refresh_request($request) { return tncp_mutate($request, 'tncp_refresh_plan'); }
 function tncp_refresh_plan($request, $plan) {
+    $plan = tncp_prune_removed_posts($plan);
     if (!empty($request['apply_approved'])) {
         $plan = tncp_apply_saved_approvals($plan, $request['type']);
         if (is_wp_error($plan)) { return $plan; }
@@ -66,7 +67,7 @@ function tncp_refresh_plan($request, $plan) {
         if (!$row['post_id']) { continue; }
         $post = get_post($row['post_id']);
         if (!$post || $post->post_type !== $request['type'] || !current_user_can('edit_post', $post->ID) || in_array($post->post_status, array('trash', 'auto-draft'), true)) {
-            return tncp_error(__('A linked post was removed or is unavailable. Restore it before refreshing this plan.', 'tn-content-planner'));
+            return tncp_error(__('A linked post is unavailable or cannot be edited by your account.', 'tn-content-planner'));
         }
         // Automatic tab refresh must not overwrite saved changes awaiting review.
         if (!empty($request['preserve_pending']) && !empty($row['baseline'])) {
@@ -85,6 +86,7 @@ function tncp_refresh_plan($request, $plan) {
         $plan = tncp_scan_rows($plan, $request['type']);
         if (is_wp_error($plan)) { return $plan; }
     }
+    $plan = tncp_prune_removed_posts($plan);
     foreach ($plan['rows'] as &$row) {
         $level = tncp_ancestry($row, $plan['rows'], $request['type']);
         if (is_wp_error($level)) { return $level; }

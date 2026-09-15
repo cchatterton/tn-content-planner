@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.24
+Stable tag: 0.3.25
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -55,7 +55,7 @@ Only title and slug are accepted, in that order. Imported rows start with no par
 2,000 plan rows and 2,000 catalog posts per post type; 1 MB per CSV; 100 hierarchy levels. Review uncreated ancestors before their children. For non-hierarchical post types, post_parent is stored but native permalinks and editors may not reflect it.
 
 = What if another editor changes a post? =
-Saving or applying is stopped when linked title, slug or parent differs from the saved snapshot. Clicking a post-type tab refreshes unchanged linked rows with a loading spinner while preserving saved pending changes. Clicking any tab automatically saves unsaved content or pattern edits before switching. Manual Save remains available; save failures preserve the current tab and edits. Removed or trashed linked posts must be restored before refreshing.
+Saving or applying is stopped when linked title, slug or parent differs from the saved snapshot. Clicking a post-type tab refreshes unchanged linked rows with a loading spinner while preserving saved pending changes. Clicking any tab automatically saves unsaved content or pattern edits before switching. Manual Save remains available; save failures preserve the current tab and edits. Refresh drops rows for trashed or deleted posts and keeps refreshing the remaining plan. Child plan rows are retained without automatically moving surviving WordPress posts.
 
 = How does review work? =
 Selected items are shown one at a time as Item X of Y. Match suggestions use exact slug, exact title, then distinct shared title words. Accept source applies plan values, Accept destination adopts the existing post values, and Create new makes a separate post. Apply advances on success; failure stays on the current item. Skip leaves an item selected for later. New posts have a stable row marker to aid recovery after interrupted requests.
@@ -70,6 +70,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.25 =
+- Continue refreshing when linked posts have been trashed or permanently deleted in WordPress.
+- Remove their obsolete plan rows without restoring or recreating posts.
+- Preserve child plan rows under the nearest surviving planned ancestor; do not move surviving WordPress posts automatically.
+
 
 = 0.3.24 =
 - Add a right-aligned XP Pattern filter alongside the CSV controls on post-type tabs.

@@ -1,4 +1,4 @@
 {
-  "version": "0.3.24",
-  "body": "## 0.3.24 - 2026-09-15\n\n- Add a right-aligned XP Pattern filter alongside the CSV controls on post-type tabs.\n- Link XP Pattern names to their post-type tab with the matching filter selected, saving pending edits first.\n- Limit Select all to filtered rows and clear selection when changing filters. Filtering remains available while editing is locked.\n"
+  "version": "0.3.25",
+  "body": "## 0.3.25 - 2026-09-15\n\n- Continue refreshing when linked posts have been trashed or permanently deleted in WordPress.\n- Remove their obsolete plan rows without restoring or recreating posts.\n- Preserve child plan rows under the nearest surviving planned ancestor; do not move surviving WordPress posts automatically.\n"
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.25 - 2026-09-15
+
+- Continue refreshing when linked posts have been trashed or permanently deleted in WordPress.
+- Remove their obsolete plan rows without restoring or recreating posts.
+- Preserve child plan rows under the nearest surviving planned ancestor; do not move surviving WordPress posts automatically.
+
 ## 0.3.24 - 2026-09-15
 
 - Add a right-aligned XP Pattern filter alongside the CSV controls on post-type tabs.

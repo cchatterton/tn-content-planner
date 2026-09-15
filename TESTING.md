@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.25
+
+- 10 WordPress regression checks cover external trash/deletion, continued refresh, retained child rows, no unintended post changes, repeat refresh and restored posts returning through scans.
+- Existing 54 scan and 42 immediate-change checks pass. PHP lint and whitespace checks pass.
+
 ## 0.3.24
 
 Release/tag match `467719a`; remote/local ZIP SHA-256: `1b8e523c4e20a1c3e755614aead1145538f3068923ae117cfedb2a572fdffc08`. Published ZIP installation through the WordPress installer passed and reports 0.3.24.
