@@ -228,6 +228,13 @@ function tncp_scan_rows($plan, $type) {
     usort($catalog, static fn($a, $b) => count(get_post_ancestors($a['id'])) <=> count(get_post_ancestors($b['id'])));
     foreach ($catalog as $post) {
         if (isset($mapped[$post['id']])) { continue; }
+        if (!array_filter($post['planning']['flags'])) {
+            $post['planning']['flags'] = tncp_level_defaults($plan, 1 + count(get_post_ancestors($post['id'])));
+            if (array_filter($post['planning']['flags'])) {
+                update_post_meta($post['id'], '_tncp_flags', $post['planning']['flags']);
+                update_post_meta($post['id'], '_tncp_pattern', $type . '-' . count(get_post_ancestors($post['id'])) . '-' . $post['planning']['template'] . '-' . count(array_filter($post['planning']['flags'])));
+            }
+        }
         // A unique slug already in the plan is the same item, not a second row.
         $matches = array_keys(array_filter($plan['rows'], static fn($row) => !$row['post_id'] && $row['slug'] && tncp_slug_matches($type, $row, $post, $plan['rows'])));
         $post_matches = array_filter($catalog, static fn($candidate) => $candidate['slug'] === $post['slug'] && (!is_post_type_hierarchical($type) || $candidate['parent'] === $post['parent']));
@@ -236,6 +243,7 @@ function tncp_scan_rows($plan, $type) {
             $index = $matches[0];
             $plan['rows'][$index]['post_id'] = $post['id'];
             $plan['rows'][$index]['baseline'] = $baseline;
+            if (!array_filter($plan['rows'][$index]['flags'])) { $plan['rows'][$index]['flags'] = $post['planning']['flags']; }
             $plan['rows'][$index]['confirmed'] = array('title' => false, 'slug' => false, 'parent' => false);
         } else {
             $plan['rows'][] = array('id' => 'scan_' . wp_generate_uuid4(), 'title' => $post['title'], 'slug' => $post['slug'],

@@ -51,6 +51,11 @@ function tncp_store($type, $plan) {
 }
 function tncp_save_request($request) { return tncp_mutate($request, 'tncp_save_plan'); }
 function tncp_save_plan($request, $plan) {
+    if (null !== $request['defaults']) {
+        $defaults = tncp_validate_defaults($request['defaults']);
+        if (is_wp_error($defaults)) { return $defaults; }
+        $plan['defaults'] = $defaults;
+    }
     $rows = tncp_validate_rows($request['rows'], $request['type'], $plan);
     if (is_wp_error($rows)) { return $rows; }
     $plan['rows'] = $rows;
@@ -142,10 +147,20 @@ function tncp_apply_plan($request, $plan) {
         $row = $rows[$index];
         $parent_id = tncp_parent_id($row, $rows);
         if ($parent_id < 0) { $errors[] = __('A parent failed to create; dependent rows were skipped.', 'tn-content-planner'); break; }
+        if (!$row['post_id'] && !array_filter($row['flags'])) {
+            $row['flags'] = tncp_level_defaults($plan, 1 + tncp_ancestry($row, $rows, $request['type']));
+            $row['pattern'] = $request['type'] . '-' . tncp_ancestry($row, $rows, $request['type']) . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
+            $rows[$index] = $row;
+        }
         $data = array('post_title' => $row['title'], 'post_name' => $row['slug'], 'post_parent' => $parent_id, 'post_type' => $request['type']);
         if ($row['post_id']) {
             $current = get_post($row['post_id']);
             if (!$current || tncp_snapshot($current) !== $row['baseline']) { $errors[] = __('A post changed during this batch. Refresh linked posts and retry.', 'tn-content-planner'); break; }
+            if ($parent_id !== (int) $current->post_parent && (!array_filter($row['flags']) || 'replace' === $request['defaults_action'])) {
+                $row['flags'] = tncp_level_defaults($plan, 1 + tncp_ancestry($row, $rows, $request['type']));
+                $row['pattern'] = $request['type'] . '-' . tncp_ancestry($row, $rows, $request['type']) . '-' . $row['template'] . '-' . count(array_filter($row['flags']));
+                $rows[$index] = $row;
+            }
             // Preserve status, content and all fields outside this plan.
             $data['ID'] = $row['post_id'];
             $desired = array('title' => $row['title'], 'slug' => $row['slug'], 'parent' => $parent_id);

@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.29
+Stable tag: 0.3.30
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,13 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.30 =
+* Add per-post-type Level 1, Level 2 and Level 3 defaults beneath the content table, with aligned relationship checkboxes.
+* Preserve existing discovered flags; apply defaults when all flags are unchecked. Moves with checked flags offer keep or replace.
+* Save defaults with the plan and respect the post-type lock. Level 1 is the root; levels deeper than 3 have no defaults.
+* Restore the plain XP Patterns heading; retain counts on the tab.
+
 
 = 0.3.29 =
 - Use very light grey (#e5e7eb) for Backlog dots in records and the key.

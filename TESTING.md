@@ -1,5 +1,10 @@
 # Validation
 
+## 0.3.30
+
+- 18 level-default, 44 immediate-change, 54 scan and 66 integration checks pass. Shared-database suites were run sequentially after a concurrent run collided on plan locks.
+- Browser checks pass for aligned columns, default autosave, new-row defaults, move replacement, lock protection and the plain XP Patterns heading. Screenshot inspected. JavaScript syntax and whitespace checks pass.
+
 ## 0.3.29
 
 Release/tag match `802b85e`; remote/local ZIP SHA-256: `d50696810746ee4605d50f17a787690f1a8216893b7a52133e7e0fda2fc88557`. Published ZIP installation through the WordPress installer passed and reports 0.3.29.

@@ -14,10 +14,15 @@ function tncp_change_field($request, $plan) {
     if (!is_array($request['baseline']) || $request['baseline'] != tncp_snapshot($post)) { return tncp_error(__('The linked post changed elsewhere. Reload before approving this change.', 'tn-content-planner'), 409); }
     $index = array_search($request['row_id'], array_column($plan['rows'], 'id'), true);
     if (false !== $index && $plan['rows'][$index]['post_id'] !== $post->ID) { return tncp_error(__('This row is linked to a different post. Reload the plan.', 'tn-content-planner'), 409); }
+    if ('parent' === $field && null !== $request['defaults']) {
+        $defaults = tncp_validate_defaults($request['defaults']);
+        if (is_wp_error($defaults)) { return $defaults; }
+        $plan['defaults'] = $defaults;
+    }
     $value = $request['value'];
     $metadata = !in_array($field, array('title', 'slug', 'parent'), true);
     $planning = tncp_post_planning($post->ID);
-    if ($metadata && (!is_array($request['planning']) || $request['planning'] != $planning)) { return tncp_error(__('The post planning metadata changed elsewhere. Reload before changing it.', 'tn-content-planner'), 409); }
+    if (($metadata || 'parent' === $field && null !== $request['defaults_action']) && (!is_array($request['planning']) || $request['planning'] != $planning)) { return tncp_error(__('The post planning metadata changed elsewhere. Reload before changing it.', 'tn-content-planner'), 409); }
     if ($metadata) {
         if ('template' === $field) {
             if (!in_array($value, array('single', 'archive', 'custom', 'redirect'), true)) { return tncp_error(__('Choose Single, Archive, Custom or Redirect.', 'tn-content-planner')); }
@@ -41,6 +46,12 @@ function tncp_change_field($request, $plan) {
         $value = 'title' === $field ? tncp_title($value) : sanitize_title(tncp_trim($value));
         if ('' === trim(wp_strip_all_tags($value)) || strlen($value) > ('title' === $field ? 4000 : 200)) { return tncp_error(__('Enter a nonempty title or slug within the field limit.', 'tn-content-planner')); }
     }
+    $apply_defaults = false;
+    if ('parent' === $field) {
+        if (null !== $request['defaults_action'] && !in_array($request['defaults_action'], array('keep', 'replace'), true)) { return tncp_error(__('Choose whether to keep flags or replace them with defaults.', 'tn-content-planner')); }
+        $apply_defaults = !array_filter($planning['flags']) || 'replace' === $request['defaults_action'];
+        if ($apply_defaults) { $planning['flags'] = tncp_level_defaults($plan, $value ? 2 + count(get_post_ancestors($value)) : 1); }
+    }
     if (in_array($field, array('slug', 'parent'), true)) {
         $desired = array('slug' => 'slug' === $field ? $value : $post->post_name, 'parent' => 'post:' . ('parent' === $field ? $value : $post->post_parent));
         $args = array('post_type' => $post->post_type, 'name' => $desired['slug'], 'post_status' => array('publish', 'draft', 'pending', 'private', 'future'), 'post__not_in' => array($post->ID), 'numberposts' => 1);
@@ -63,6 +74,11 @@ function tncp_change_field($request, $plan) {
         $result = wp_update_post(wp_slash(array('ID' => $post->ID, $column => $value)), true);
         if (is_wp_error($result)) { return tncp_error($result->get_error_message()); }
         if (!$result) { return tncp_error(__('WordPress could not apply the approved change.', 'tn-content-planner')); }
+    }
+    if ($apply_defaults) {
+        update_post_meta($post->ID, '_tncp_flags', $planning['flags']);
+        if (get_post_meta($post->ID, '_tncp_flags', true) != $planning['flags']) { return tncp_error(__('The post moved, but its flags could not be saved. Reload the plan before retrying.', 'tn-content-planner'), 500); }
+        if (false !== $index) { $plan['rows'][$index]['flags'] = $planning['flags']; }
     }
     $post = get_post($post->ID);
     update_post_meta($post->ID, '_tncp_pattern', $post->post_type . '-' . count(get_post_ancestors($post)) . '-' . $planning['template'] . '-' . count(array_filter($planning['flags'])));

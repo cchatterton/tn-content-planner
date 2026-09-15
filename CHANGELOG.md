@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.30 - 2026-09-15
+
+- Add per-post-type Level 1, Level 2 and Level 3 defaults beneath the content table, with aligned relationship checkboxes.
+- Preserve existing discovered flags; apply defaults when all flags are unchecked. Moves with checked flags offer keep or replace.
+- Save defaults with the plan and respect the post-type lock. Level 1 is the root; levels deeper than 3 have no defaults.
+- Restore the plain XP Patterns heading; retain counts on the tab.
+
 ## 0.3.29 - 2026-09-15
 
 - Use very light grey (#e5e7eb) for Backlog dots in records and the key.

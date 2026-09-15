@@ -125,8 +125,31 @@
         source.childNodes.forEach(node => copy(node, output));
         return output;
     }
+    function levelDefaults(level) {
+        return Object.fromEntries(flags.map(flag => [flag, Boolean(plan.defaults?.[level]?.[flag])]));
+    }
+    function defaultsTable() {
+        const table = el('table', { class: 'widefat striped tncp-defaults-table', 'aria-label': __('Level defaults') });
+        table.append(el('thead', {}, [el('tr', {}, ['', __('Level defaults'), '', '', '', ...flags.map(flag => __(flag[0].toUpperCase() + flag.slice(1))), '', '', ''].map(text => el('th', { scope: 'col', text })))]));
+        const body = el('tbody');
+        for (let level = 1; level <= 3; level++) {
+            const tr = el('tr');
+            for (let column = 0; column < 13; column++) {
+                const cell = el(column === 1 ? 'th' : 'td', column === 1 ? { scope: 'row', text: `${__('Level')} ${level}` } : {});
+                if (column >= 5 && column <= 9) {
+                    const flag = flags[column - 5]; cell.className = 'tncp-flag';
+                    cell.append(el('input', { type: 'checkbox', checked: levelDefaults(level)[flag], 'data-default': `${level}-${flag}`, 'aria-label': `${__('Level')} ${level} ${__(flag[0].toUpperCase() + flag.slice(1))}`, onchange: event => {
+                        plan.defaults ||= {}; plan.defaults[level] = { ...levelDefaults(level), [flag]: event.target.checked }; markDirty(); render(); app.querySelector(`[data-default="${level}-${flag}"]`)?.focus();
+                    } }));
+                }
+                tr.append(cell);
+            }
+            body.append(tr);
+        }
+        table.append(body); return table;
+    }
     function newRow() {
-        return { id: uid(), title: '', slug: '', parent: '', template: 'single', flags: Object.fromEntries(flags.map(flag => [flag, false])), post_id: 0, baseline: null, confirmed: {} };
+        return { id: uid(), title: '', slug: '', parent: '', template: 'single', flags: levelDefaults(1), post_id: 0, baseline: null, confirmed: {} };
     }
     function parentId(row) {
         if (!row.parent) return 0;
@@ -181,7 +204,7 @@
         });
     }
     function parentPostValue(value) { return !value ? 0 : value.startsWith('post:') ? Number(value.slice(5)) : plan.rows.find(item => `row:${item.id}` === value)?.post_id || -1; }
-    async function applyLinkedChange(row, field, value) {
+    async function applyLinkedChange(row, field, value, defaultsAction = 'keep') {
         const wasDirty = dirty, old = row[field], metadata = field === 'template' || flags.includes(field);
         if (field === 'parent') {
             row[field] = value;
@@ -190,9 +213,10 @@
         }
         await work(async () => {
             const post = catalog.find(item => item.id === row.post_id);
-            const result = await api('change', { revision: plan.revision, row_id: row.id, post_id: row.post_id, baseline: row.baseline, planning: post?.planning, field, value: field === 'parent' ? parentPostValue(value) : value, confirmed: true });
+            const result = await api('change', { revision: plan.revision, row_id: row.id, post_id: row.post_id, baseline: row.baseline, planning: post?.planning, field, ...(field === 'parent' ? { defaults_action: defaultsAction, defaults: plan.defaults || {} } : {}), value: field === 'parent' ? parentPostValue(value) : value, confirmed: true });
             if (flags.includes(field)) row.flags[field] = result.planning.flags[field];
             else row[field] = metadata ? result.planning.template : field === 'parent' ? (result.snapshot.parent ? `post:${result.snapshot.parent}` : '') : result.snapshot[field];
+            if (field === 'parent') row.flags = result.planning.flags;
             row.baseline = result.snapshot;
             row.confirmed = { ...row.confirmed, [field]: false }; row.scanned = false;
             plan.revision = result.plan.revision;
@@ -205,15 +229,18 @@
     async function change(row, field, value) {
         if (busy || (flags.includes(field) ? row.flags[field] : row[field]) === value) return;
         const old = row[field];
+        let defaultsAction = 'keep';
         if (field === 'slug') value = slug(value);
         if (field === 'title') value = value.trim();
         if (row[field] === value) { render(); return; }
         if (row.post_id && ['title', 'slug', 'parent'].includes(field)) {
             const message = field === 'parent' ? __('Do you want to move this post under the new parent?') : field === 'title' ? __('Do you want to change the linked post’s title or create a new item in the plan with the new name?') : __('Do you want to change the linked post’s slug or create a new item in the plan with this new slug?');
-            const choices = [['update', field === 'parent' ? __('Move linked post') : __('Change linked post')]];
+            const hasFlags = field === 'parent' && flags.some(flag => row.flags[flag]);
+            const choices = hasFlags ? [['keep', __('Move & keep checkboxes')], ['replace', __('Move & use defaults')]] : [['update', field === 'parent' ? __('Move linked post') : __('Change linked post')]];
             if (field !== 'parent') choices.push(['new', __('Create new plan item')]);
-            const decision = await ask(__('Linked post change'), `${message} ${__('Approving applies this change immediately.')}`, choices);
+            const decision = await ask(__('Linked post change'), `${message} ${hasFlags ? __('Replace the current checkboxes with the destination level defaults, or keep them?') : ''} ${__('Approving applies this change immediately.')}`, choices);
             if (decision === 'cancel') { render(); return; }
+            defaultsAction = decision === 'replace' ? 'replace' : 'keep';
             if (decision === 'new') {
                 const copy = { ...structuredClone(row), id: uid(), post_id: 0, baseline: null, confirmed: {} };
                 copy[field] = value;
@@ -223,11 +250,16 @@
                 plan.rows.push(copy); editing = copy.id; markDirty(); render(); return;
             }
         }
-        if (row.post_id) { await applyLinkedChange(row, field, value); return; }
+        if (row.post_id) { await applyLinkedChange(row, field, value, defaultsAction); return; }
         if (flags.includes(field)) { row.flags[field] = value; markDirty(); render(); return; }
+        if (field === 'parent' && flags.some(flag => row.flags[flag])) {
+            defaultsAction = await ask(__('Move plan item'), __('Replace the current checkboxes with the destination level defaults, or keep them?'), [['keep', __('Keep checkboxes')], ['replace', __('Use level defaults')]]);
+            if (defaultsAction === 'cancel') { render(); return; }
+        }
         row[field] = value;
         if (!row.slug) selected.delete(row.id);
         try { plan.rows.forEach(item => depth(item)); } catch (error) { row[field] = old; announce(error.message, true); render(); return; }
+        if (field === 'parent' && (!flags.some(flag => row.flags[flag]) || defaultsAction === 'replace')) row.flags = levelDefaults(depth(row) + 1);
         if (field === 'slug' && !row.post_id) {
             const matches = catalog.filter(post => slugMatches(row, post, value));
             if (matches.length === 1 && !plan.rows.some(item => item.id !== row.id && item.post_id === matches[0].id)) {
@@ -270,7 +302,7 @@
         }
         if (!await confirmPending()) { render(); return; }
         await work(async () => {
-            plan = await api('save', { revision: plan.revision, rows: plan.rows }); dirty = false; render(); announce(__('Plan saved. Select rows, then choose Map Selected.'));
+            plan = await api('save', { revision: plan.revision, rows: plan.rows, defaults: plan.defaults || {} }); dirty = false; render(); announce(__('Plan saved. Select rows, then choose Map Selected.'));
         });
     }
     function titleControl(row) {
@@ -500,8 +532,9 @@
             head.append(el('th', { scope: 'col' }, [selectAll]));
             [__('Title *'), __('Content slug'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach(text => head.append(el('th', { scope: 'col', text })));
             table.append(el('thead', {}, [head]), el('tbody', {}, shown.map(rowView)));
-            panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table]));
+            panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table, defaultsTable()]));
         }
+        if (!plan.rows.length) panel.append(el('div', { class: 'tncp-scroll' }, [defaultsTable()]));
         panel.append(el('div', { class: 'tncp-actions tncp-footer' }, [
             button(__('Add row'), () => { const row = newRow(); patternFilters[type] = ''; plan.rows.push(row); editing = row.id; markDirty(); render(); app.querySelector(`[data-title="${row.id}"]`)?.focus(); }),
             button(__('Save plan'), save, true),
@@ -541,8 +574,6 @@
             const active = (control.dataset.mine === 'true') === patternsMine;
             control.setAttribute('aria-pressed', String(active)); control.classList.toggle('button-primary', active);
         });
-        const heading = document.getElementById('tncp-pattern-heading');
-        if (heading) heading.textContent = `${visible} ${__('XP Patterns')}`;
         const empty = document.getElementById('tncp-pattern-empty'); if (empty) empty.hidden = visible > 0;
         scheduleTableHeaders();
         const scroll = app.querySelector('.tncp-pattern-scroll'); if (scroll) scroll.hidden = visible === 0;
@@ -559,7 +590,7 @@
             type: 'button', class: 'button' + (patternsMine === mine ? ' button-primary' : ''), 'aria-pressed': String(patternsMine === mine), 'data-mine': String(mine), text: label,
             onclick: () => { patternsMine = mine; filterPatterns(); }
         })));
-        panel.append(el('div', { class: 'tncp-pattern-heading' }, [el('h2', { id: 'tncp-pattern-heading', text: `${patternsPlan.rows.length} ${__('XP Patterns')}` }), filters]));
+        panel.append(el('div', { class: 'tncp-pattern-heading' }, [el('h2', { id: 'tncp-pattern-heading', text: __('XP Patterns') }), filters]));
         if (!patternsPlan.rows.length) { panel.append(el('p', { text: __('No patterns yet. Scan a post type or save a content plan to get started.') })); return; }
         const table = el('table', { class: 'widefat striped tncp-patterns-table' });
         table.append(el('thead', {}, [el('tr', {}, [__('Pattern'), __('Content items'), __('Short description'), __('Status'), __('XP Owner'), __('Example post')].map(text => el('th', { scope: 'col', text })))]));
@@ -687,8 +718,13 @@
             button(__('Skip for now'), () => { reviewSkipped++; reviewIndex++; resetReviewItem(); render(); }),
             button(__('Reload this item'), async () => { await work(async () => { const data = await api('plan'); plan = data.plan; catalog = data.catalog; typeSettings = data.settings || {}; resetReviewItem(); render(); }); }),
             button(reviewIndex + 1 === reviewQueue.length ? __('Apply & finish') : __('Apply & next'), async () => {
+                let defaultsAction = 'keep';
+                if (reviewDecision === 'source' && target && target.parent !== parentId(row) && flags.some(flag => row.flags[flag])) {
+                    defaultsAction = await ask(__('Move plan item'), __('Replace the current checkboxes with the destination level defaults, or keep them?'), [['keep', __('Keep checkboxes')], ['replace', __('Use level defaults')]]);
+                    if (defaultsAction === 'cancel') return;
+                }
                 await work(async () => {
-                    const result = await api('resolve', { revision: plan.revision, row_id: row.id, decision: reviewDecision, target_id: reviewTarget,
+                    const result = await api('resolve', { revision: plan.revision, row_id: row.id, decision: reviewDecision, target_id: reviewTarget, defaults_action: defaultsAction,
                         target_snapshot: target ? reviewSnapshot(target) : null, new_slug: slug(reviewNewSlug), creation_status: creationStatus });
                     if (!result.completed.length) throw new Error(result.errors.join(' ') || __('This item could not be applied. Review it and try again.'));
                     plan = result.plan; selected.delete(row.id); dirty = false;
