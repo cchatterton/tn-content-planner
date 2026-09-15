@@ -2,6 +2,8 @@
 
 ## 0.3.28
 
+Release/tag match `97dc464`; remote/local ZIP SHA-256: `da237893441d1eebdca77ccc6ca28a31fa91a60f4950e649b7cf98e7b990d8ff`. Published ZIP installation through the WordPress installer passed and reports 0.3.28.
+
 - 54 scan/pattern checks pass with Backlog as the unsaved-pattern default.
 - Browser test verifies XP Owner, capitalised option order, all four persisted status colours, matching key dots and desktop/mobile Axe. PHP lint, JavaScript syntax and whitespace checks pass.
 
