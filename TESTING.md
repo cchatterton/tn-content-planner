@@ -2,6 +2,8 @@
 
 ## 0.3.32
 
+Release/tag match `bbf6328`; remote/local ZIP SHA-256: `6acd36bfa7d947d95790161018fe87b09eac0cc82b17d3d3e051e6a03bd64e71`. Published ZIP installation through WordPress passed and reports 0.3.32.
+
 - Browser regression passes for hiding linked posts, showing new rows, retaining unsaved text, independent tab preferences and locked filtering. Local external HTTP requests were disabled after an unrelated WordPress request timeout. JavaScript syntax and whitespace checks pass.
 
 ## 0.3.31
