@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.31 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.32 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -9,6 +9,8 @@ A WordPress content planning wizard: plan a WBS by post type, review and create 
 Upload the root `tn-content-planner.zip` through WordPress Plugins → Add New → Upload Plugin. Activate it, then open **Content Planner**. GitHub release updates appear in the native Plugins screen.
 
 ## Scope and decisions
+
+- Each post-type tab has Planned only / Planned and existing controls. Planned only shows unlinked rows; the default includes linked posts. Preferences are independent per tab while the page stays open, work with the XP Pattern filter, preserve edits and remain usable while locked.
 
 - Level defaults are saved per post type beneath the content table. Level 1 is the root, Level 2 its children, and Level 3 its grandchildren; deeper levels have no defaults. New rows inherit root defaults. Discovery preserves existing flags and applies defaults only when all are unchecked. Moves with empty flags apply destination defaults automatically; checked flags offer keep or replace. Editing defaults does not retroactively overwrite existing rows.
 

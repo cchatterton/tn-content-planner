@@ -1,4 +1,4 @@
 {
-  "version": "0.3.31",
-  "body": "## 0.3.31 - 2026-09-15\n\n- Move XP status dots before the pattern labels on post-type tabs.\n- Add an equally sized transparent spacer before the XP pattern column heading to align its text.\n"
+  "version": "0.3.32",
+  "body": "## 0.3.32 - 2026-09-17\n\n- Add Planned only / Planned and existing toggles to each post-type tab.\n- Planned only hides rows linked to WordPress posts. Each tab remembers its own choice while the planner is open.\n- Combine visibility with the XP Pattern filter, preserve unsaved edits, clear selections on switching, and allow filtering while locked.\n"
 }

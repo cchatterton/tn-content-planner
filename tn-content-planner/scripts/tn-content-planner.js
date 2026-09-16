@@ -11,6 +11,7 @@
     let patternStatuses = TNCP.pattern_statuses || {};
     let patternExamples = TNCP.pattern_examples || {};
     const patternFilters = {};
+    const plannedOnly = {};
     let patternsMine = false;
     let patternsPlan = { revision: 0, rows: [], catalog: {} };
     let selected = new Set(), dirty = false, busy = false, step = 1, editing = null;
@@ -430,7 +431,7 @@
     window.addEventListener('resize', scheduleTableHeaders, { passive: true });
     function applyTypeLock(panel) {
         if (!typeSettings.locked) return;
-        panel.querySelectorAll('button:not(.tncp-lock), input, select:not(#tncp-pattern-filter), textarea').forEach(control => { control.disabled = true; });
+        panel.querySelectorAll('button:not(.tncp-lock):not(.tncp-visibility-toggle), input, select:not(#tncp-pattern-filter), textarea').forEach(control => { control.disabled = true; });
     }
     async function toggleTypeLock() {
         if (busy) return;
@@ -460,7 +461,7 @@
         } catch (error) { patternFilters[type] = priorFilter; type = prior; throw error; } });
         document.getElementById(`tncp-tab-${type}`)?.focus();
     }
-    function visibleRows() { return orderedRows().filter(row => !patternFilters[type] || pattern(row) === patternFilters[type]); }
+    function visibleRows() { return orderedRows().filter(row => (!plannedOnly[type] || !row.post_id) && (!patternFilters[type] || pattern(row) === patternFilters[type])); }
     function render() {
         scheduleTableHeaders();
         const active = document.activeElement;
@@ -514,11 +515,18 @@
         if (patternFilters[type] && !keys.includes(patternFilters[type])) keys.push(patternFilters[type]);
         keys.forEach(key => filter.append(el('option', { value: key, text: key })));
         filter.value = patternFilters[type] || '';
+        const visibility = el('div', { class: 'tncp-visibility-controls', role: 'group', 'aria-label': __('Show content') });
+        [[true, __('Planned only')], [false, __('Planned and existing')]].forEach(([only, label]) => {
+            const active = Boolean(plannedOnly[type]) === only;
+            visibility.append(el('button', { type: 'button', class: 'button tncp-visibility-toggle' + (active ? ' button-primary' : ''), 'aria-pressed': String(active), 'data-planned-only': String(only), text: label, onclick: () => {
+                plannedOnly[type] = only; selected.clear(); render(); app.querySelector(`[data-planned-only="${only}"]`)?.focus();
+            } }));
+        });
         const shown = visibleRows();
         selected = new Set([...selected].filter(id => shown.some(row => row.id === id)));
         panel.append(el('div', { class: 'tncp-actions tncp-plan-tools' }, [
             button(__('Import CSV'), () => file.click()), file, button(__('Download CSV template'), downloadTemplate),
-            el('div', { class: 'tncp-filter-control' }, [filter]),
+            el('div', { class: 'tncp-filter-control' }, [visibility, filter]),
         ]));
         if (!plan.rows.length) panel.append(el('div', { class: 'tncp-empty' }, [el('h3', { text: __('Start with the content you need') }), el('p', { text: __('Add your first row or import a CSV to build your work breakdown structure.') })]));
         else {
@@ -531,7 +539,7 @@
             selectAll.indeterminate = shown.some(row => selected.has(row.id)) && !selectAll.checked;
             head.append(el('th', { scope: 'col' }, [selectAll]));
             [__('Title *'), __('Content slug'), __('Parent'), __('Template'), __('Local'), __('Related'), __('Children'), __('Siblings'), __('Parents'), __('XP pattern'), __('Post ID'), __('Actions')].forEach((text, index) => head.append(index === 9 ? el('th', { scope: 'col' }, [el('span', { class: 'tncp-pattern-reference' }, [el('span', { class: 'tncp-pattern-status', 'aria-hidden': 'true' }), el('span', { text })])]) : el('th', { scope: 'col', text })));
-            table.append(el('thead', {}, [head]), el('tbody', {}, shown.map(rowView)));
+            table.append(el('thead', {}, [head]), el('tbody', {}, shown.length ? shown.map(rowView) : [el('tr', {}, [el('td', { colspan: '13', text: __('No rows match these filters.') })])]));
             panel.append(el('div', { class: 'tncp-scroll', tabindex: '0', role: 'region', 'aria-label': __('Content plan table') }, [table, defaultsTable()]));
         }
         if (!plan.rows.length) panel.append(el('div', { class: 'tncp-scroll' }, [defaultsTable()]));

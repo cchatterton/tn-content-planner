@@ -171,3 +171,5 @@
 .tncp-wrap .tncp-pattern-status.is-backlog { background: #e5e7eb; }
 
 .tncp-wrap .tncp-defaults-table { margin-top: 1rem; }
+
+.tncp-wrap .tncp-filter-control, .tncp-wrap .tncp-visibility-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .25rem; }

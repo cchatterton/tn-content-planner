@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.32 - 2026-09-17
+
+- Add Planned only / Planned and existing toggles to each post-type tab.
+- Planned only hides rows linked to WordPress posts. Each tab remembers its own choice while the planner is open.
+- Combine visibility with the XP Pattern filter, preserve unsaved edits, clear selections on switching, and allow filtering while locked.
+
 ## 0.3.31 - 2026-09-15
 
 - Move XP status dots before the pattern labels on post-type tabs.

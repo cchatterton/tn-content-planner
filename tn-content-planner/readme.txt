@@ -3,7 +3,7 @@ Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.3.31
+Stable tag: 0.3.32
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -70,6 +70,12 @@ Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-servi
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.32 =
+* Add Planned only / Planned and existing toggles to each post-type tab.
+* Planned only hides rows linked to WordPress posts. Each tab remembers its own choice while the planner is open.
+* Combine visibility with the XP Pattern filter, preserve unsaved edits, clear selections on switching, and allow filtering while locked.
+
 
 = 0.3.31 =
 * Move XP status dots before the pattern labels on post-type tabs.

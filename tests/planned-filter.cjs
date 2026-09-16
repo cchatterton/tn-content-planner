@@ -1,0 +1,32 @@
+const {chromium}=require('playwright');
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:'chrome'});
+ const page=await browser.newPage({viewport:{width:1600,height:1050}});
+ await page.goto('http://127.0.0.1:8765/wp-login.php');
+ await page.evaluate(password=>{document.getElementById('user_login').value='tncp_admin';document.getElementById('user_pass').value=password;},process.env.TNCP_TEST_PASSWORD);await page.locator('#wp-submit').click();await page.waitForURL('**/wp-admin/');
+ await page.goto('http://127.0.0.1:8765/wp-admin/admin.php?page=tn-content-planner');await page.getByRole('tab',{name:/^Pages,/}).click();await page.locator('tbody tr').first().waitFor();
+ const assert=require('node:assert/strict');
+ async function ready(){await page.waitForFunction(()=>document.getElementById('tncp-app').getAttribute('aria-busy')==='false');}
+ await ready();
+ const total=await page.locator('.tncp-table tbody tr[data-row]').count();assert.ok(total>0);
+ await page.getByRole('button',{name:'Planned only',exact:true}).click();
+ assert.equal(await page.locator('.tncp-table tbody tr[data-row]').count(),0);
+ await page.getByText('No rows match these filters.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Add row',exact:true}).click();
+ assert.equal(await page.locator('.tncp-table tbody tr[data-row]').count(),1);
+ await page.getByRole('textbox',{name:'Title, HTML allowed',exact:true}).fill('Unsaved visibility check');
+ await page.getByRole('button',{name:'Planned and existing',exact:true}).click();
+ assert.equal(await page.locator('.tncp-table tbody tr[data-row]').count(),total+1);
+ await page.getByRole('button',{name:'Planned only',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Edit title: Unsaved visibility check',exact:true}).count(),1);
+ await page.getByRole('button',{name:'Remove row: Unsaved visibility check',exact:true}).click();await page.getByRole('button',{name:'Remove row',exact:true}).click();
+ await page.getByRole('tab',{name:/^Posts,/}).click();await ready();
+ assert.equal(await page.getByRole('button',{name:'Planned and existing',exact:true}).getAttribute('aria-pressed'),'true');
+ await page.getByRole('tab',{name:/^Pages,/}).click();await ready();
+ assert.equal(await page.getByRole('button',{name:'Planned only',exact:true}).getAttribute('aria-pressed'),'true');
+ await page.getByRole('button',{name:'Lock post type',exact:true}).click();await ready();
+ assert.ok(await page.getByRole('button',{name:'Planned and existing',exact:true}).isEnabled());
+ await page.getByRole('button',{name:'Planned and existing',exact:true}).click();assert.equal(await page.locator('.tncp-table tbody tr[data-row]').count(),total);
+ await page.getByRole('button',{name:'Unlock post type',exact:true}).click();await ready();
+ console.log('PASS: existing rows hide, new rows stay visible, unsaved text retained, independent tab preferences and locked filtering.');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1);});
