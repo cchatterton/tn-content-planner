@@ -1,6 +1,6 @@
 # TN Content Planner
 
-Author: Techn · Version: 0.3.32 · Branding mode: Author Branded
+Author: Techn · Version: 0.3.33 · Branding mode: Author Branded
 
 A WordPress content planning wizard: plan a WBS by post type, review and create selected posts, and immediately apply approved changes to linked posts.
 
@@ -86,8 +86,14 @@ The browser suite requires Playwright and Chrome, and uses a disposable WordPres
 
 Follow [codex-standards](https://github.com/cchatterton/codex-standards): general development, WordPress plugin, branding/UX and GitHub update standards. Release versions must match in the header, constant, readme Stable tag, update manifest and changelog. Build and commit the root ZIP, push, publish a matching `vX.Y.Z` release with that exact ZIP, then verify native WordPress update delivery.
 
-The manifest-first updater falls back to the public latest-release redirect and only then GitHub's API. Successful release cache and failure backoff are separate. Manual checks are capability-gated and nonce-protected. No plan data is sent to GitHub.
+Update discovery is delegated to TN Update Controller; no per-plugin remote fallback runs during rendering.
 
 ## Licences
 
 Plugin: GPL v2 or later. Font Awesome Free 6.7.2: CSS code MIT, fonts SIL OFL 1.1, icons CC BY 4.0. The upstream licence is included under `tn-content-planner/assets/fontawesome/LICENSE.txt`.
+
+## Controller migration — 0.3.33
+
+Updates are now supplied by [TN Update Controller](https://github.com/cchatterton/tn-update-controller). The old independent updater has been removed. Plugin identity, feature settings and activation scope are unchanged. Install/activate/check links use local controller detection and never fetch release metadata while rendering. Legacy update guidance below or in historical notes is superseded by this controller integration.
+
+Release order: build and validate the ZIP, publish its matching GitHub release asset, then publish verified controller catalogue metadata. Existing update.json endpoints are maintained only for older, not-yet-migrated installations, after asset verification.

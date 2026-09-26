@@ -2,22 +2,23 @@
 /**
  * Plugin Name: TN Content Planner
  * Description: Plan content by post type, arrange a WBS, and create or update selected WordPress content.
- * Version: 0.3.32
- * Requires at least: 6.0
- * Requires PHP: 8.1
+ * Version: 0.3.33
+ * Requires at least: 7.0
+ * Requires PHP: 8.5
  * Author: Techn
  * Author URI: https://techn.com.au
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Techn Controller API: 1
  * Text Domain: tn-content-planner
  * Update URI: https://github.com/cchatterton/tn-content-planner
  */
 if (!defined('ABSPATH')) { exit; }
-define('TNCP_VERSION', '0.3.32');
+define('TNCP_VERSION', '0.3.33');
 define('TNCP_PLUGIN_FILE', __FILE__);
 define('TNCP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TNCP_PLUGIN_URL', plugin_dir_url(__FILE__));
-foreach (array('helpers', 'defaults', 'admin', 'assets', 'rest', 'updater') as $tncp_file) {
+foreach (array('helpers', 'defaults', 'admin', 'assets', 'rest') as $tncp_file) {
     require_once TNCP_PLUGIN_DIR . 'functions/' . $tncp_file . '.php';
 }
 unset($tncp_file);
@@ -25,3 +26,6 @@ unset($tncp_file);
 require_once TNCP_PLUGIN_DIR . 'functions/patterns.php';
 
 require_once TNCP_PLUGIN_DIR . 'functions/changes.php';
+
+require_once __DIR__ . '/functions/controller-client.php';
+tnuc_client_register(__FILE__, 'tn-content-planner');

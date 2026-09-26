@@ -149,44 +149,7 @@ try {
     tncp_test(403 === tncp_test_request('save', array('revision' => 0, 'rows' => array()))->get_status(), 'Subscriber REST blocked');
     wp_set_current_user(1);
     require_once ABSPATH . 'wp-admin/includes/user.php'; wp_delete_user($subscriber);
-    // Updater contracts with isolated mocked network responses.
-    $calls = array();
-    $mock = static function($pre, $args, $url) use (&$calls) {
-        $calls[] = $url;
-        return array('headers' => array(), 'body' => wp_json_encode(array('version' => '99.0.0', 'body' => 'Test release')), 'response' => array('code' => 200, 'message' => 'OK'), 'cookies' => array());
-    };
-    add_filter('pre_http_request', $mock, 10, 3); tncp_clear_update_cache();
-    $update = tncp_inject_update((object) array('response' => 'invalid', 'no_update' => 'invalid'));
-    tncp_test(1 === count($calls) && str_contains($calls[0], 'update.json'), 'Valid manifest avoids GitHub API');
-    tncp_test('99.0.0' === $update->response[plugin_basename(TNCP_PLUGIN_FILE)]->new_version, 'Native update injected');
-    tncp_test(!isset($update->no_update[plugin_basename(TNCP_PLUGIN_FILE)]), 'No stale no_update');
-    tncp_release_lookup(); tncp_test(1 === count($calls), 'Successful lookup cached');
-    remove_filter('pre_http_request', $mock, 10);
-    tncp_clear_update_cache(); $calls = array();
-    $failed = static function($pre, $args, $url) use (&$calls) { $calls[] = $url; return array('headers' => array(), 'body' => 'rate limited', 'response' => array('code' => 429, 'message' => 'Too Many Requests'), 'cookies' => array()); };
-    add_filter('pre_http_request', $failed, 10, 3);
-    tncp_test(false === tncp_release_lookup(), 'Failed lookup returns false');
-    tncp_test(false === get_site_transient('tncp_release'), 'Failure is not cached as release');
-    tncp_release_lookup(); tncp_test(1 === count($calls), 'Rate limiting stops fallback and activates backoff');
-    remove_filter('pre_http_request', $failed, 10); tncp_clear_update_cache();
-    $calls = array();
-    $fallback = static function($pre, $args, $url) use (&$calls) {
-        $calls[] = $url;
-        if (str_contains($url, 'update.json')) { return new WP_Error('offline', 'Unavailable'); }
-        return array('headers' => array('location' => tncp_update_repository() . '/releases/tag/v0.3.0'), 'body' => '', 'response' => array('code' => 302, 'message' => 'Found'), 'cookies' => array());
-    };
-    add_filter('pre_http_request', $fallback, 10, 3);
-    $release = tncp_release_lookup();
-    tncp_test('0.3.0' === $release['version'] && 2 === count($calls), 'Public redirect fallback avoids API');
-    remove_filter('pre_http_request', $fallback, 10); tncp_clear_update_cache();
-    $equal = tncp_release_data(TNCP_VERSION, 'Current'); set_site_transient('tncp_release', $equal, 300);
-    $file = plugin_basename(TNCP_PLUGIN_FILE);
-    $transient = tncp_inject_update((object) array('response' => array($file => (object) array('new_version' => '0.0.1')), 'no_update' => array($file => new stdClass())));
-    tncp_test(!isset($transient->response[$file]) && !isset($transient->no_update[$file]), 'Equal version removes stale update entries');
-    $details = tncp_plugin_information(false, 'plugin_information', (object) array('slug' => 'tn-content-planner'));
-    tncp_test('TN Content Planner' === $details->name && str_contains($details->sections['changelog'], 'Current'), 'Native plugin details include changelog');
-    tncp_clear_update_cache();
-    tncp_test(false === tncp_release_data('https://evil.test/zip'), 'Reject invalid release versions');
+    require __DIR__ . '/controller-integration.php';
     add_option('tncp_lock_page', time(), '', false);
     $locked = tncp_test_request('save', array('revision' => 0, 'rows' => array()));
     tncp_test(409 === $locked->get_status(), 'Concurrent plan mutation lock');
@@ -196,7 +159,6 @@ try {
     wp_set_current_user(1);
     foreach ($created as $id) { wp_delete_post($id, true); }
     if (null === $original) { delete_option('tncp_plan_page'); } else { update_option('tncp_plan_page', $original, false); }
-    tncp_clear_update_cache();
     delete_option('tncp_plan_tncp_hidden_test');
     delete_option('tncp_plan_tncp_public_test');
     foreach (array('tncp_public_test', 'tncp_hidden_test', 'tncp_private_test', 'tncp_cap_test') as $fixture) { unregister_post_type($fixture); }

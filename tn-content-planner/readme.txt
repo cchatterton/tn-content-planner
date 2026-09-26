@@ -1,10 +1,10 @@
 === TN Content Planner ===
 Contributors:
 Tags: content-planning, hierarchy, editorial, csv, drafts
-Requires at least: 6.0
-Tested up to: 7.1
-Stable tag: 0.3.32
-Requires PHP: 8.1
+Requires at least: 7.0
+Tested up to: 7.1.2
+Stable tag: 0.3.33
+Requires PHP: 8.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -65,11 +65,16 @@ Plans, mappings and generated posts are retained. No content is deleted automati
 
 == External services ==
 
-GitHub is used only for plugin update discovery and ZIP downloads via WordPress. Requests send the server IP, standard HTTP headers and plugin version. No content plan or post data is sent. Successful checks are cached; network failures do not prevent planning. Update metadata is requested from raw.githubusercontent.com, with github.com and api.github.com as fallbacks. Updates are downloaded from GitHub release asset infrastructure.
+Update discovery and release details are supplied by TN Update Controller. This plugin does not independently request release metadata, repository readmes or changelogs. The explicit controller-install action downloads its official GitHub release ZIP; see Controller installation service below.
 Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service
 Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 == Changelog ==
+
+= 0.3.33 =
+* Replace the independent updater with TN Update Controller integration.
+* Standardise author and plugin-row links; preserve feature settings and plugin identity.
+* Require WordPress 7.0+ and PHP 8.5+.
 
 = 0.3.32 =
 * Add Planned only / Planned and existing toggles to each post-type tab.
@@ -260,3 +265,13 @@ Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-
 * Initial WBS editor, CSV import, safe HTML previews, hierarchy planning and XP patterns.
 * Selected draft creation and explicitly confirmed linked-post changes.
 * Conflict, permission and hierarchy validation, and native GitHub updates.
+
+== Managed updates ==
+
+Install and activate TN Update Controller to discover and install updates. The plugin row offers Install Techn Update Controller, Activate Techn Update Controller, or Check for updates according to local state and permissions. Feature operation does not require the controller. No release lookup happens while rendering this plugin's row. On multisite the controller must be network active. This plugin release requires WordPress 7.0 and PHP 8.5 or later.
+
+== Controller installation service ==
+
+Only an explicit authorised Install Techn Update Controller action downloads the official controller ZIP from GitHub. No plugin settings or site inventory are submitted; GitHub receives the server IP address and normal request metadata. Routine update discovery is delegated to the installed controller. Repository links open GitHub when selected.
+Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service
+Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
